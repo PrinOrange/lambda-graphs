@@ -1,0 +1,17 @@
+vendor/
+__pycache__/
+build/
+.DS_Store
+/data
+src/atlas.egg-info/
+dist/
+/tests/data/RANDOM/dfg_rosetta
+tests/**/*.dot
+tests/**/*.png
+/tests/data/RANDOM/gcj.json
+.coverage
+.vscode/
+.venv
+.pytest_cache/
+.idea/
+*.bin*

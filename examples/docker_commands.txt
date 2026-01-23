@@ -1,0 +1,61 @@
+================================================================================
+                        ATLAS Docker Usage Commands
+================================================================================
+
+1. BUILD THE DOCKER IMAGE
+-------------------------
+docker build -t atlas .
+
+
+2. TEST WITH --code-file (single file)
+--------------------------------------
+docker run --rm -v "$(pwd):/work" -w /work atlas \
+    --lang cpp \
+    --code-file ./examples/single/test_single.cpp \
+    --graphs "cfg,dfg" \
+    --output all
+
+
+3. TEST WITH --code-folder (multiple files)
+-------------------------------------------
+docker run --rm -v "$(pwd):/work" -w /work atlas \
+    --lang c \
+    --code-folder ./examples/multi \
+    --combined-name "multi_file_example" \
+    --graphs "cfg,dfg" \
+    --output all
+
+
+================================================================================
+                          Additional Options
+================================================================================
+
+GENERATE ONLY JSON OUTPUT:
+--------------------------
+docker run --rm -v "$(pwd):/work" -w /work atlas \
+    --lang cpp \
+    --code-file ./examples/single/test_single.cpp \
+    --graphs cfg \
+    --output json
+
+
+WITH COLLAPSED NODES AND DEBUG LOGGING:
+---------------------------------------
+docker run --rm -v "$(pwd):/work" -w /work atlas \
+    --lang cpp \
+    --code-file ./examples/single/test_single.cpp \
+    --graphs "dfg" \
+    --last-def \
+
+
+================================================================================
+                              Notes
+================================================================================
+
+- Output files (JSON, DOT, PNG) will appear in your current working directory
+- The -v "$(pwd):/work" flag mounts your current directory into the container
+- Available graphs: ast, cfg, dfg, cst, sdfg
+- Output formats: json, dot, all (dot also generates PNG)
+- Supported languages: c, cpp
+
+================================================================================

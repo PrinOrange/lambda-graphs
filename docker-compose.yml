@@ -1,0 +1,16 @@
+services:
+  atlas:
+    build: .
+    volumes:
+      # Mount input files/folders directory
+      - ./input:/input:ro
+      # Mount output directory for generated graphs
+      - ./output:/work/output
+      # Mount temp directory for merged source files
+      - ./temp:/work/temp
+      # Persist tree-sitter grammars between runs
+      - atlas-grammars:/tmp/atlas
+    working_dir: /work
+
+volumes:
+  atlas-grammars:
