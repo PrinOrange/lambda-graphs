@@ -2,6 +2,8 @@
 
 ATLAS (Automated Tree-based Language Analysis System) aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
 
+Tool Demonstration link: [https://youtu.be/xEJDNYkiD4s](https://youtu.be/xEJDNYkiD4s)
+
 ## Overview
 
 `ATLAS` is a CLI tool for generating customized source code representations from C and C++ programs. Currently, `ATLAS` generates codeviews for C and C++, supporting both method-level and file-level code snippets. `ATLAS` can be used to generate over 15 possible combinations of codeviews for both languages, including:
