@@ -2,7 +2,7 @@
 
 ATLAS (Automated Tree-based Language Analysis System) aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
 
-Tool Demonstration link: [https://youtu.be/xEJDNYkiD4s](https://youtu.be/xEJDNYkiD4s)
+Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbenp14)
 
 ## Overview
 
