@@ -1,12 +1,12 @@
-# ATLAS: Automated Tree-based Language Analysis System for C and C++ source programs
+# ATLAS: Multi-View Code Representation Tool for C and C++ Source Programs
 
-ATLAS (Automated Tree-based Language Analysis System) aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
+ATLAS aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
 
 Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbenp14)
 
 ## Overview
 
-`ATLAS` is a CLI tool for generating customized source code representations from C and C++ programs. Currently, `ATLAS` generates codeviews for C and C++, supporting both method-level and file-level code snippets. `ATLAS` can be used to generate over 15 possible combinations of codeviews for both languages, including:
+`ATLAS` is a CLI tool for generating customized source code representations from C and C++ programs. Currently, `ATLAS` generates codeviews for C and C++, supporting both method-level and file-level code snippets. `ATLAS` can be used to generate over 7 possible combinations of codeviews for both languages, including:
 
 - **AST** (Abstract Syntax Tree)
 - **CFG** (Control Flow Graph)
@@ -109,12 +109,28 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
 docker run --rm -v "$(pwd):/work" -w /work atlas \
     --lang c \
     --code-file ./examples/single/test_single.c \
-    --graphs "dfg" \
+    --graphs "ast,dfg" \
     --collapsed \
-    --last-def
+    --last-def \
+    --output all
 ```
 
-### Option 2: Using CLI Directly
+### Option 2: Using Example Scripts
+
+The `examples/scripts/` folder contains ready-to-use bash scripts that automatically build the Docker image and run ATLAS on a target file or folder, generating CFG, DFG, and AST outputs. Each script handles the build, graph generation, and output file renaming in one step.
+
+To run a script, make it executable and execute it from the repository root:
+
+```console
+chmod +x examples/scripts/single_test_single.sh
+./examples/scripts/single_test_single.sh
+```
+
+Output files will appear in the `output/` directory, named after the source file and view (e.g. `test_single_cfg.png`, `test_single_dfg.json`).
+
+---
+
+### Option 3: Using CLI Directly
 
 After setting up via virtual environment, use the `atlas` command directly.
 
@@ -167,8 +183,8 @@ atlas --lang "c" --code "int main() { int x = 5; return x; }" --graphs "ast,cfg"
 
 | Option | Description |
 |--------|-------------|
-| `--output` | Output format: `json`, `dot`, or `all` (dot also generates PNG). Default: `all` |
-| `--collapsed` | Collapse duplicate variable nodes into a single node in DFG |
+| `--output` | Output format: `json`, `dot`, or `all` (dot also generates PNG). Default: `dot` |
+| `--collapsed` | Collapse duplicate variable nodes into a single node in AST |
 | `--last-def` | Add last definition information to DFG edges (shows where variables were last defined) |
 | `--blacklisted` | Comma-separated list of AST node types to exclude from the graph |
 
@@ -319,7 +335,6 @@ The code is structured in the following way:
    - `AST/` - Abstract Syntax Tree (language-agnostic)
    - `CFG/` - Control Flow Graph (language-specific: `CFG_c.py`, `CFG_cpp.py`)
    - `DFG/` - Data Flow Graph (language-agnostic)
-   - `SDFG/` - Statement-level Data Flow Graph (language-specific: `SDFG_c.py`, `SDFG_cpp.py`)
    - `combined_graph/` - Combines multiple codeviews into a single graph
 
 4. **CLI Entry Point** (`src/atlas/cli.py`): The CLI implementation using Typer. The drivers can also be directly imported and used as a Python package.
