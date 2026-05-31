@@ -11,7 +11,6 @@ Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbe
 - **AST** (Abstract Syntax Tree)
 - **CFG** (Control Flow Graph)
 - **DFG** (Data Flow Graph)
-- **SDFG** (Statement-level Data Flow Graph with Reaching Definitions)
 - **Combined graphs** (any combination of the above)
 
 `ATLAS` is designed to be easily extendable to various programming languages. This is primarily because we use [tree-sitter](https://tree-sitter.github.io/tree-sitter/), a highly efficient incremental parser that supports over 40 languages.
