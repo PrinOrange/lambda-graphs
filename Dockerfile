@@ -21,7 +21,7 @@ COPY src/ ./src/
 RUN pip install --no-cache-dir .
 
 # Create directory for tree-sitter grammars
-RUN mkdir -p /tmp/atlas
+RUN mkdir -p /tmp/atlas && chmod 777 /tmp/atlas
 
 # Set default command to show help
 ENTRYPOINT ["atlas"]

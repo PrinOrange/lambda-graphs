@@ -1,4 +1,4 @@
-"""CLI for depend."""
+"""CLI for ATLAS"""
 from __future__ import annotations
 
 import sys
