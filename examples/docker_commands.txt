@@ -46,6 +46,9 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
     --code-file ./examples/single/test_single.cpp \
     --graphs "dfg" \
     --last-def \
+    --collapsed \
+    --debug \
+    --output all
 
 
 ================================================================================
@@ -54,7 +57,7 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
 
 - Output files (JSON, DOT, PNG) will appear in your current working directory
 - The -v "$(pwd):/work" flag mounts your current directory into the container
-- Available graphs: ast, cfg, dfg, cst, sdfg
+- Available graphs: ast, cfg, dfg
 - Output formats: json, dot, all (dot also generates PNG)
 - Supported languages: c, cpp
 
