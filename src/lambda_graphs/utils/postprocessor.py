@@ -27,7 +27,7 @@ def to_dot(graph):
     return nx.nx_pydot.to_pydot(graph)
 
 
-def write_to_dot(og_graph, filename, output_png=False, src_language=None):
+def write_to_dot(og_graph, filename, output_png=False, output_svg=False, src_language=None):
     graph = copy.deepcopy(og_graph)
     if not os.getenv("GITHUB_ACTIONS"):
         dot_reserved_keywords = {
@@ -80,4 +80,8 @@ def write_to_dot(og_graph, filename, output_png=False, src_language=None):
         if output_png:
             check_call(
                 ["dot", "-Tpng", filename, "-o", filename.rsplit(".", 1)[0] + ".png"]
+            )
+        if output_svg:
+            check_call(
+                ["dot", "-Tsvg", filename, "-o", filename.rsplit(".", 1)[0] + ".svg"]
             )

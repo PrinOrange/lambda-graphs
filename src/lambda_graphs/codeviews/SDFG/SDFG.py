@@ -65,13 +65,27 @@ class DfgRda:
                     self.graph,
                     output_file.rsplit(".", 1)[0] + ".dot",
                     output_png=True,
+                    output_svg=(graph_format == "all"),
                     src_language=self.src_language,
                 )
-            if graph_format == "all" or graph_format == "dot":
                 postprocessor.write_to_dot(
                     self.debug_graph,
                     output_file.rsplit(".", 1)[0] + "_debug.dot",
                     output_png=True,
+                    output_svg=(graph_format == "all"),
+                    src_language=self.src_language,
+                )
+            if graph_format == "svg":
+                postprocessor.write_to_dot(
+                    self.graph,
+                    output_file.rsplit(".", 1)[0] + ".dot",
+                    output_svg=True,
+                    src_language=self.src_language,
+                )
+                postprocessor.write_to_dot(
+                    self.debug_graph,
+                    output_file.rsplit(".", 1)[0] + "_debug.dot",
+                    output_svg=True,
                     src_language=self.src_language,
                 )
             self.json = postprocessor.write_networkx_to_json(self.graph, output_file)

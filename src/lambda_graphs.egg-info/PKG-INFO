@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
 Name: lambda-graphs
-Version: 0.1.4
+Version: 0.1.5
 Summary: Generate combined multi-code view graphs
-Home-page: https://github.com/jaid-monwar/ATLAS-multi-view-code-representation-tool.git
+Home-page: https://github.com/PrinOrange/lambda-graphs
 License: Apache-2.0
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: OS Independent

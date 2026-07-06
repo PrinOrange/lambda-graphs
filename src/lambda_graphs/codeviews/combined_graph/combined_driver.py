@@ -52,6 +52,14 @@ class CombinedDriver:
                     self.graph,
                     output_file.split(".")[0] + ".dot",
                     output_png=True,
+                    output_svg=(graph_format == "all"),
+                    src_language=self.src_language,
+                )
+            if graph_format == "svg":
+                postprocessor.write_to_dot(
+                    self.graph,
+                    output_file.split(".")[0] + ".dot",
+                    output_svg=True,
                     src_language=self.src_language,
                 )
 
