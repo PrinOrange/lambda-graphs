@@ -1,3 +1,36 @@
+Metadata-Version: 2.4
+Name: lambda-graphs
+Version: 0.1.4
+Summary: Generate combined multi-code view graphs
+Home-page: https://github.com/jaid-monwar/ATLAS-multi-view-code-representation-tool.git
+License: Apache-2.0
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: networkx==2.6.3
+Requires-Dist: tree-sitter>=0.22
+Requires-Dist: tree-sitter-c
+Requires-Dist: tree-sitter-cpp
+Requires-Dist: tree-sitter-java
+Requires-Dist: deepdiff>=7.0.0
+Requires-Dist: pydot==1.4.1
+Requires-Dist: typer>=0.9.0
+Requires-Dist: loguru==0.6.0
+Requires-Dist: setuptools>=69.0; python_version >= "3.12"
+Provides-Extra: dev
+Requires-Dist: tqdm; extra == "dev"
+Requires-Dist: pqdm; extra == "dev"
+Requires-Dist: loguru; extra == "dev"
+Requires-Dist: GitPython; extra == "dev"
+Requires-Dist: pandas; extra == "dev"
+Dynamic: license-file
+
 # lambda-graphs: Multi-View Code Representation Tool for C, C++ and Java Source Programs
 
 lambda-graphs aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).

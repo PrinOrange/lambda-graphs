@@ -2,7 +2,7 @@ import subprocess
 
 from tree_sitter import Parser
 
-from atlas import get_language_map
+from lambda_graphs import get_language_map
 
 
 def get_commit_hash(directory):

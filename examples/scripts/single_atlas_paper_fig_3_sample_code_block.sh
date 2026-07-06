@@ -17,11 +17,11 @@ cd "$REPO_ROOT"
 
 SRC_LANG="cpp"
 CODE_FILE="./examples/single/atlas_paper_fig_3_sample_code_block.cpp"
-BASE="atlas_paper_fig_3_sample_code_block"   # ATLAS names outputs after the file stem
+BASE="atlas_paper_fig_3_sample_code_block"   # lambda-graphs names outputs after the file stem
 
 # 1. Build the Docker image (cached after the first run).
-echo ">>> Building Docker image 'atlas' ..."
-docker build -t atlas .
+echo ">>> Building Docker image 'lambda-graphs' ..."
+docker build -t lambda-graphs .
 
 mkdir -p output
 
@@ -29,7 +29,7 @@ mkdir -p output
 generate_and_rename() {
     local graph="$1"   # cfg | dfg | ast
     echo ">>> Generating ${graph} for ${CODE_FILE} ..."
-    docker run --rm --user "$(id -u):$(id -g)" -v "$REPO_ROOT:/work" -w /work atlas \
+    lambda-graphs \
         --lang "$SRC_LANG" \
         --code-file "$CODE_FILE" \
         --graphs "$graph" \
@@ -54,7 +54,7 @@ generate_and_rename ast
 
 # AST with --collapsed: all variable occurrences collapsed into one node.
 echo ">>> Generating ast_collapsed for ${CODE_FILE} ..."
-docker run --rm --user "$(id -u):$(id -g)" -v "$REPO_ROOT:/work" -w /work atlas \
+lambda-graphs \
     --lang "$SRC_LANG" \
     --code-file "$CODE_FILE" \
     --graphs ast \
@@ -74,7 +74,7 @@ done
 
 # AST with --blacklisted "number_literal": number literal nodes removed.
 echo ">>> Generating ast_blacklisted for ${CODE_FILE} ..."
-docker run --rm --user "$(id -u):$(id -g)" -v "$REPO_ROOT:/work" -w /work atlas \
+lambda-graphs \
     --lang "$SRC_LANG" \
     --code-file "$CODE_FILE" \
     --graphs ast \

@@ -1,4 +1,4 @@
-"""CLI for ATLAS"""
+"""CLI for lambda-graphs"""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def main(
     debug: bool = typer.Option(False, help="Enables debug logs"),
 ):
     """
-    Atlas
+    lambda-graphs
 
     Generates, customizes and combines multiple source code representations (AST, CFG, DFG)
 

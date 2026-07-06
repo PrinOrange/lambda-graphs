@@ -14,11 +14,11 @@ cd "$REPO_ROOT"
 
 SRC_LANG="c"
 CODE_FOLDER="./examples/multi"
-BASE="multi"   # ATLAS names outputs after the folder name
+BASE="multi"   # lambda-graphs names outputs after the folder name
 
 # 1. Build the Docker image (cached after the first run).
-echo ">>> Building Docker image 'atlas' ..."
-docker build -t atlas .
+echo ">>> Building Docker image 'lambda-graphs' ..."
+docker build -t lambda-graphs .
 
 mkdir -p output
 
@@ -26,7 +26,7 @@ mkdir -p output
 generate_and_rename() {
     local graph="$1"   # cfg | dfg | ast
     echo ">>> Generating ${graph} for ${CODE_FOLDER} ..."
-    docker run --rm --user "$(id -u):$(id -g)" -v "$REPO_ROOT:/work" -w /work atlas \
+    lambda-graphs \
         --lang "$SRC_LANG" \
         --code-folder "$CODE_FOLDER" \
         --graphs "$graph" \

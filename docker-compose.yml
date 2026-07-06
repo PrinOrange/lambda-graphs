@@ -1,5 +1,5 @@
 services:
-  atlas:
+  lambda-graphs:
     build: .
     volumes:
       # Mount input files/folders directory
@@ -9,8 +9,8 @@ services:
       # Mount temp directory for merged source files
       - ./temp:/work/temp
       # Persist tree-sitter grammars between runs
-      - atlas-grammars:/tmp/atlas
+      - lambda-graphs-grammars:/tmp/lambda-graphs
     working_dir: /work
 
 volumes:
-  atlas-grammars:
+  lambda-graphs-grammars:

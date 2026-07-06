@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-LABEL maintainer="ATLAS Project"
-LABEL description="ATLAS - Tree Sitter Multi Codeview Generator"
+LABEL maintainer="lambda-graphs Project"
+LABEL description="lambda-graphs - Tree Sitter Multi Codeview Generator"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -21,8 +21,8 @@ COPY src/ ./src/
 RUN pip install --no-cache-dir .
 
 # Create directory for tree-sitter grammars
-RUN mkdir -p /tmp/atlas && chmod 777 /tmp/atlas
+RUN mkdir -p /tmp/lambda-graphs && chmod 777 /tmp/lambda-graphs
 
 # Set default command to show help
-ENTRYPOINT ["atlas"]
+ENTRYPOINT ["lambda-graphs"]
 CMD ["--help"]

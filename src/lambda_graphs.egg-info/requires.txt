@@ -1,0 +1,19 @@
+networkx==2.6.3
+tree-sitter>=0.22
+tree-sitter-c
+tree-sitter-cpp
+tree-sitter-java
+deepdiff>=7.0.0
+pydot==1.4.1
+typer>=0.9.0
+loguru==0.6.0
+
+[:python_version >= "3.12"]
+setuptools>=69.0
+
+[dev]
+tqdm
+pqdm
+loguru
+GitPython
+pandas

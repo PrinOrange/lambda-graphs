@@ -14,11 +14,11 @@ cd "$REPO_ROOT"
 
 SRC_LANG="cpp"
 CODE_FILE="./examples/single/test_single.cpp"
-BASE="test_single"   # ATLAS names outputs after the file stem
+BASE="test_single"   # lambda-graphs names outputs after the file stem
 
 # 1. Build the Docker image (cached after the first run).
-echo ">>> Building Docker image 'atlas' ..."
-docker build -t atlas .
+echo ">>> Building Docker image 'lambda-graphs' ..."
+docker build -t lambda-graphs .
 
 mkdir -p output
 
@@ -26,7 +26,7 @@ mkdir -p output
 generate_and_rename() {
     local graph="$1"   # cfg | dfg | ast
     echo ">>> Generating ${graph} for ${CODE_FILE} ..."
-    docker run --rm --user "$(id -u):$(id -g)" -v "$REPO_ROOT:/work" -w /work atlas \
+    lambda-graphs \
         --lang "$SRC_LANG" \
         --code-file "$CODE_FILE" \
         --graphs "$graph" \

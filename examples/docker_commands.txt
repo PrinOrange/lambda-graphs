@@ -1,15 +1,15 @@
 ================================================================================
-                        ATLAS Docker Usage Commands
+                        lambda-graphs Docker Usage Commands
 ================================================================================
 
 1. BUILD THE DOCKER IMAGE
 -------------------------
-docker build -t atlas .
+docker build -t lambda-graphs .
 
 
 2. TEST WITH --code-file (single file)
 --------------------------------------
-docker run --rm -v "$(pwd):/work" -w /work atlas \
+docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
     --lang cpp \
     --code-file ./examples/single/test_single.cpp \
     --graphs "cfg,dfg" \
@@ -18,7 +18,7 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
 
 3. TEST WITH --code-folder (multiple files)
 -------------------------------------------
-docker run --rm -v "$(pwd):/work" -w /work atlas \
+docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
     --lang c \
     --code-folder ./examples/multi \
     --combined-name "multi_file_example" \
@@ -32,7 +32,7 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
 
 GENERATE ONLY JSON OUTPUT:
 --------------------------
-docker run --rm -v "$(pwd):/work" -w /work atlas \
+docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
     --lang cpp \
     --code-file ./examples/single/test_single.cpp \
     --graphs cfg \
@@ -41,7 +41,7 @@ docker run --rm -v "$(pwd):/work" -w /work atlas \
 
 WITH COLLAPSED NODES AND DEBUG LOGGING:
 ---------------------------------------
-docker run --rm -v "$(pwd):/work" -w /work atlas \
+docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
     --lang cpp \
     --code-file ./examples/single/test_single.cpp \
     --graphs "dfg" \

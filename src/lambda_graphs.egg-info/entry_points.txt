@@ -1,0 +1,2 @@
+[console_scripts]
+lambda-graphs = lambda_graphs.cli:app

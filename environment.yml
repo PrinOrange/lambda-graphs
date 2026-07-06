@@ -1,4 +1,4 @@
-name: atlas
+name: lambda-graphs
 channels:
   - conda-forge
   - defaults
