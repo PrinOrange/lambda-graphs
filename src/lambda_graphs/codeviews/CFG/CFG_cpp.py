@@ -1057,10 +1057,27 @@ class CFGGraph_cpp(CFGGraph):
         return None
 
     def add_edge(self, src, dest, edge_type, additional_data=None):
-        """Add an edge to the CFG edge list with validation and deduplication"""
+        """Add an edge to the CFG edge list with validation and deduplication.
+
+        If *edge_type* contains a ``|`` suffix (e.g. ``"function_call|42"``),
+        the suffix is extracted into ``additional_data["call_id"]`` and the
+        edge type is stored cleanly (``"function_call"``).
+        """
         if src is None or dest is None:
             logger.error(f"Attempting to add edge with None: {src} -> {dest}")
             return
+
+        # Extract |suffix from edge_type into dedicated call_id attribute
+        if "|" in edge_type:
+            base_type, _, suffix = edge_type.partition("|")
+            if additional_data is None:
+                additional_data = {}
+            # Use call_id for numeric ids, call_info for string labels
+            try:
+                additional_data["call_id"] = int(suffix)
+            except ValueError:
+                additional_data["call_id"] = suffix
+            edge_type = base_type
 
         if additional_data:
             edge_tuple = (src, dest, edge_type, additional_data)

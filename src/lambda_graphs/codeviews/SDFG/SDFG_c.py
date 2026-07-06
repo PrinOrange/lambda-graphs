@@ -1976,6 +1976,11 @@ def dfg_c(properties, CFG_results):
     tree = parser.tree
 
     cfg_graph = copy.deepcopy(CFG_results.graph)
+    # Mark DFG nodes with distinct source / colour (overwrites the CFG defaults)
+    for nid in cfg_graph.nodes():
+        cfg_graph.nodes[nid]["source"] = "DFG"
+        cfg_graph.nodes[nid]["fillcolor"] = "#F5E0C6"
+        cfg_graph.nodes[nid]["color"] = "#C98A5A"
     node_list = CFG_results.node_list
 
     processed_edges = []

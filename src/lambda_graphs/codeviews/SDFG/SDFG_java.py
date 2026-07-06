@@ -931,6 +931,11 @@ def dfg_java(prop, CFG_results):
     additional_edges = []
     processed_edges = []
     cfg_graph = copy.deepcopy(CFG_results.graph)
+    # Mark DFG nodes with distinct source / colour (overwrites the CFG defaults)
+    for nid in cfg_graph.nodes():
+        cfg_graph.nodes[nid]["source"] = "DFG"
+        cfg_graph.nodes[nid]["fillcolor"] = "#F5E0C6"
+        cfg_graph.nodes[nid]["color"] = "#C98A5A"
 
     # Temperory edge adding logic when CFG is broken
     # 41 -> 57

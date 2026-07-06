@@ -119,7 +119,11 @@ class CFGGraph_java(CFGGraph):
         return new_list
 
     def add_edge(self, src_node, dest_node, edge_type, additional_data=None):
-        # current_node_list = list(map(lambda x: x[0], self.CFG_node_list))
+        """Add an edge to the CFG edge list with deduplication.
+
+        If *edge_type* contains a ``|`` suffix, the suffix is extracted
+        into ``additional_data["call_id"]`` and the edge type is stored cleanly.
+        """
         if src_node == None or dest_node == None:
             logger.error(
                 "Node where adding edge is attempted is none {}->{}",
@@ -127,9 +131,19 @@ class CFGGraph_java(CFGGraph):
                 dest_node,
             )
             logger.warning(traceback.format_stack()[-2])
-            # print(src_node, dest_node, edge_type)
             raise NotImplementedError
         else:
+            # Extract |suffix from edge_type into dedicated call_id attribute
+            if "|" in edge_type:
+                base_type, _, suffix = edge_type.partition("|")
+                if additional_data is None:
+                    additional_data = {}
+                try:
+                    additional_data["call_id"] = int(suffix)
+                except ValueError:
+                    additional_data["call_id"] = suffix
+                edge_type = base_type
+
             for src, dest, ty, *_ in self.CFG_edge_list:
                 if src == src_node and dest == dest_node:
                     return

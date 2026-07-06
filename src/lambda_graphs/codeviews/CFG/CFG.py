@@ -15,7 +15,16 @@ class CFGGraph:
         G = nx.MultiDiGraph()
         for node in CFG_node_list:
             label = str(node[1] + 1) + "_ " + node[2]
-            G.add_node(node[0], label=label, type_label=node[3])
+            G.add_node(
+                node[0],
+                label=label,
+                type_label=node[3],
+                shape="box",
+                style="rounded, filled",
+                fillcolor="#D6E5F5",
+                color="#5A8EC9",
+                source="CFG",
+            )
         for edge in CFG_edge_list:
             additional_data = None
             if len(edge) == 4:
@@ -28,6 +37,11 @@ class CFGGraph:
                 normal_label = "virtual_call"
             else:
                 normal_label = edge[2]
+
+            # Append call_id to visual label so it shows in DOT/PNG/SVG
+            if additional_data and "call_id" in additional_data:
+                normal_label = f"{normal_label}|{additional_data['call_id']}"
+
             G.add_edge(
                 edge[0],
                 edge[1],
