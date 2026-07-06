@@ -41,7 +41,9 @@ def main(
         help="Custom name for combined file (without extension), e.g., 'myproject'",
     ),
     graphs: str = typer.Option("ast,dfg", help="ast, cfg, dfg"),
-    output: str = typer.Option("dot", help="all/json/dot/svg (dot generates png as well)"),
+    output: str = typer.Option(
+        "dot", help="all/json/dot/svg (dot generates png as well)"
+    ),
     blacklisted: str = typer.Option("", help="Nodes to be removed from the AST"),
     collapsed: bool = typer.Option(
         False, help="Collapses all occurrences of a variable into one node"

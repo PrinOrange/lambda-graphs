@@ -13,7 +13,7 @@ Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbe
 - **DFG** (Data Flow Graph)
 - **Combined graphs** (any combination of the above)
 
-`lambda-graphs` is designed to be easily extendable to various programming languages. This is primarily because we use [tree-sitter](https://tree-sitter.github.io/tree-sitter/), a highly efficient incremental parser that supports over 40 languages.
+`lambda-graphs` provides both a CLI and a **Python API** so you can generate graphs programmatically without shelling out. It is designed to be easily extendable to various programming languages. This is primarily because we use [tree-sitter](https://tree-sitter.github.io/tree-sitter/), a highly efficient incremental parser that supports over 40 languages.
 
 ---
 ## Setup
@@ -182,7 +182,7 @@ lambda-graphs --lang "c" --code "int main() { int x = 5; return x; }" --graphs "
 
 | Option | Description |
 |--------|-------------|
-| `--output` | Output format: `json`, `dot`, or `all` (dot also generates PNG). Default: `dot` |
+| `--output` | Output format: `json`, `dot`, `svg`, or `all` (dot generates PNG; svg generates SVG). Default: `dot` |
 | `--collapsed` | Collapse duplicate variable nodes into a single node in AST |
 | `--last-def` | Add last definition information to DFG edges (shows where variables were last defined) |
 | `--blacklisted` | Comma-separated list of AST node types to exclude from the graph |
@@ -211,6 +211,53 @@ lambda-graphs --lang "c" --code-file test.c --graphs "dfg" --last-def
 # Exclude specific AST node types
 lambda-graphs --lang "c" --code-file test.c --graphs "ast,cfg" --blacklisted "comment,string_literal"
 ```
+
+### Option 4: Using the Python API
+
+You can also use `lambda-graphs` as a library to get graph objects directly (no file I/O):
+
+```python
+from lambda_graphs import generate
+
+# Generate graphs from a code string
+result = generate("cpp", code="int main() { int x = 5; return x; }",
+                  graphs=["ast", "cfg", "dfg"])
+
+# Each graph is a networkx.MultiDiGraph
+print(result.ast.nodes(data=True))
+print(result.cfg.nodes(data=True))
+print(result.dfg.nodes(data=True))
+print(result.combined.nodes(data=True))
+
+# With options
+result = generate(
+    "cpp",
+    code="...",
+    graphs=["ast", "dfg"],
+    collapsed=True,                     # collapse duplicate variable nodes
+    last_def=True,                      # add last-def info to DFG edges
+    blacklisted=["comment", "number_literal"],  # exclude AST node types
+)
+
+# From a file
+result = generate("cpp", code_file="./test.cpp", graphs=["cfg", "dfg"])
+
+# From a folder (auto-merges multi-file projects)
+result = generate("c", code_folder="./project/src", graphs=["cfg", "dfg"])
+
+# Export to disk
+result.to_json("output.json")
+result.to_dot("output.dot", png=True, svg=True)
+```
+
+The returned `GraphsResult` object has four attributes:
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `.ast` | `nx.MultiDiGraph` or `None` | AST graph |
+| `.cfg` | `nx.MultiDiGraph` or `None` | CFG graph |
+| `.dfg` | `nx.MultiDiGraph` or `None` | DFG graph |
+| `.combined` | `nx.MultiDiGraph` | Combined multi-view graph |
 
 ---
 ## Limitations
@@ -336,7 +383,7 @@ The code is structured in the following way:
    - `DFG/` - Data Flow Graph (language-agnostic)
    - `combined_graph/` - Combines multiple codeviews into a single graph
 
-4. **CLI Entry Point** (`src/lambda_graphs/cli.py`): The CLI implementation using Typer. The drivers can also be directly imported and used as a Python package.
+4. **CLI & API Entry Points** (`src/lambda_graphs/cli.py`, `__init__.py`): The CLI is implemented with Typer. The `generate()` function in `__init__.py` exposes the same functionality as a Python API.
 
 5. **Node Definitions** (`src/lambda_graphs/utils/`): `c_nodes.py` and `cpp_nodes.py` define AST node type categorizations used throughout the codebase.
 

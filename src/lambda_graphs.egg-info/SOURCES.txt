@@ -43,6 +43,7 @@ src/lambda_graphs/utils/__init__.py
 src/lambda_graphs/utils/c_nodes.py
 src/lambda_graphs/utils/cpp_nodes.py
 src/lambda_graphs/utils/java_nodes.py
+src/lambda_graphs/utils/language.py
 src/lambda_graphs/utils/multi_file_merger.py
 src/lambda_graphs/utils/postprocessor.py
 src/lambda_graphs/utils/preprocessor.py
