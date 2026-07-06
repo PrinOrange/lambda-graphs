@@ -7,7 +7,9 @@ from atlas import get_language_map
 
 def get_commit_hash(directory):
     try:
-        result = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=directory, capture_output=True, text=True)
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=directory, capture_output=True, text=True
+        )
         if result.returncode == 0:
             commit_hash = result.stdout.strip()
             return commit_hash
@@ -48,17 +50,16 @@ class CustomParser:
         if root_node.is_named:
             current_node_id = AST_id[0]
             AST_id[0] += 1
-            AST_index[
-                (root_node.start_point, root_node.end_point, root_node.type)
-            ] = current_node_id
+            AST_index[(root_node.start_point, root_node.end_point, root_node.type)] = (
+                current_node_id
+            )
             for child in root_node.children:
                 if child.is_named:
                     self.create_AST_id(child, AST_index, AST_id)
             return
 
     def parse(self):
-        parser = Parser()
-        parser.set_language(self.language_map[self.src_language])
+        parser = Parser(self.language_map[self.src_language])
         tree = parser.parse(bytes(self.src_code, "utf8"))
         self.root_node = tree.root_node
         self.create_AST_id(self.root_node, self.index, [5])

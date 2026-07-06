@@ -5,6 +5,7 @@ build/
 /data
 src/atlas.egg-info/
 dist/
+output/
 /tests/data/RANDOM/dfg_rosetta
 tests/**/*.dot
 tests/**/*.png

@@ -133,7 +133,9 @@ class CFGGraph_cpp(CFGGraph):
             node = node.parent
         return None
 
-    def resolve_template_specialization(self, base_class_name, template_args, method_name):
+    def resolve_template_specialization(
+        self, base_class_name, template_args, method_name
+    ):
         """
         Resolve which template specialization matches the given template arguments.
         Returns the function_id of the matching specialization's method, or None if not found.
@@ -156,7 +158,9 @@ class CFGGraph_cpp(CFGGraph):
 
         candidates = []
 
-        for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+        for ((class_name, fn_name), fn_sig), fn_id in self.records[
+            "function_list"
+        ].items():
             if fn_name != method_name:
                 continue
 
@@ -187,7 +191,10 @@ class CFGGraph_cpp(CFGGraph):
             for child in parent.children:
                 if child.type == "template_parameter_list":
                     for param in child.named_children:
-                        if param.type in ["type_parameter_declaration", "parameter_declaration"]:
+                        if param.type in [
+                            "type_parameter_declaration",
+                            "parameter_declaration",
+                        ]:
                             template_params.append(param)
 
             is_full_specialization = len(template_params) == 0
@@ -198,7 +205,7 @@ class CFGGraph_cpp(CFGGraph):
                 if child.type == "template_argument_list":
                     template_specs = []
                     for arg in child.named_children:
-                        template_specs.append(arg.text.decode('utf-8'))
+                        template_specs.append(arg.text.decode("utf-8"))
                     break
 
             if not template_specs:
@@ -299,17 +306,21 @@ class CFGGraph_cpp(CFGGraph):
 
                 for child in class_node.children:
                     if child.type == "type_identifier":
-                        class_name = child.text.decode('utf-8')
+                        class_name = child.text.decode("utf-8")
                     elif child.type == "template_argument_list":
                         for arg in child.named_children:
-                            template_args.append(arg.text.decode('utf-8'))
+                            template_args.append(arg.text.decode("utf-8"))
 
                 fn_name = None
                 fn_sig = []
 
                 declarator = None
                 for child in node.children:
-                    if child.type in ["function_declarator", "pointer_declarator", "reference_declarator"]:
+                    if child.type in [
+                        "function_declarator",
+                        "pointer_declarator",
+                        "reference_declarator",
+                    ]:
                         declarator = child
                         break
 
@@ -320,7 +331,7 @@ class CFGGraph_cpp(CFGGraph):
                         nonlocal fn_name, fn_sig, is_variadic
                         for gc in decl_node.children:
                             if gc.type in ["identifier", "field_identifier"]:
-                                fn_name = gc.text.decode('utf-8')
+                                fn_name = gc.text.decode("utf-8")
                             elif gc.type == "parameter_list":
                                 for param in gc.children:
                                     if param.type == "parameter_declaration":
@@ -330,7 +341,11 @@ class CFGGraph_cpp(CFGGraph):
                                     elif param.type == "...":
                                         is_variadic = True
                                         fn_sig.append("...")
-                            elif gc.type in ["function_declarator", "pointer_declarator", "reference_declarator"]:
+                            elif gc.type in [
+                                "function_declarator",
+                                "pointer_declarator",
+                                "reference_declarator",
+                            ]:
                                 extract_from_declarator(gc)
 
                     extract_from_declarator(declarator)
@@ -366,12 +381,12 @@ class CFGGraph_cpp(CFGGraph):
         if not param_type_node:
             return None
 
-        base_type = param_type_node.text.decode('utf-8')
+        base_type = param_type_node.text.decode("utf-8")
 
         param_declarator = param_node.child_by_field_name("declarator")
         if param_declarator:
             if param_declarator.type == "reference_declarator":
-                declarator_text = param_declarator.text.decode('utf-8')
+                declarator_text = param_declarator.text.decode("utf-8")
                 if declarator_text.startswith("&&"):
                     return base_type + "&&"
                 else:
@@ -398,7 +413,7 @@ class CFGGraph_cpp(CFGGraph):
             if child.type == "base_class_clause":
                 for subchild in child.children:
                     if subchild.type == "type_identifier":
-                        base_class_name = subchild.text.decode('utf-8')
+                        base_class_name = subchild.text.decode("utf-8")
                         base_classes.add(base_class_name)
                 break
 
@@ -450,7 +465,9 @@ class CFGGraph_cpp(CFGGraph):
         """
         namespaces = set()
 
-        for ((ns_or_class, fn_name), _), _ in self.records.get("function_list", {}).items():
+        for ((ns_or_class, fn_name), _), _ in self.records.get(
+            "function_list", {}
+        ).items():
             if fn_name == class_name:
                 if ns_or_class == class_name:
                     namespaces.add(None)
@@ -459,7 +476,9 @@ class CFGGraph_cpp(CFGGraph):
 
         return namespaces
 
-    def get_explicit_base_constructors_in_initializer_list(self, constructor_node, base_class_names):
+    def get_explicit_base_constructors_in_initializer_list(
+        self, constructor_node, base_class_names
+    ):
         """
         Check which base class constructors are explicitly called in the constructor's
         field_initializer_list.
@@ -489,12 +508,12 @@ class CFGGraph_cpp(CFGGraph):
             if child.type == "field_initializer":
                 for subchild in child.children:
                     if subchild.type == "field_identifier":
-                        field_name = subchild.text.decode('utf-8')
+                        field_name = subchild.text.decode("utf-8")
                         if field_name in base_class_names:
                             explicit_base_calls.add(field_name)
                         break
                     elif subchild.type == "qualified_identifier":
-                        field_name = subchild.text.decode('utf-8')
+                        field_name = subchild.text.decode("utf-8")
                         if field_name in base_class_names:
                             explicit_base_calls.add(field_name)
                         simple_name = field_name.split("::")[-1]
@@ -517,7 +536,7 @@ class CFGGraph_cpp(CFGGraph):
             "continue_statement",
             "return_statement",
             "goto_statement",
-            "throw_statement"
+            "throw_statement",
         ]
 
         return node.type in jump_types
@@ -550,7 +569,7 @@ class CFGGraph_cpp(CFGGraph):
             if n.type == "call_expression":
                 func = n.child_by_field_name("function")
                 if func and func.type == "identifier":
-                    var_name = func.text.decode('utf-8')
+                    var_name = func.text.decode("utf-8")
                     if var_name in self.records.get("lambda_variables", {}):
                         return True
                     containing_func = self.get_containing_function(node)
@@ -561,15 +580,24 @@ class CFGGraph_cpp(CFGGraph):
                             if parameters:
                                 for param in parameters.named_children:
                                     if param.type == "parameter_declaration":
-                                        param_decl = param.child_by_field_name("declarator")
+                                        param_decl = param.child_by_field_name(
+                                            "declarator"
+                                        )
                                         if param_decl:
                                             param_name = None
                                             if param_decl.type == "identifier":
-                                                param_name = param_decl.text.decode('utf-8')
-                                            elif param_decl.type == "reference_declarator":
+                                                param_name = param_decl.text.decode(
+                                                    "utf-8"
+                                                )
+                                            elif (
+                                                param_decl.type
+                                                == "reference_declarator"
+                                            ):
                                                 for child in param_decl.named_children:
                                                     if child.type == "identifier":
-                                                        param_name = child.text.decode('utf-8')
+                                                        param_name = child.text.decode(
+                                                            "utf-8"
+                                                        )
                                                         break
                                             if param_name == var_name:
                                                 return True
@@ -589,7 +617,7 @@ class CFGGraph_cpp(CFGGraph):
         type_string: detailed type information
         """
         if throw_node.type != "throw_statement":
-            return ('unknown', None)
+            return ("unknown", None)
 
         thrown_expr = None
         for child in throw_node.children:
@@ -598,28 +626,28 @@ class CFGGraph_cpp(CFGGraph):
                 break
 
         if thrown_expr is None:
-            return ('rethrow', None)
+            return ("rethrow", None)
 
         if thrown_expr.type == "number_literal":
-            literal_text = thrown_expr.text.decode('utf-8')
-            if 'f' in literal_text.lower() or '.' in literal_text:
-                return ('float', 'float')
+            literal_text = thrown_expr.text.decode("utf-8")
+            if "f" in literal_text.lower() or "." in literal_text:
+                return ("float", "float")
             else:
-                return ('int', 'int')
+                return ("int", "int")
 
         elif thrown_expr.type == "string_literal":
-            return ('string', 'const char*')
+            return ("string", "const char*")
 
         elif thrown_expr.type == "call_expression":
             func_node = thrown_expr.child_by_field_name("function")
             if func_node:
-                func_text = func_node.text.decode('utf-8')
-                return ('class', func_text)
+                func_text = func_node.text.decode("utf-8")
+                return ("class", func_text)
 
         elif thrown_expr.type == "identifier":
-            return ('variable', thrown_expr.text.decode('utf-8'))
+            return ("variable", thrown_expr.text.decode("utf-8"))
 
-        return ('unknown', thrown_expr.text.decode('utf-8') if thrown_expr else None)
+        return ("unknown", thrown_expr.text.decode("utf-8") if thrown_expr else None)
 
     def extract_catch_parameter_type(self, catch_node):
         """
@@ -630,7 +658,7 @@ class CFGGraph_cpp(CFGGraph):
         type_string: detailed type information
         """
         if catch_node.type != "catch_clause":
-            return ('unknown', None)
+            return ("unknown", None)
 
         param_list = None
         for child in catch_node.children:
@@ -639,36 +667,36 @@ class CFGGraph_cpp(CFGGraph):
                 break
 
         if param_list is None:
-            return ('catch_all', '...')
+            return ("catch_all", "...")
 
-        param_text = param_list.text.decode('utf-8')
+        param_text = param_list.text.decode("utf-8")
         if param_text.startswith("(") and param_text.endswith(")"):
             param_text = param_text[1:-1].strip()
 
         if param_text == "...":
-            return ('catch_all', '...')
+            return ("catch_all", "...")
 
         parts = param_text.split()
         if not parts:
-            return ('catch_all', '...')
+            return ("catch_all", "...")
 
-        if 'int' in param_text and 'point' not in param_text.lower():
-            return ('int', 'int')
-        elif 'float' in param_text or 'double' in param_text:
-            return ('float', 'float')
-        elif 'char*' in param_text or 'char *' in param_text:
-            return ('string', 'const char*')
-        elif 'exception' in param_text.lower() or '::' in param_text:
+        if "int" in param_text and "point" not in param_text.lower():
+            return ("int", "int")
+        elif "float" in param_text or "double" in param_text:
+            return ("float", "float")
+        elif "char*" in param_text or "char *" in param_text:
+            return ("string", "const char*")
+        elif "exception" in param_text.lower() or "::" in param_text:
             type_part = param_text
-            type_part = type_part.replace('const', '').replace('&', '').strip()
+            type_part = type_part.replace("const", "").replace("&", "").strip()
             words = type_part.split()
             if len(words) > 1:
-                class_name = ' '.join(words[:-1])
+                class_name = " ".join(words[:-1])
             else:
                 class_name = words[0]
-            return ('class', class_name.strip())
+            return ("class", class_name.strip())
 
-        return ('class', param_text)
+        return ("class", param_text)
 
     def exception_type_matches(self, thrown_type, catch_type):
         """
@@ -687,27 +715,29 @@ class CFGGraph_cpp(CFGGraph):
         thrown_cat, thrown_str = thrown_type
         catch_cat, catch_str = catch_type
 
-        if catch_cat == 'catch_all':
+        if catch_cat == "catch_all":
             return True
 
-        if thrown_cat == 'rethrow':
+        if thrown_cat == "rethrow":
             return False
 
         if thrown_cat == catch_cat:
-            if thrown_cat in ['int', 'float', 'string']:
+            if thrown_cat in ["int", "float", "string"]:
                 return True
 
-            if thrown_cat == 'class':
-                thrown_normalized = thrown_str.replace(' ', '') if thrown_str else ''
-                catch_normalized = catch_str.replace(' ', '') if catch_str else ''
+            if thrown_cat == "class":
+                thrown_normalized = thrown_str.replace(" ", "") if thrown_str else ""
+                catch_normalized = catch_str.replace(" ", "") if catch_str else ""
 
                 if thrown_normalized == catch_normalized:
                     return True
 
-                if catch_normalized in ['std::exception', 'exception']:
-                    if thrown_normalized.startswith('std::'):
-                        if ('error' in thrown_normalized.lower() or
-                            'exception' in thrown_normalized.lower()):
+                if catch_normalized in ["std::exception", "exception"]:
+                    if thrown_normalized.startswith("std::"):
+                        if (
+                            "error" in thrown_normalized.lower()
+                            or "exception" in thrown_normalized.lower()
+                        ):
                             return True
 
         return False
@@ -757,8 +787,13 @@ class CFGGraph_cpp(CFGGraph):
             if parent.type == "function_definition":
                 if (parent.start_point, parent.end_point, parent.type) in node_list:
                     fn_index = self.get_index(parent)
-                    if self.records.get("implicit_return_map") and fn_index in self.records["implicit_return_map"]:
-                        implicit_return_id = self.records["implicit_return_map"][fn_index]
+                    if (
+                        self.records.get("implicit_return_map")
+                        and fn_index in self.records["implicit_return_map"]
+                    ):
+                        implicit_return_id = self.records["implicit_return_map"][
+                            fn_index
+                        ]
                         return (implicit_return_id, None)
                 return (2, None)
 
@@ -778,7 +813,10 @@ class CFGGraph_cpp(CFGGraph):
             current_node = parent
             next_node = current_node.next_named_sibling
 
-        if next_node.type == "compound_statement" and len(list(next_node.named_children)) == 0:
+        if (
+            next_node.type == "compound_statement"
+            and len(list(next_node.named_children)) == 0
+        ):
             current_node = next_node
             return self.get_next_index(current_node, node_list)
 
@@ -786,10 +824,15 @@ class CFGGraph_cpp(CFGGraph):
             children_list = list(next_node.named_children)
             if children_list:
                 first_child = children_list[0]
-                if (first_child.start_point, first_child.end_point, first_child.type) in node_list:
+                if (
+                    first_child.start_point,
+                    first_child.end_point,
+                    first_child.type,
+                ) in node_list:
                     return (self.get_index(first_child), first_child)
 
         if next_node.type == "field_declaration":
+
             def find_first_in_wrapper(wrapper_node):
                 for child in wrapper_node.named_children:
                     if (child.start_point, child.end_point, child.type) in node_list:
@@ -803,8 +846,16 @@ class CFGGraph_cpp(CFGGraph):
             if result:
                 return result
 
-        if next_node.type in ["preproc_include", "preproc_def", "preproc_function_def", "preproc_call",
-                              "preproc_if", "preproc_ifdef", "preproc_elif", "preproc_else"]:
+        if next_node.type in [
+            "preproc_include",
+            "preproc_def",
+            "preproc_function_def",
+            "preproc_call",
+            "preproc_if",
+            "preproc_ifdef",
+            "preproc_elif",
+            "preproc_else",
+        ]:
             return self.get_next_index(next_node, node_list)
 
         if (next_node.start_point, next_node.end_point, next_node.type) in node_list:
@@ -828,13 +879,24 @@ class CFGGraph_cpp(CFGGraph):
             if children and children[-1] == node:
                 grandparent = parent.parent
                 if grandparent and grandparent.type in [
-                    "if_statement", "while_statement", "for_statement",
-                    "for_range_loop", "do_statement", "else_clause",
-                    "catch_clause", "try_statement"
+                    "if_statement",
+                    "while_statement",
+                    "for_statement",
+                    "for_range_loop",
+                    "do_statement",
+                    "else_clause",
+                    "catch_clause",
+                    "try_statement",
                 ]:
                     return True
 
-        if parent.type in ["if_statement", "while_statement", "for_statement", "for_range_loop", "do_statement"]:
+        if parent.type in [
+            "if_statement",
+            "while_statement",
+            "for_statement",
+            "for_range_loop",
+            "do_statement",
+        ]:
             consequence = parent.child_by_field_name("consequence")
             body = parent.child_by_field_name("body")
 
@@ -933,8 +995,8 @@ class CFGGraph_cpp(CFGGraph):
             if child.type == "attribute_declaration":
                 for attr_child in child.named_children:
                     if attr_child.type == "attribute":
-                        attr_text = attr_child.text.decode('utf-8')
-                        attr_name = attr_text.split('(')[0].strip()
+                        attr_text = attr_child.text.decode("utf-8")
+                        attr_name = attr_text.split("(")[0].strip()
                         attributes.append(attr_name)
         return attributes
 
@@ -1037,18 +1099,25 @@ class CFGGraph_cpp(CFGGraph):
             last_stmt_id = None
 
             for key, node in node_list.items():
-                if (node.start_point >= scope_start and
-                    node.end_point <= scope_end and
-                    node != scope_node):
+                if (
+                    node.start_point >= scope_start
+                    and node.end_point <= scope_end
+                    and node != scope_node
+                ):
                     if node.type in self.statement_types["node_list_type"]:
-                        if last_stmt_node is None or node.start_point > last_stmt_node.start_point:
+                        if (
+                            last_stmt_node is None
+                            or node.start_point > last_stmt_node.start_point
+                        ):
                             last_stmt_node = node
                             last_stmt_id = self.get_index(node)
 
             if not last_stmt_node or not last_stmt_id:
                 continue
 
-            next_after_scope_id, next_after_scope = self.get_next_index(scope_node, node_list)
+            next_after_scope_id, next_after_scope = self.get_next_index(
+                scope_node, node_list
+            )
 
             is_return_at_scope_exit = last_stmt_node.type == "return_statement"
 
@@ -1056,10 +1125,16 @@ class CFGGraph_cpp(CFGGraph):
                 parent = scope_node.parent
                 while parent:
                     if parent.type == "function_definition":
-                        if (parent.start_point, parent.end_point, parent.type) in node_list:
+                        if (
+                            parent.start_point,
+                            parent.end_point,
+                            parent.type,
+                        ) in node_list:
                             fn_id = self.get_index(parent)
                             if fn_id in self.records.get("implicit_return_map", {}):
-                                next_after_scope_id = self.records["implicit_return_map"][fn_id]
+                                next_after_scope_id = self.records[
+                                    "implicit_return_map"
+                                ][fn_id]
                             elif is_return_at_scope_exit:
                                 next_after_scope_id = None
                             else:
@@ -1071,11 +1146,19 @@ class CFGGraph_cpp(CFGGraph):
 
             if next_after_scope_id != 2:
                 destructor_ids = []
-                for var_name, class_name, namespace_prefix, decl_id, order in objects_reversed:
+                for (
+                    var_name,
+                    class_name,
+                    namespace_prefix,
+                    decl_id,
+                    order,
+                ) in objects_reversed:
                     destructor_name = f"~{class_name}"
                     destructor_id = None
 
-                    for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get("function_list", {}).items():
+                    for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get(
+                        "function_list", {}
+                    ).items():
                         if fn_name == destructor_name:
                             if namespace_prefix:
                                 if fn_class_name == namespace_prefix:
@@ -1092,29 +1175,48 @@ class CFGGraph_cpp(CFGGraph):
                 if destructor_ids:
 
                     if is_return_at_scope_exit:
-                        first_var_name, first_class_name, first_dest_id = destructor_ids[0]
-                        self.add_edge(last_stmt_id, first_dest_id, "scope_exit_destructor")
+                        first_var_name, first_class_name, first_dest_id = (
+                            destructor_ids[0]
+                        )
+                        self.add_edge(
+                            last_stmt_id, first_dest_id, "scope_exit_destructor"
+                        )
                     else:
-                        first_var_name, first_class_name, first_dest_id = destructor_ids[0]
-                        self.add_edge(last_stmt_id, first_dest_id, "scope_exit_destructor")
+                        first_var_name, first_class_name, first_dest_id = (
+                            destructor_ids[0]
+                        )
+                        self.add_edge(
+                            last_stmt_id, first_dest_id, "scope_exit_destructor"
+                        )
 
                     for i in range(len(destructor_ids)):
                         var_name, class_name, curr_dest_id = destructor_ids[i]
 
-                        implicit_return_id = self.records.get("implicit_return_map", {}).get(curr_dest_id)
+                        implicit_return_id = self.records.get(
+                            "implicit_return_map", {}
+                        ).get(curr_dest_id)
 
                         if not implicit_return_id:
                             continue
                         if i < len(destructor_ids) - 1:
-                            next_var_name, next_class_name, next_dest_id = destructor_ids[i + 1]
+                            next_var_name, next_class_name, next_dest_id = (
+                                destructor_ids[i + 1]
+                            )
                             edge_label = f"destructor_chain|{var_name}"
                             self.add_edge(implicit_return_id, next_dest_id, edge_label)
                         else:
                             edge_label = f"scope_destructor_return|{var_name}"
                             if next_after_scope_id is not None:
-                                if not hasattr(self, '_pending_destructor_returns'):
+                                if not hasattr(self, "_pending_destructor_returns"):
                                     self._pending_destructor_returns = []
-                                self._pending_destructor_returns.append((implicit_return_id, next_after_scope_id, edge_label, class_name))
+                                self._pending_destructor_returns.append(
+                                    (
+                                        implicit_return_id,
+                                        next_after_scope_id,
+                                        edge_label,
+                                        class_name,
+                                    )
+                                )
 
     def chain_base_class_destructors(self):
         """
@@ -1135,21 +1237,29 @@ class CFGGraph_cpp(CFGGraph):
         if "extends" in self.records and self.records["extends"]:
             for class_name, base_classes in self.records["extends"].items():
                 if base_classes:
-                    inheritance_map[class_name] = base_classes if isinstance(base_classes, list) else [base_classes]
+                    inheritance_map[class_name] = (
+                        base_classes
+                        if isinstance(base_classes, list)
+                        else [base_classes]
+                    )
 
         if not inheritance_map:
+
             def extract_inheritance(node):
                 if node.type in ["class_specifier", "struct_specifier"]:
                     name_node = node.child_by_field_name("name")
                     if name_node:
-                        class_name = name_node.text.decode('utf-8')
+                        class_name = name_node.text.decode("utf-8")
 
                         base_classes = []
                         for child in node.children:
                             if child.type == "base_class_clause":
                                 for subchild in child.children:
-                                    if subchild.type in ["type_identifier", "qualified_identifier"]:
-                                        base_name = subchild.text.decode('utf-8')
+                                    if subchild.type in [
+                                        "type_identifier",
+                                        "qualified_identifier",
+                                    ]:
+                                        base_name = subchild.text.decode("utf-8")
                                         base_classes.append(base_name)
 
                         if base_classes:
@@ -1160,7 +1270,9 @@ class CFGGraph_cpp(CFGGraph):
 
             extract_inheritance(self.root_node)
 
-        for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get("function_list", {}).items():
+        for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get(
+            "function_list", {}
+        ).items():
             if not fn_name.startswith("~"):
                 continue
 
@@ -1183,11 +1295,19 @@ class CFGGraph_cpp(CFGGraph):
 
                 candidates = []
                 index_to_key = {v: k for k, v in self.index.items()}
-                for ((base_fn_class, base_fn_name), base_fn_sig), base_fn_id in self.records.get("function_list", {}).items():
+                for (
+                    (base_fn_class, base_fn_name),
+                    base_fn_sig,
+                ), base_fn_id in self.records.get("function_list", {}).items():
                     is_match = False
-                    if base_fn_class == base_class and base_fn_name == base_destructor_name:
+                    if (
+                        base_fn_class == base_class
+                        and base_fn_name == base_destructor_name
+                    ):
                         is_match = True
-                    elif base_fn_class in [None, "None"] and base_fn_name.startswith(f"{base_class}::~"):
+                    elif base_fn_class in [None, "None"] and base_fn_name.startswith(
+                        f"{base_class}::~"
+                    ):
                         is_match = True
 
                     if is_match:
@@ -1211,18 +1331,33 @@ class CFGGraph_cpp(CFGGraph):
                     base_destructor_id = candidates[0][0]
 
                 if base_destructor_id:
-                    self.add_edge(implicit_return_id, base_destructor_id, "base_destructor_call")
+                    self.add_edge(
+                        implicit_return_id, base_destructor_id, "base_destructor_call"
+                    )
 
-                    base_implicit_return_id = self.records.get("implicit_return_map", {}).get(base_destructor_id)
+                    base_implicit_return_id = self.records.get(
+                        "implicit_return_map", {}
+                    ).get(base_destructor_id)
                     if base_implicit_return_id:
-                        if hasattr(self, '_pending_destructor_returns'):
-                            for pend_src, pend_dest, pend_label, pend_class in list(self._pending_destructor_returns):
+                        if hasattr(self, "_pending_destructor_returns"):
+                            for pend_src, pend_dest, pend_label, pend_class in list(
+                                self._pending_destructor_returns
+                            ):
                                 if pend_src == implicit_return_id:
-                                    self.add_edge(base_implicit_return_id, pend_dest, pend_label)
-                                    self._pending_destructor_returns.remove((pend_src, pend_dest, pend_label, pend_class))
+                                    self.add_edge(
+                                        base_implicit_return_id, pend_dest, pend_label
+                                    )
+                                    self._pending_destructor_returns.remove(
+                                        (pend_src, pend_dest, pend_label, pend_class)
+                                    )
 
-        if hasattr(self, '_pending_destructor_returns'):
-            for pend_src, pend_dest, pend_label, pend_class in self._pending_destructor_returns:
+        if hasattr(self, "_pending_destructor_returns"):
+            for (
+                pend_src,
+                pend_dest,
+                pend_label,
+                pend_class,
+            ) in self._pending_destructor_returns:
                 self.add_edge(pend_src, pend_dest, pend_label)
 
     def extract_inheritance_info(self, root_node):
@@ -1231,18 +1366,22 @@ class CFGGraph_cpp(CFGGraph):
         Populates self.records["extends"] with class_name -> [base_classes] mapping.
         Should be called early in CFG construction before constructor/destructor processing.
         """
+
         def extract_from_node(node):
             if node.type in ["class_specifier", "struct_specifier"]:
                 name_node = node.child_by_field_name("name")
                 if name_node:
-                    class_name = name_node.text.decode('utf-8')
+                    class_name = name_node.text.decode("utf-8")
 
                     base_classes = []
                     for child in node.children:
                         if child.type == "base_class_clause":
                             for subchild in child.children:
-                                if subchild.type in ["type_identifier", "qualified_identifier"]:
-                                    base_name = subchild.text.decode('utf-8')
+                                if subchild.type in [
+                                    "type_identifier",
+                                    "qualified_identifier",
+                                ]:
+                                    base_name = subchild.text.decode("utf-8")
                                     base_classes.append(base_name)
 
                     if base_classes:
@@ -1272,14 +1411,23 @@ class CFGGraph_cpp(CFGGraph):
                 qualified_scope = None
 
                 if function_node.type == "identifier":
-                    func_name = function_node.text.decode('utf-8')
+                    func_name = function_node.text.decode("utf-8")
 
-                    if func_name in {'noexcept', 'sizeof', 'alignof', 'decltype', 'typeid',
-                                     'static_assert', 'requires'}:
+                    if func_name in {
+                        "noexcept",
+                        "sizeof",
+                        "alignof",
+                        "decltype",
+                        "typeid",
+                        "static_assert",
+                        "requires",
+                    }:
                         return
 
                     is_constructor = False
-                    for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get("function_list", {}).items():
+                    for ((fn_class_name, fn_name), fn_sig), fn_id in self.records.get(
+                        "function_list", {}
+                    ).items():
                         if fn_class_name == func_name and fn_name == func_name:
                             is_constructor = True
                             break
@@ -1287,10 +1435,22 @@ class CFGGraph_cpp(CFGGraph):
                     if is_constructor:
                         class_name = func_name
                         parent_stmt = root_node
-                        while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+                        while (
+                            parent_stmt
+                            and parent_stmt.type
+                            not in self.statement_types["node_list_type"]
+                        ):
                             parent_stmt = parent_stmt.parent
 
-                        if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+                        if (
+                            parent_stmt
+                            and (
+                                parent_stmt.start_point,
+                                parent_stmt.end_point,
+                                parent_stmt.type,
+                            )
+                            in node_list
+                        ):
                             parent_index = self.get_index(parent_stmt)
                             call_index = self.get_index(root_node)
 
@@ -1300,7 +1460,9 @@ class CFGGraph_cpp(CFGGraph):
                             key = (class_name, signature)
                             if key not in self.records["constructor_calls"]:
                                 self.records["constructor_calls"][key] = []
-                            self.records["constructor_calls"][key].append((call_index, parent_index))
+                            self.records["constructor_calls"][key].append(
+                                (call_index, parent_index)
+                            )
 
                         for child in root_node.children:
                             self.function_list(child, node_list)
@@ -1309,10 +1471,10 @@ class CFGGraph_cpp(CFGGraph):
                 elif function_node.type == "field_expression":
                     field = function_node.child_by_field_name("field")
                     if field:
-                        func_name = field.text.decode('utf-8')
+                        func_name = field.text.decode("utf-8")
 
                 elif function_node.type == "qualified_identifier":
-                    full_name = function_node.text.decode('utf-8')
+                    full_name = function_node.text.decode("utf-8")
                     parts = full_name.split("::")
                     if len(parts) >= 2:
                         func_name = parts[-1]
@@ -1320,9 +1482,13 @@ class CFGGraph_cpp(CFGGraph):
 
                         scope_parts = qualified_scope.split("::")
                         if scope_parts[0] in self.records.get("namespace_aliases", {}):
-                            actual_namespace = self.records["namespace_aliases"][scope_parts[0]]
+                            actual_namespace = self.records["namespace_aliases"][
+                                scope_parts[0]
+                            ]
                             if len(scope_parts) > 1:
-                                qualified_scope = actual_namespace + "::" + "::".join(scope_parts[1:])
+                                qualified_scope = (
+                                    actual_namespace + "::" + "::".join(scope_parts[1:])
+                                )
                             else:
                                 qualified_scope = actual_namespace
                     else:
@@ -1333,7 +1499,7 @@ class CFGGraph_cpp(CFGGraph):
                     is_indirect_call = True
                     argument = function_node.child_by_field_name("argument")
                     if argument and argument.type == "identifier":
-                        pointer_var = argument.text.decode('utf-8')
+                        pointer_var = argument.text.decode("utf-8")
 
                 elif function_node.type == "template_function":
                     identifier_node = None
@@ -1343,13 +1509,24 @@ class CFGGraph_cpp(CFGGraph):
                             break
 
                     if identifier_node:
-                        func_name = identifier_node.text.decode('utf-8')
+                        func_name = identifier_node.text.decode("utf-8")
 
                 parent_stmt = root_node
-                while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+                while (
+                    parent_stmt
+                    and parent_stmt.type not in self.statement_types["node_list_type"]
+                ):
                     parent_stmt = parent_stmt.parent
 
-                if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+                if (
+                    parent_stmt
+                    and (
+                        parent_stmt.start_point,
+                        parent_stmt.end_point,
+                        parent_stmt.type,
+                    )
+                    in node_list
+                ):
                     parent_index = self.get_index(parent_stmt)
                     call_index = self.get_index(function_node)
 
@@ -1362,28 +1539,38 @@ class CFGGraph_cpp(CFGGraph):
                         key = (pointer_var, signature)
                         if key not in self.records["indirect_calls"]:
                             self.records["indirect_calls"][key] = []
-                        self.records["indirect_calls"][key].append((call_index, parent_index))
+                        self.records["indirect_calls"][key].append(
+                            (call_index, parent_index)
+                        )
                     elif func_name:
                         if function_node.type == "field_expression":
                             object_name = None
-                            argument_node = function_node.child_by_field_name("argument")
+                            argument_node = function_node.child_by_field_name(
+                                "argument"
+                            )
                             if argument_node and argument_node.type == "identifier":
-                                object_name = argument_node.text.decode('utf-8')
+                                object_name = argument_node.text.decode("utf-8")
 
                             key = (func_name, signature)
                             if key not in self.records["method_calls"]:
                                 self.records["method_calls"][key] = []
-                            self.records["method_calls"][key].append((call_index, parent_index, object_name))
+                            self.records["method_calls"][key].append(
+                                (call_index, parent_index, object_name)
+                            )
                         elif qualified_scope:
                             key = (qualified_scope, func_name, signature)
                             if key not in self.records["static_method_calls"]:
                                 self.records["static_method_calls"][key] = []
-                            self.records["static_method_calls"][key].append((call_index, parent_index))
+                            self.records["static_method_calls"][key].append(
+                                (call_index, parent_index)
+                            )
                         else:
                             key = (func_name, signature)
                             if key not in self.records["function_calls"]:
                                 self.records["function_calls"][key] = []
-                            self.records["function_calls"][key].append((call_index, parent_index))
+                            self.records["function_calls"][key].append(
+                                (call_index, parent_index)
+                            )
 
         elif root_node.type == "declaration":
             type_node = root_node.child_by_field_name("type")
@@ -1394,9 +1581,9 @@ class CFGGraph_cpp(CFGGraph):
             namespace_prefix = None
 
             if type_node and type_node.type == "type_identifier":
-                class_name = type_node.text.decode('utf-8')
+                class_name = type_node.text.decode("utf-8")
             elif type_node and type_node.type == "qualified_identifier":
-                full_name = type_node.text.decode('utf-8')
+                full_name = type_node.text.decode("utf-8")
                 parts = full_name.split("::")
                 class_name = parts[-1]
                 if len(parts) > 1:
@@ -1404,9 +1591,9 @@ class CFGGraph_cpp(CFGGraph):
             elif type_node and type_node.type == "template_type":
                 for child in type_node.named_children:
                     if child.type == "type_identifier":
-                        class_name = child.text.decode('utf-8')
+                        class_name = child.text.decode("utf-8")
                     elif child.type == "qualified_identifier":
-                        full_name = child.text.decode('utf-8')
+                        full_name = child.text.decode("utf-8")
                         parts = full_name.split("::")
                         class_name = parts[-1]
                         if len(parts) > 1:
@@ -1414,41 +1601,101 @@ class CFGGraph_cpp(CFGGraph):
                     elif child.type == "template_argument_list":
                         template_args = []
                         for arg in child.named_children:
-                            arg_text = arg.text.decode('utf-8')
+                            arg_text = arg.text.decode("utf-8")
                             template_args.append(arg_text)
                         template_args = tuple(template_args)
 
             c_types_no_constructors = {
-                'va_list', 'FILE', 'size_t', 'ptrdiff_t', 'time_t', 'clock_t',
-                'jmp_buf', 'sig_atomic_t', 'wchar_t', 'mbstate_t', 'fpos_t',
-                'div_t', 'ldiv_t', 'lldiv_t', 'imaxdiv_t', 'tm',
-                'vector', 'list', 'deque', 'queue', 'priority_queue', 'stack',
-                'set', 'multiset', 'map', 'multimap',
-                'unordered_set', 'unordered_multiset', 'unordered_map', 'unordered_multimap',
-                'string', 'wstring', 'u16string', 'u32string',
-                'pair', 'tuple', 'array', 'bitset',
-                'unique_ptr', 'shared_ptr', 'weak_ptr',
-                'optional', 'variant', 'any',
-                'function', 'reference_wrapper',
-                'istream', 'ostream', 'iostream', 'ifstream', 'ofstream', 'fstream',
-                'istringstream', 'ostringstream', 'stringstream',
-                'cin', 'cout', 'cerr', 'clog',
+                "va_list",
+                "FILE",
+                "size_t",
+                "ptrdiff_t",
+                "time_t",
+                "clock_t",
+                "jmp_buf",
+                "sig_atomic_t",
+                "wchar_t",
+                "mbstate_t",
+                "fpos_t",
+                "div_t",
+                "ldiv_t",
+                "lldiv_t",
+                "imaxdiv_t",
+                "tm",
+                "vector",
+                "list",
+                "deque",
+                "queue",
+                "priority_queue",
+                "stack",
+                "set",
+                "multiset",
+                "map",
+                "multimap",
+                "unordered_set",
+                "unordered_multiset",
+                "unordered_map",
+                "unordered_multimap",
+                "string",
+                "wstring",
+                "u16string",
+                "u32string",
+                "pair",
+                "tuple",
+                "array",
+                "bitset",
+                "unique_ptr",
+                "shared_ptr",
+                "weak_ptr",
+                "optional",
+                "variant",
+                "any",
+                "function",
+                "reference_wrapper",
+                "istream",
+                "ostream",
+                "iostream",
+                "ifstream",
+                "ofstream",
+                "fstream",
+                "istringstream",
+                "ostringstream",
+                "stringstream",
+                "cin",
+                "cout",
+                "cerr",
+                "clog",
             }
 
             if class_name and class_name not in c_types_no_constructors:
 
                 parent_stmt = root_node
-                while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+                while (
+                    parent_stmt
+                    and parent_stmt.type not in self.statement_types["node_list_type"]
+                ):
                     parent_stmt = parent_stmt.parent
 
-                if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+                if (
+                    parent_stmt
+                    and (
+                        parent_stmt.start_point,
+                        parent_stmt.end_point,
+                        parent_stmt.type,
+                    )
+                    in node_list
+                ):
                     parent_index = self.get_index(parent_stmt)
                     call_index = parent_index
 
                     scope_node = root_node.parent
                     while scope_node:
                         if scope_node.type == "compound_statement":
-                            scope_key = (scope_node.start_point, scope_node.end_point, scope_node.type)
+                            scope_key = (
+                                scope_node.start_point,
+                                scope_node.end_point,
+                                scope_node.type,
+                            )
                             if scope_key not in self.scope_objects:
                                 self.scope_objects[scope_key] = []
                             if scope_key not in self.scope_nodes:
@@ -1466,34 +1713,58 @@ class CFGGraph_cpp(CFGGraph):
                             is_pointer_declarator = False
                             if declarator:
                                 if declarator.type == "identifier":
-                                    var_name = declarator.text.decode('utf-8')
+                                    var_name = declarator.text.decode("utf-8")
                                 elif declarator.type == "pointer_declarator":
                                     is_pointer_declarator = True
                                     ptr_var_name = None
                                     for ptr_child in declarator.children:
                                         if ptr_child.type == "identifier":
-                                            ptr_var_name = ptr_child.text.decode('utf-8')
+                                            ptr_var_name = ptr_child.text.decode(
+                                                "utf-8"
+                                            )
                                             break
 
                                     if ptr_var_name:
                                         value_node = child.child_by_field_name("value")
-                                        if value_node and value_node.type == "pointer_expression":
+                                        if (
+                                            value_node
+                                            and value_node.type == "pointer_expression"
+                                        ):
                                             is_address_of = False
                                             target_var = None
                                             for pe_child in value_node.children:
                                                 if pe_child.type == "&":
                                                     is_address_of = True
-                                                elif pe_child.type == "identifier" and is_address_of:
-                                                    target_var = pe_child.text.decode('utf-8')
+                                                elif (
+                                                    pe_child.type == "identifier"
+                                                    and is_address_of
+                                                ):
+                                                    target_var = pe_child.text.decode(
+                                                        "utf-8"
+                                                    )
                                                     break
 
                                             if is_address_of and target_var:
-                                                for scope_key, obj_list in self.scope_objects.items():
+                                                for (
+                                                    scope_key,
+                                                    obj_list,
+                                                ) in self.scope_objects.items():
                                                     for obj_info in obj_list:
-                                                        if len(obj_info) >= 3 and obj_info[0] == target_var:
+                                                        if (
+                                                            len(obj_info) >= 3
+                                                            and obj_info[0]
+                                                            == target_var
+                                                        ):
                                                             concrete_class = obj_info[1]
-                                                            concrete_namespace = obj_info[2]
-                                                            self.pointer_targets[ptr_var_name] = (concrete_class, concrete_namespace)
+                                                            concrete_namespace = (
+                                                                obj_info[2]
+                                                            )
+                                                            self.pointer_targets[
+                                                                ptr_var_name
+                                                            ] = (
+                                                                concrete_class,
+                                                                concrete_namespace,
+                                                            )
                                                             break
 
                             if is_pointer_declarator:
@@ -1509,15 +1780,20 @@ class CFGGraph_cpp(CFGGraph):
                                 if subchild.type == "argument_list":
                                     args_node = subchild
                                     break
-                                elif subchild.text.decode('utf-8') == "=":
+                                elif subchild.text.decode("utf-8") == "=":
                                     has_initializer = True
-                                elif has_initializer and subchild.type == "call_expression":
+                                elif (
+                                    has_initializer
+                                    and subchild.type == "call_expression"
+                                ):
                                     func_node = subchild.child_by_field_name("function")
                                     if func_node:
-                                        func_text = func_node.text.decode('utf-8')
+                                        func_text = func_node.text.decode("utf-8")
                                         if "move" in func_text:
                                             is_move = True
-                                            args = subchild.child_by_field_name("arguments")
+                                            args = subchild.child_by_field_name(
+                                                "arguments"
+                                            )
                                             if args and args.named_child_count > 0:
                                                 moved_arg = args.named_children[0]
                                                 signature = (f"{class_name}&&",)
@@ -1535,17 +1811,23 @@ class CFGGraph_cpp(CFGGraph):
                                 key = ((namespace_prefix, class_name), signature)
                                 if key not in self.records["constructor_calls"]:
                                     self.records["constructor_calls"][key] = []
-                                self.records["constructor_calls"][key].append((call_index, parent_index))
+                                self.records["constructor_calls"][key].append(
+                                    (call_index, parent_index)
+                                )
                             elif is_move:
                                 key = ((namespace_prefix, class_name), signature)
                                 if key not in self.records["constructor_calls"]:
                                     self.records["constructor_calls"][key] = []
-                                self.records["constructor_calls"][key].append((call_index, parent_index))
+                                self.records["constructor_calls"][key].append(
+                                    (call_index, parent_index)
+                                )
                             elif is_copy:
                                 key = ((namespace_prefix, class_name), signature)
                                 if key not in self.records["constructor_calls"]:
                                     self.records["constructor_calls"][key] = []
-                                self.records["constructor_calls"][key].append((call_index, parent_index))
+                                self.records["constructor_calls"][key].append(
+                                    (call_index, parent_index)
+                                )
                             elif is_function_return_init:
                                 call_expr = None
                                 for subchild in child.children:
@@ -1554,22 +1836,30 @@ class CFGGraph_cpp(CFGGraph):
                                         break
 
                                 if call_expr:
-                                    func_node = call_expr.child_by_field_name("function")
+                                    func_node = call_expr.child_by_field_name(
+                                        "function"
+                                    )
                                     if func_node and func_node.type == "identifier":
-                                        func_name = func_node.text.decode('utf-8')
-                                        args_node = call_expr.child_by_field_name("arguments")
+                                        func_name = func_node.text.decode("utf-8")
+                                        args_node = call_expr.child_by_field_name(
+                                            "arguments"
+                                        )
                                         signature = self.get_call_signature(args_node)
                                         key = (func_name, signature)
                                         func_call_index = self.get_index(call_expr)
                                         if key not in self.records["function_calls"]:
                                             self.records["function_calls"][key] = []
-                                        self.records["function_calls"][key].append((func_call_index, parent_index))
+                                        self.records["function_calls"][key].append(
+                                            (func_call_index, parent_index)
+                                        )
                             else:
                                 signature = tuple()
                                 key = ((namespace_prefix, class_name), signature)
                                 if key not in self.records["constructor_calls"]:
                                     self.records["constructor_calls"][key] = []
-                                self.records["constructor_calls"][key].append((call_index, parent_index))
+                                self.records["constructor_calls"][key].append(
+                                    (call_index, parent_index)
+                                )
 
                     if not has_init_declarator:
                         is_pointer_declaration = False
@@ -1581,23 +1871,41 @@ class CFGGraph_cpp(CFGGraph):
                         if not is_pointer_declaration:
                             for child in root_node.children:
                                 if child.type == "identifier":
-                                    var_name = child.text.decode('utf-8')
+                                    var_name = child.text.decode("utf-8")
                                     break
 
                             signature = tuple()
                             key = ((namespace_prefix, class_name), signature)
                             if key not in self.records["constructor_calls"]:
                                 self.records["constructor_calls"][key] = []
-                            self.records["constructor_calls"][key].append((call_index, parent_index))
+                            self.records["constructor_calls"][key].append(
+                                (call_index, parent_index)
+                            )
 
                     if var_name and scope_node:
-                        scope_key = (scope_node.start_point, scope_node.end_point, scope_node.type)
+                        scope_key = (
+                            scope_node.start_point,
+                            scope_node.end_point,
+                            scope_node.type,
+                        )
                         order = len(self.scope_objects.get(scope_key, []))
-                        self.scope_objects[scope_key].append((var_name, class_name, namespace_prefix, parent_index, order))
+                        self.scope_objects[scope_key].append(
+                            (
+                                var_name,
+                                class_name,
+                                namespace_prefix,
+                                parent_index,
+                                order,
+                            )
+                        )
                         self.object_scope_map[var_name] = scope_key
 
                     if var_name and template_args:
-                        self.template_instantiations[var_name] = (class_name, template_args, None)
+                        self.template_instantiations[var_name] = (
+                            class_name,
+                            template_args,
+                            None,
+                        )
 
                     return
 
@@ -1606,7 +1914,7 @@ class CFGGraph_cpp(CFGGraph):
             if type_node:
                 class_name = None
                 if type_node.type == "type_identifier":
-                    class_name = type_node.text.decode('utf-8')
+                    class_name = type_node.text.decode("utf-8")
 
                 if class_name:
                     parent = root_node.parent
@@ -1620,16 +1928,18 @@ class CFGGraph_cpp(CFGGraph):
                                         if declarator.type == "pointer_declarator":
                                             for subchild in declarator.children:
                                                 if subchild.type == "identifier":
-                                                    var_name = subchild.text.decode('utf-8')
+                                                    var_name = subchild.text.decode(
+                                                        "utf-8"
+                                                    )
                                                     break
                                         elif declarator.type == "identifier":
-                                            var_name = declarator.text.decode('utf-8')
+                                            var_name = declarator.text.decode("utf-8")
                                     break
                             break
                         elif parent.type == "assignment_expression":
                             left = parent.child_by_field_name("left")
                             if left and left.type == "identifier":
-                                var_name = left.text.decode('utf-8')
+                                var_name = left.text.decode("utf-8")
                             break
                         parent = parent.parent
 
@@ -1637,14 +1947,30 @@ class CFGGraph_cpp(CFGGraph):
                         self.runtime_types[var_name] = class_name
 
                     parent_stmt = root_node
-                    while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+                    while (
+                        parent_stmt
+                        and parent_stmt.type
+                        not in self.statement_types["node_list_type"]
+                    ):
                         parent_stmt = parent_stmt.parent
 
-                    if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+                    if (
+                        parent_stmt
+                        and (
+                            parent_stmt.start_point,
+                            parent_stmt.end_point,
+                            parent_stmt.type,
+                        )
+                        in node_list
+                    ):
                         parent_index = self.get_index(parent_stmt)
 
                         call_index = parent_index
-                        if (root_node.start_point, root_node.end_point, root_node.type) in node_list:
+                        if (
+                            root_node.start_point,
+                            root_node.end_point,
+                            root_node.type,
+                        ) in node_list:
                             call_index = self.get_index(root_node)
 
                         args_node = root_node.child_by_field_name("arguments")
@@ -1657,7 +1983,9 @@ class CFGGraph_cpp(CFGGraph):
                         key = (class_name, signature)
                         if key not in self.records["constructor_calls"]:
                             self.records["constructor_calls"][key] = []
-                        self.records["constructor_calls"][key].append((call_index, parent_index))
+                        self.records["constructor_calls"][key].append(
+                            (call_index, parent_index)
+                        )
 
         delete_expr_node = None
         if root_node.type == "delete_expression":
@@ -1677,36 +2005,64 @@ class CFGGraph_cpp(CFGGraph):
                 var_name = None
 
                 if arg_node.type == "identifier":
-                    arg_text = arg_node.text.decode('utf-8')
+                    arg_text = arg_node.text.decode("utf-8")
                     var_name = arg_text
 
                     if var_name in self.runtime_types:
                         class_name = self.runtime_types[var_name]
                     else:
-                        arg_key = (arg_node.start_point, arg_node.end_point, arg_node.type)
+                        arg_key = (
+                            arg_node.start_point,
+                            arg_node.end_point,
+                            arg_node.type,
+                        )
                         if arg_key in self.index:
                             arg_index = self.index[arg_key]
                             if arg_index in self.declaration_map:
                                 decl_index = self.declaration_map[arg_index]
                                 if decl_index in self.symbol_table.get("data_type", {}):
-                                    data_type = self.symbol_table["data_type"][decl_index]
-                                    class_name = data_type.replace("*", "").replace("&", "").strip()
+                                    data_type = self.symbol_table["data_type"][
+                                        decl_index
+                                    ]
+                                    class_name = (
+                                        data_type.replace("*", "")
+                                        .replace("&", "")
+                                        .strip()
+                                    )
 
                 if class_name:
                     parent_stmt = root_node
-                    while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+                    while (
+                        parent_stmt
+                        and parent_stmt.type
+                        not in self.statement_types["node_list_type"]
+                    ):
                         parent_stmt = parent_stmt.parent
 
-                    if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+                    if (
+                        parent_stmt
+                        and (
+                            parent_stmt.start_point,
+                            parent_stmt.end_point,
+                            parent_stmt.type,
+                        )
+                        in node_list
+                    ):
                         parent_index = self.get_index(parent_stmt)
 
                         call_index = parent_index
-                        if (root_node.start_point, root_node.end_point, root_node.type) in node_list:
+                        if (
+                            root_node.start_point,
+                            root_node.end_point,
+                            root_node.type,
+                        ) in node_list:
                             call_index = self.get_index(root_node)
 
                         if class_name not in self.records["destructor_calls"]:
                             self.records["destructor_calls"][class_name] = []
-                        self.records["destructor_calls"][class_name].append((call_index, parent_index))
+                        self.records["destructor_calls"][class_name].append(
+                            (call_index, parent_index)
+                        )
 
         elif root_node.type == "function_definition":
             field_init_list = None
@@ -1716,7 +2072,11 @@ class CFGGraph_cpp(CFGGraph):
                     break
 
             if field_init_list:
-                if (root_node.start_point, root_node.end_point, root_node.type) in node_list:
+                if (
+                    root_node.start_point,
+                    root_node.end_point,
+                    root_node.type,
+                ) in node_list:
                     constructor_index = self.get_index(root_node)
 
                     containing_class = self.get_containing_class(root_node)
@@ -1730,28 +2090,49 @@ class CFGGraph_cpp(CFGGraph):
 
                                 for subchild in child.children:
                                     if subchild.type == "field_identifier":
-                                        field_id = subchild.text.decode('utf-8')
+                                        field_id = subchild.text.decode("utf-8")
                                     elif subchild.type == "argument_list":
                                         args_node = subchild
 
                                 if field_id and field_id in base_class_names:
-                                    signature = self.get_call_signature(args_node) if args_node else tuple()
+                                    signature = (
+                                        self.get_call_signature(args_node)
+                                        if args_node
+                                        else tuple()
+                                    )
                                     key = (field_id, signature)
 
                                     call_id = constructor_index
-                                    if (child.start_point, child.end_point, child.type) in node_list:
+                                    if (
+                                        child.start_point,
+                                        child.end_point,
+                                        child.type,
+                                    ) in node_list:
                                         call_id = self.get_index(child)
 
                                     if key not in self.records["constructor_calls"]:
                                         self.records["constructor_calls"][key] = []
-                                    self.records["constructor_calls"][key].append((call_id, constructor_index))
+                                    self.records["constructor_calls"][key].append(
+                                        (call_id, constructor_index)
+                                    )
 
-        elif root_node.type in ["binary_expression", "assignment_expression", "update_expression"]:
+        elif root_node.type in [
+            "binary_expression",
+            "assignment_expression",
+            "update_expression",
+        ]:
             parent_stmt = root_node
-            while parent_stmt and parent_stmt.type not in self.statement_types["node_list_type"]:
+            while (
+                parent_stmt
+                and parent_stmt.type not in self.statement_types["node_list_type"]
+            ):
                 parent_stmt = parent_stmt.parent
 
-            if parent_stmt and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type) in node_list:
+            if (
+                parent_stmt
+                and (parent_stmt.start_point, parent_stmt.end_point, parent_stmt.type)
+                in node_list
+            ):
                 parent_index = self.get_index(parent_stmt)
                 call_index = self.get_index(root_node)
 
@@ -1764,7 +2145,26 @@ class CFGGraph_cpp(CFGGraph):
                     left_operand = root_node.child_by_field_name("left")
                     right_operand = root_node.child_by_field_name("right")
                     for child in root_node.children:
-                        if child.type in ["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "<<", ">>", "&", "|", "^", "&&", "||"]:
+                        if child.type in [
+                            "+",
+                            "-",
+                            "*",
+                            "/",
+                            "%",
+                            "==",
+                            "!=",
+                            "<",
+                            ">",
+                            "<=",
+                            ">=",
+                            "<<",
+                            ">>",
+                            "&",
+                            "|",
+                            "^",
+                            "&&",
+                            "||",
+                        ]:
                             operator_symbol = child.type
                             break
 
@@ -1798,7 +2198,9 @@ class CFGGraph_cpp(CFGGraph):
                     key = (operator_symbol, is_member_operator)
                     if key not in self.records["operator_calls"]:
                         self.records["operator_calls"][key] = []
-                    self.records["operator_calls"][key].append((call_index, parent_index, operand_type))
+                    self.records["operator_calls"][key].append(
+                        (call_index, parent_index, operand_type)
+                    )
 
         for child in root_node.children:
             self.function_list(child, node_list)
@@ -1812,21 +2214,30 @@ class CFGGraph_cpp(CFGGraph):
             return None
 
         if operand_node.type == "identifier":
-            node_key = (operand_node.start_point, operand_node.end_point, operand_node.type)
+            node_key = (
+                operand_node.start_point,
+                operand_node.end_point,
+                operand_node.type,
+            )
             if node_key in self.index:
                 node_id = self.index[node_key]
-                if hasattr(self.parser, 'symbol_table') and isinstance(self.parser.symbol_table, dict):
-                    data_type = self.parser.symbol_table.get('data_type', {})
+                if hasattr(self.parser, "symbol_table") and isinstance(
+                    self.parser.symbol_table, dict
+                ):
+                    data_type = self.parser.symbol_table.get("data_type", {})
 
                     if node_id in data_type:
                         return data_type[node_id]
 
-                    if hasattr(self.parser, 'declaration_map') and node_id in self.parser.declaration_map:
+                    if (
+                        hasattr(self.parser, "declaration_map")
+                        and node_id in self.parser.declaration_map
+                    ):
                         decl_id = self.parser.declaration_map[node_id]
                         if decl_id in data_type:
                             return data_type[decl_id]
 
-            var_name = operand_node.text.decode('utf-8')
+            var_name = operand_node.text.decode("utf-8")
             return var_name
 
         elif operand_node.type == "field_expression":
@@ -1840,7 +2251,7 @@ class CFGGraph_cpp(CFGGraph):
                 return self.get_operand_type(argument)
 
         elif operand_node.type == "qualified_identifier":
-            return operand_node.text.decode('utf-8')
+            return operand_node.text.decode("utf-8")
 
         elif operand_node.type == "parenthesized_expression":
             for child in operand_node.children:
@@ -1860,7 +2271,7 @@ class CFGGraph_cpp(CFGGraph):
                                 class_name_node = child
                                 break
                         if class_name_node:
-                            return class_name_node.text.decode('utf-8')
+                            return class_name_node.text.decode("utf-8")
                     return None
 
                 base_type = self.get_operand_type(argument)
@@ -1877,7 +2288,7 @@ class CFGGraph_cpp(CFGGraph):
                         class_name_node = child
                         break
                 if class_name_node:
-                    return class_name_node.text.decode('utf-8') + "*"
+                    return class_name_node.text.decode("utf-8") + "*"
             return None
 
         return None
@@ -1920,11 +2331,15 @@ class CFGGraph_cpp(CFGGraph):
         if len(type_clean) == 1 and type_clean.isupper():
             return True
 
-        if type_clean.startswith('_T') and len(type_clean) <= 4:
+        if type_clean.startswith("_T") and len(type_clean) <= 4:
             return True
 
-        if type_clean.startswith('T') and len(type_clean) <= 10 and type_clean[0].isupper():
-            common_types = {'Table', 'Tree', 'Time', 'Token', 'Type', 'Text', 'Tuple'}
+        if (
+            type_clean.startswith("T")
+            and len(type_clean) <= 10
+            and type_clean[0].isupper()
+        ):
+            common_types = {"Table", "Tree", "Time", "Token", "Type", "Text", "Tuple"}
             if type_clean not in common_types:
                 return True
 
@@ -1957,7 +2372,9 @@ class CFGGraph_cpp(CFGGraph):
             if len(call_sig) < fixed_param_count:
                 return False
 
-            params_to_check = zip(call_sig[:fixed_param_count], func_sig[:fixed_param_count])
+            params_to_check = zip(
+                call_sig[:fixed_param_count], func_sig[:fixed_param_count]
+            )
         else:
             if len(call_sig) != len(func_sig):
                 return False
@@ -1977,26 +2394,30 @@ class CFGGraph_cpp(CFGGraph):
             call_type_clean = call_type.strip()
             func_type_clean = func_type.strip()
 
-            if call_type_clean.endswith('&') and not call_type_clean.endswith('&&'):
+            if call_type_clean.endswith("&") and not call_type_clean.endswith("&&"):
                 base_call_type = call_type_clean[:-1].strip()
-                base_call_type_no_const = base_call_type.replace('const', '').strip()
-                func_type_no_const = func_type_clean.replace('const', '').strip()
+                base_call_type_no_const = base_call_type.replace("const", "").strip()
+                func_type_no_const = func_type_clean.replace("const", "").strip()
                 if base_call_type_no_const == func_type_no_const:
                     continue
 
-            if 'const' in call_type_clean and call_type_clean.endswith('&'):
-                base_call_type = call_type_clean.replace('const', '').replace('&', '').strip()
-                func_type_no_const = func_type_clean.replace('const', '').strip()
+            if "const" in call_type_clean and call_type_clean.endswith("&"):
+                base_call_type = (
+                    call_type_clean.replace("const", "").replace("&", "").strip()
+                )
+                func_type_no_const = func_type_clean.replace("const", "").strip()
                 if base_call_type == func_type_no_const:
                     continue
 
-            if '*' in call_type_clean or '*' in func_type_clean:
-                call_type_no_const = call_type_clean.replace('const', '').strip()
-                func_type_no_const = func_type_clean.replace('const', '').strip()
+            if "*" in call_type_clean or "*" in func_type_clean:
+                call_type_no_const = call_type_clean.replace("const", "").strip()
+                func_type_no_const = func_type_clean.replace("const", "").strip()
                 if call_type_no_const == func_type_no_const:
                     continue
 
-            if ('char*' in call_type_clean or 'char *' in call_type_clean) and 'string' in func_type_clean:
+            if (
+                "char*" in call_type_clean or "char *" in call_type_clean
+            ) and "string" in func_type_clean:
                 continue
 
             return False
@@ -2023,14 +2444,14 @@ class CFGGraph_cpp(CFGGraph):
             function_node = arg_node.child_by_field_name("function")
 
             if function_node:
-                func_text = function_node.text.decode('utf-8')
+                func_text = function_node.text.decode("utf-8")
 
                 if func_text in ["std::move", "move"]:
                     args_node = arg_node.child_by_field_name("arguments")
                     if args_node and len(args_node.named_children) > 0:
                         inner_arg = args_node.named_children[0]
                         base_type = self.get_argument_type(inner_arg)
-                        base_type = base_type.rstrip('&').rstrip()
+                        base_type = base_type.rstrip("&").rstrip()
                         return base_type + "&&"
 
                 elif func_text in ["std::forward", "forward"] or "forward" in func_text:
@@ -2039,7 +2460,7 @@ class CFGGraph_cpp(CFGGraph):
                             if child.type == "template_argument_list":
                                 if len(child.named_children) > 0:
                                     template_arg = child.named_children[0]
-                                    return template_arg.text.decode('utf-8')
+                                    return template_arg.text.decode("utf-8")
 
                     args_node = arg_node.child_by_field_name("arguments")
                     if args_node and len(args_node.named_children) > 0:
@@ -2079,11 +2500,15 @@ class CFGGraph_cpp(CFGGraph):
                                                 break
 
                         if not is_array:
-                            var_name = arg_node.text.decode('utf-8')
+                            var_name = arg_node.text.decode("utf-8")
+
                             def find_array_declaration(node, var_name):
                                 if node.type == "array_declarator":
                                     for child in node.children:
-                                        if child.type == "identifier" and child.text.decode('utf-8') == var_name:
+                                        if (
+                                            child.type == "identifier"
+                                            and child.text.decode("utf-8") == var_name
+                                        ):
                                             return True
                                         if find_array_declaration(child, var_name):
                                             return True
@@ -2092,7 +2517,9 @@ class CFGGraph_cpp(CFGGraph):
                                         return True
                                 return False
 
-                            if self.root_node and find_array_declaration(self.root_node, var_name):
+                            if self.root_node and find_array_declaration(
+                                self.root_node, var_name
+                            ):
                                 is_array = True
 
                         if is_array:
@@ -2108,9 +2535,9 @@ class CFGGraph_cpp(CFGGraph):
             return "unknown"
 
         elif node_type == "number_literal":
-            text = arg_node.text.decode('utf-8').lower()
-            if '.' in text or 'e' in text:
-                return "float" if text.endswith('f') else "double"
+            text = arg_node.text.decode("utf-8").lower()
+            if "." in text or "e" in text:
+                return "float" if text.endswith("f") else "double"
             else:
                 return "int"
 
@@ -2139,27 +2566,27 @@ class CFGGraph_cpp(CFGGraph):
 
             if operator == "&" and operand:
                 base_type = self.get_argument_type(operand)
-                base_type = base_type.rstrip('&').rstrip()
+                base_type = base_type.rstrip("&").rstrip()
                 return base_type + "*"
             elif operator == "*" and operand:
                 base_type = self.get_argument_type(operand)
                 if base_type.endswith("*"):
                     return base_type[:-1].rstrip() + "&"
                 else:
-                    return base_type.rstrip('&').rstrip() + "&"
+                    return base_type.rstrip("&").rstrip() + "&"
             else:
                 for child in arg_node.named_children:
                     base_type = self.get_argument_type(child)
                     if base_type.endswith("*"):
                         return base_type[:-1].rstrip() + "&"
                     else:
-                        return base_type.rstrip('&').rstrip() + "&"
+                        return base_type.rstrip("&").rstrip() + "&"
 
         elif node_type == "subscript_expression":
             argument = arg_node.child_by_field_name("argument")
             if argument:
                 base_type = self.get_argument_type(argument)
-                base_type = base_type.rstrip('&').rstrip()
+                base_type = base_type.rstrip("&").rstrip()
                 if base_type.endswith("*"):
                     element_type = base_type[:-1].rstrip()
                     return element_type + "&"
@@ -2243,16 +2670,19 @@ class CFGGraph_cpp(CFGGraph):
             alias_name = None
             for child in root_node.children:
                 if child.type == "namespace_identifier":
-                    alias_name = child.text.decode('utf-8')
+                    alias_name = child.text.decode("utf-8")
                     break
 
             actual_namespace = None
             for child in root_node.children:
                 if child.type == "nested_namespace_specifier":
-                    actual_namespace = child.text.decode('utf-8')
+                    actual_namespace = child.text.decode("utf-8")
                     break
-                elif child.type == "namespace_identifier" and alias_name != child.text.decode('utf-8'):
-                    actual_namespace = child.text.decode('utf-8')
+                elif (
+                    child.type == "namespace_identifier"
+                    and alias_name != child.text.decode("utf-8")
+                ):
+                    actual_namespace = child.text.decode("utf-8")
                     break
 
             if alias_name and actual_namespace:
@@ -2278,20 +2708,25 @@ class CFGGraph_cpp(CFGGraph):
                 function_name = None
 
                 if left.type == "identifier":
-                    pointer_var = left.text.decode('utf-8')
+                    pointer_var = left.text.decode("utf-8")
 
                 if right.type == "identifier":
-                    function_name = right.text.decode('utf-8')
+                    function_name = right.text.decode("utf-8")
                 elif right.type == "pointer_expression":
                     arg = right.child_by_field_name("argument")
                     if arg and arg.type == "identifier":
-                        function_name = arg.text.decode('utf-8')
+                        function_name = arg.text.decode("utf-8")
 
                 if pointer_var and function_name:
                     if pointer_var not in self.records["function_pointer_assignments"]:
                         self.records["function_pointer_assignments"][pointer_var] = []
-                    if function_name not in self.records["function_pointer_assignments"][pointer_var]:
-                        self.records["function_pointer_assignments"][pointer_var].append(function_name)
+                    if (
+                        function_name
+                        not in self.records["function_pointer_assignments"][pointer_var]
+                    ):
+                        self.records["function_pointer_assignments"][
+                            pointer_var
+                        ].append(function_name)
 
         elif root_node.type == "init_declarator":
             declarator = root_node.child_by_field_name("declarator")
@@ -2306,7 +2741,7 @@ class CFGGraph_cpp(CFGGraph):
                     if node.type == "array_declarator":
                         for child in node.named_children:
                             if child.type == "identifier":
-                                return child.text.decode('utf-8')
+                                return child.text.decode("utf-8")
                     for child in node.named_children:
                         result = find_array_declarator(child)
                         if result:
@@ -2318,11 +2753,23 @@ class CFGGraph_cpp(CFGGraph):
                 if array_name:
                     for child in value.named_children:
                         if child.type == "identifier":
-                            function_name = child.text.decode('utf-8')
-                            if array_name not in self.records["function_pointer_assignments"]:
-                                self.records["function_pointer_assignments"][array_name] = []
-                            if function_name not in self.records["function_pointer_assignments"][array_name]:
-                                self.records["function_pointer_assignments"][array_name].append(function_name)
+                            function_name = child.text.decode("utf-8")
+                            if (
+                                array_name
+                                not in self.records["function_pointer_assignments"]
+                            ):
+                                self.records["function_pointer_assignments"][
+                                    array_name
+                                ] = []
+                            if (
+                                function_name
+                                not in self.records["function_pointer_assignments"][
+                                    array_name
+                                ]
+                            ):
+                                self.records["function_pointer_assignments"][
+                                    array_name
+                                ].append(function_name)
 
         for child in root_node.children:
             self.track_function_pointer_assignments(child)
@@ -2339,7 +2786,9 @@ class CFGGraph_cpp(CFGGraph):
         index_to_key = {v: k for k, v in self.index.items()}
 
         for (func_name, signature), call_list in self.records["function_calls"].items():
-            for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+            for ((class_name, fn_name), fn_sig), fn_id in self.records[
+                "function_list"
+            ].items():
                 if fn_name == func_name and self.signatures_match(signature, fn_sig):
                     for call_id, parent_id in call_list:
                         self.map_function_parameters_to_lambdas(fn_id, call_id)
@@ -2354,9 +2803,18 @@ class CFGGraph_cpp(CFGGraph):
                         if has_noreturn:
                             continue
 
-                        if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
-                            for return_id in self.records["return_statement_map"][fn_id]:
-                                is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                        if (
+                            self.records.get("return_statement_map")
+                            and fn_id in self.records["return_statement_map"]
+                        ):
+                            for return_id in self.records["return_statement_map"][
+                                fn_id
+                            ]:
+                                is_implicit_return = (
+                                    self.records.get("implicit_return_map")
+                                    and return_id
+                                    in self.records["implicit_return_map"].values()
+                                )
 
                                 parent_key = index_to_key.get(parent_id)
                                 if not parent_key:
@@ -2366,24 +2824,47 @@ class CFGGraph_cpp(CFGGraph):
                                     continue
 
                                 return_key = index_to_key.get(return_id)
-                                return_node = self.node_list.get(return_key) if return_key else None
-                                is_throw_statement = return_node and return_node.type == "throw_statement"
+                                return_node = (
+                                    self.node_list.get(return_key)
+                                    if return_key
+                                    else None
+                                )
+                                is_throw_statement = (
+                                    return_node
+                                    and return_node.type == "throw_statement"
+                                )
 
                                 if is_throw_statement:
                                     caller_parent = parent_node.parent
                                     found_caller_try = False
                                     while caller_parent is not None:
                                         if caller_parent.type == "try_statement":
-                                            thrown_type = self.extract_thrown_type(return_node)
+                                            thrown_type = self.extract_thrown_type(
+                                                return_node
+                                            )
 
                                             for child in caller_parent.children:
                                                 if child.type == "catch_clause":
-                                                    if (child.start_point, child.end_point, child.type) in self.node_list:
-                                                        catch_type = self.extract_catch_parameter_type(child)
+                                                    if (
+                                                        child.start_point,
+                                                        child.end_point,
+                                                        child.type,
+                                                    ) in self.node_list:
+                                                        catch_type = self.extract_catch_parameter_type(
+                                                            child
+                                                        )
 
-                                                        if self.exception_type_matches(thrown_type, catch_type):
-                                                            catch_index = self.get_index(child)
-                                                            self.add_edge(return_id, catch_index, "function_return")
+                                                        if self.exception_type_matches(
+                                                            thrown_type, catch_type
+                                                        ):
+                                                            catch_index = (
+                                                                self.get_index(child)
+                                                            )
+                                                            self.add_edge(
+                                                                return_id,
+                                                                catch_index,
+                                                                "function_return",
+                                                            )
                                                             found_caller_try = True
                                                             break
 
@@ -2403,25 +2884,52 @@ class CFGGraph_cpp(CFGGraph):
                                     return_key = index_to_key.get(return_id)
 
                                     if is_implicit_return:
-                                        self.add_edge(return_id, return_target, "function_return")
+                                        self.add_edge(
+                                            return_id, return_target, "function_return"
+                                        )
                                     elif not return_key:
                                         fn_key = index_to_key.get(fn_id)
-                                        fn_node = self.node_list.get(fn_key) if fn_key else None
+                                        fn_node = (
+                                            self.node_list.get(fn_key)
+                                            if fn_key
+                                            else None
+                                        )
 
                                         if fn_node:
-                                            last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                            last_stmt = self.get_last_statement_in_function_body(
+                                                fn_node, self.node_list
+                                            )
                                             if last_stmt:
                                                 last_stmt_id, _ = last_stmt
-                                                self.add_edge(last_stmt_id, return_target, "function_return")
+                                                self.add_edge(
+                                                    last_stmt_id,
+                                                    return_target,
+                                                    "function_return",
+                                                )
                                             else:
-                                                self.add_edge(fn_id, return_target, "function_return")
+                                                self.add_edge(
+                                                    fn_id,
+                                                    return_target,
+                                                    "function_return",
+                                                )
                                     else:
                                         return_node = self.node_list.get(return_key)
                                         if return_node:
-                                            parent_func = self.get_containing_function(parent_node)
-                                            return_func = self.get_containing_function(return_node)
-                                            if parent_func != return_func or parent_func is None:
-                                                self.add_edge(return_id, return_target, "function_return")
+                                            parent_func = self.get_containing_function(
+                                                parent_node
+                                            )
+                                            return_func = self.get_containing_function(
+                                                return_node
+                                            )
+                                            if (
+                                                parent_func != return_func
+                                                or parent_func is None
+                                            ):
+                                                self.add_edge(
+                                                    return_id,
+                                                    return_target,
+                                                    "function_return",
+                                                )
 
         for (method_name, signature), call_list in self.records["method_calls"].items():
             for call_id, parent_id, object_name in call_list:
@@ -2436,15 +2944,27 @@ class CFGGraph_cpp(CFGGraph):
                             data_type = self.symbol_table.get("data_type", {}).get(idx)
                             if data_type:
                                 object_class = data_type
-                                object_class = object_class.replace("*", "").replace("&", "").replace("class ", "").replace("struct ", "").strip()
+                                object_class = (
+                                    object_class.replace("*", "")
+                                    .replace("&", "")
+                                    .replace("class ", "")
+                                    .replace("struct ", "")
+                                    .strip()
+                                )
                                 break
 
                 known_concrete_type = None
                 known_concrete_namespace = None
                 if object_name and object_name in self.pointer_targets:
-                    known_concrete_type, known_concrete_namespace = self.pointer_targets[object_name]
+                    known_concrete_type, known_concrete_namespace = (
+                        self.pointer_targets[object_name]
+                    )
 
-                if object_name and not known_concrete_type and object_name in self.runtime_types:
+                if (
+                    object_name
+                    and not known_concrete_type
+                    and object_name in self.runtime_types
+                ):
                     known_concrete_type = self.runtime_types[object_name]
 
                 matching_functions = []
@@ -2459,9 +2979,16 @@ class CFGGraph_cpp(CFGGraph):
 
                 has_derived_implementation = False
                 if derived_classes or derived_class_namespaces:
-                    for ((ns_or_class, fn_name), fn_sig), fn_id in self.records["function_list"].items():
-                        name_matches = (fn_name == method_name or fn_name.endswith("::" + method_name))
-                        if name_matches and (ns_or_class in derived_classes or ns_or_class in derived_class_namespaces):
+                    for ((ns_or_class, fn_name), fn_sig), fn_id in self.records[
+                        "function_list"
+                    ].items():
+                        name_matches = fn_name == method_name or fn_name.endswith(
+                            "::" + method_name
+                        )
+                        if name_matches and (
+                            ns_or_class in derived_classes
+                            or ns_or_class in derived_class_namespaces
+                        ):
                             has_derived_implementation = True
                             break
 
@@ -2477,8 +3004,12 @@ class CFGGraph_cpp(CFGGraph):
                         allowed_identifiers.update(derived_class_namespaces)
                     allowed_identifiers.discard(None)
 
-                for ((ns_or_class, fn_name), fn_sig), fn_id in self.records["function_list"].items():
-                    name_matches = (fn_name == method_name or fn_name.endswith("::" + method_name))
+                for ((ns_or_class, fn_name), fn_sig), fn_id in self.records[
+                    "function_list"
+                ].items():
+                    name_matches = fn_name == method_name or fn_name.endswith(
+                        "::" + method_name
+                    )
 
                     if object_class and ns_or_class not in allowed_identifiers:
                         continue
@@ -2490,7 +3021,9 @@ class CFGGraph_cpp(CFGGraph):
 
                 if template_instantiation:
                     base_class, template_args, _ = template_instantiation
-                    resolved_fn_id = self.resolve_template_specialization(base_class, template_args, method_name)
+                    resolved_fn_id = self.resolve_template_specialization(
+                        base_class, template_args, method_name
+                    )
 
                     if resolved_fn_id:
                         target_functions.append((resolved_fn_id, False))
@@ -2533,7 +3066,10 @@ class CFGGraph_cpp(CFGGraph):
                     else:
                         self.add_edge(parent_id, fn_id, f"method_call|{call_id}")
 
-                    if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
+                    if (
+                        self.records.get("return_statement_map")
+                        and fn_id in self.records["return_statement_map"]
+                    ):
                         parent_key = index_to_key.get(parent_id)
                         if not parent_key:
                             continue
@@ -2544,28 +3080,57 @@ class CFGGraph_cpp(CFGGraph):
                         return_target = parent_id
 
                         if return_target and parent_id != fn_id:
-                            for return_id in self.records["return_statement_map"][fn_id]:
-                                is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                            for return_id in self.records["return_statement_map"][
+                                fn_id
+                            ]:
+                                is_implicit_return = (
+                                    self.records.get("implicit_return_map")
+                                    and return_id
+                                    in self.records["implicit_return_map"].values()
+                                )
 
                                 return_key = index_to_key.get(return_id)
-                                return_node = self.node_list.get(return_key) if return_key else None
-                                is_throw_statement = return_node and return_node.type == "throw_statement"
+                                return_node = (
+                                    self.node_list.get(return_key)
+                                    if return_key
+                                    else None
+                                )
+                                is_throw_statement = (
+                                    return_node
+                                    and return_node.type == "throw_statement"
+                                )
 
                                 if is_throw_statement:
                                     caller_parent = parent_node.parent
                                     found_caller_try = False
                                     while caller_parent is not None:
                                         if caller_parent.type == "try_statement":
-                                            thrown_type = self.extract_thrown_type(return_node)
+                                            thrown_type = self.extract_thrown_type(
+                                                return_node
+                                            )
 
                                             for child in caller_parent.children:
                                                 if child.type == "catch_clause":
-                                                    if (child.start_point, child.end_point, child.type) in self.node_list:
-                                                        catch_type = self.extract_catch_parameter_type(child)
+                                                    if (
+                                                        child.start_point,
+                                                        child.end_point,
+                                                        child.type,
+                                                    ) in self.node_list:
+                                                        catch_type = self.extract_catch_parameter_type(
+                                                            child
+                                                        )
 
-                                                        if self.exception_type_matches(thrown_type, catch_type):
-                                                            catch_index = self.get_index(child)
-                                                            self.add_edge(return_id, catch_index, "method_return")
+                                                        if self.exception_type_matches(
+                                                            thrown_type, catch_type
+                                                        ):
+                                                            catch_index = (
+                                                                self.get_index(child)
+                                                            )
+                                                            self.add_edge(
+                                                                return_id,
+                                                                catch_index,
+                                                                "method_return",
+                                                            )
                                                             found_caller_try = True
                                                             break
 
@@ -2579,26 +3144,56 @@ class CFGGraph_cpp(CFGGraph):
 
                                 if is_implicit_return:
                                     if return_target:
-                                        self.add_edge(return_id, return_target, "method_return")
+                                        self.add_edge(
+                                            return_id, return_target, "method_return"
+                                        )
                                 else:
                                     return_key = index_to_key.get(return_id)
                                     if return_key:
                                         return_node = self.node_list.get(return_key)
                                         if return_node:
-                                            parent_func = self.get_containing_function(parent_node)
-                                            return_func = self.get_containing_function(return_node)
-                                            if parent_func != return_func or parent_func is None:
-                                                self.add_edge(return_id, return_target, "method_return")
+                                            parent_func = self.get_containing_function(
+                                                parent_node
+                                            )
+                                            return_func = self.get_containing_function(
+                                                return_node
+                                            )
+                                            if (
+                                                parent_func != return_func
+                                                or parent_func is None
+                                            ):
+                                                self.add_edge(
+                                                    return_id,
+                                                    return_target,
+                                                    "method_return",
+                                                )
 
-        for (class_name, method_name, signature), call_list in self.records["static_method_calls"].items():
-            for ((fn_class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
-                if fn_class_name == class_name and fn_name == method_name and self.signatures_match(signature, fn_sig):
+        for (class_name, method_name, signature), call_list in self.records[
+            "static_method_calls"
+        ].items():
+            for ((fn_class_name, fn_name), fn_sig), fn_id in self.records[
+                "function_list"
+            ].items():
+                if (
+                    fn_class_name == class_name
+                    and fn_name == method_name
+                    and self.signatures_match(signature, fn_sig)
+                ):
                     for call_id, parent_id in call_list:
                         self.add_edge(parent_id, fn_id, f"static_call|{call_id}")
 
-                        if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
-                            for return_id in self.records["return_statement_map"][fn_id]:
-                                is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                        if (
+                            self.records.get("return_statement_map")
+                            and fn_id in self.records["return_statement_map"]
+                        ):
+                            for return_id in self.records["return_statement_map"][
+                                fn_id
+                            ]:
+                                is_implicit_return = (
+                                    self.records.get("implicit_return_map")
+                                    and return_id
+                                    in self.records["implicit_return_map"].values()
+                                )
 
                                 parent_key = index_to_key.get(parent_id)
                                 if not parent_key:
@@ -2608,24 +3203,47 @@ class CFGGraph_cpp(CFGGraph):
                                     continue
 
                                 return_key = index_to_key.get(return_id)
-                                return_node = self.node_list.get(return_key) if return_key else None
-                                is_throw_statement = return_node and return_node.type == "throw_statement"
+                                return_node = (
+                                    self.node_list.get(return_key)
+                                    if return_key
+                                    else None
+                                )
+                                is_throw_statement = (
+                                    return_node
+                                    and return_node.type == "throw_statement"
+                                )
 
                                 if is_throw_statement:
                                     caller_parent = parent_node.parent
                                     found_caller_try = False
                                     while caller_parent is not None:
                                         if caller_parent.type == "try_statement":
-                                            thrown_type = self.extract_thrown_type(return_node)
+                                            thrown_type = self.extract_thrown_type(
+                                                return_node
+                                            )
 
                                             for child in caller_parent.children:
                                                 if child.type == "catch_clause":
-                                                    if (child.start_point, child.end_point, child.type) in self.node_list:
-                                                        catch_type = self.extract_catch_parameter_type(child)
+                                                    if (
+                                                        child.start_point,
+                                                        child.end_point,
+                                                        child.type,
+                                                    ) in self.node_list:
+                                                        catch_type = self.extract_catch_parameter_type(
+                                                            child
+                                                        )
 
-                                                        if self.exception_type_matches(thrown_type, catch_type):
-                                                            catch_index = self.get_index(child)
-                                                            self.add_edge(return_id, catch_index, "static_return")
+                                                        if self.exception_type_matches(
+                                                            thrown_type, catch_type
+                                                        ):
+                                                            catch_index = (
+                                                                self.get_index(child)
+                                                            )
+                                                            self.add_edge(
+                                                                return_id,
+                                                                catch_index,
+                                                                "static_return",
+                                                            )
                                                             found_caller_try = True
                                                             break
 
@@ -2643,27 +3261,56 @@ class CFGGraph_cpp(CFGGraph):
                                     return_key = index_to_key.get(return_id)
 
                                     if is_implicit_return:
-                                        self.add_edge(return_id, return_target, "static_return")
+                                        self.add_edge(
+                                            return_id, return_target, "static_return"
+                                        )
                                     elif not return_key:
                                         fn_key = index_to_key.get(fn_id)
-                                        fn_node = self.node_list.get(fn_key) if fn_key else None
+                                        fn_node = (
+                                            self.node_list.get(fn_key)
+                                            if fn_key
+                                            else None
+                                        )
 
                                         if fn_node:
-                                            last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                            last_stmt = self.get_last_statement_in_function_body(
+                                                fn_node, self.node_list
+                                            )
                                             if last_stmt:
                                                 last_stmt_id, _ = last_stmt
-                                                self.add_edge(last_stmt_id, return_target, "static_return")
+                                                self.add_edge(
+                                                    last_stmt_id,
+                                                    return_target,
+                                                    "static_return",
+                                                )
                                             else:
-                                                self.add_edge(fn_id, return_target, "static_return")
+                                                self.add_edge(
+                                                    fn_id,
+                                                    return_target,
+                                                    "static_return",
+                                                )
                                     else:
                                         return_node = self.node_list.get(return_key)
                                         if return_node:
-                                            parent_func = self.get_containing_function(parent_node)
-                                            return_func = self.get_containing_function(return_node)
-                                            if parent_func != return_func or parent_func is None:
-                                                self.add_edge(return_id, return_target, "static_return")
+                                            parent_func = self.get_containing_function(
+                                                parent_node
+                                            )
+                                            return_func = self.get_containing_function(
+                                                return_node
+                                            )
+                                            if (
+                                                parent_func != return_func
+                                                or parent_func is None
+                                            ):
+                                                self.add_edge(
+                                                    return_id,
+                                                    return_target,
+                                                    "static_return",
+                                                )
 
-        for (operator_symbol, is_member), call_list in self.records["operator_calls"].items():
+        for (operator_symbol, is_member), call_list in self.records[
+            "operator_calls"
+        ].items():
             operator_to_function_name = {
                 "+": "operator+",
                 "-": "operator-",
@@ -2697,7 +3344,9 @@ class CFGGraph_cpp(CFGGraph):
             for call_id, parent_id, operand_type in call_list:
                 matching_functions = []
 
-                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records[
+                    "function_list"
+                ].items():
                     if fn_name == operator_func_name:
                         if is_member:
                             if operand_type and fn_class_name == operand_type:
@@ -2713,8 +3362,16 @@ class CFGGraph_cpp(CFGGraph):
                             if operand_type and fn_sig:
                                 type_match = False
                                 for param_type in fn_sig:
-                                    param_simple = param_type.replace('const', '').replace('&', '').replace('*', '').strip()
-                                    if operand_type in param_simple or param_simple in operand_type:
+                                    param_simple = (
+                                        param_type.replace("const", "")
+                                        .replace("&", "")
+                                        .replace("*", "")
+                                        .strip()
+                                    )
+                                    if (
+                                        operand_type in param_simple
+                                        or param_simple in operand_type
+                                    ):
                                         type_match = True
                                         break
                                 if type_match:
@@ -2724,13 +3381,24 @@ class CFGGraph_cpp(CFGGraph):
 
                 for fn_id in matching_functions:
                     edge_label = f"operator_call|{call_id}"
-                    if operator_symbol.startswith("++") or operator_symbol.startswith("--"):
-                        edge_label = f"{operator_symbol.split('_')[1]}_increment_call|{call_id}"
+                    if operator_symbol.startswith("++") or operator_symbol.startswith(
+                        "--"
+                    ):
+                        edge_label = (
+                            f"{operator_symbol.split('_')[1]}_increment_call|{call_id}"
+                        )
                     self.add_edge(parent_id, fn_id, edge_label)
 
-                    if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
+                    if (
+                        self.records.get("return_statement_map")
+                        and fn_id in self.records["return_statement_map"]
+                    ):
                         for return_id in self.records["return_statement_map"][fn_id]:
-                            is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                            is_implicit_return = (
+                                self.records.get("implicit_return_map")
+                                and return_id
+                                in self.records["implicit_return_map"].values()
+                            )
 
                             parent_key = index_to_key.get(parent_id)
                             if not parent_key:
@@ -2746,61 +3414,132 @@ class CFGGraph_cpp(CFGGraph):
 
                                 if is_implicit_return or not return_key:
                                     fn_key = index_to_key.get(fn_id)
-                                    fn_node = self.node_list.get(fn_key) if fn_key else None
+                                    fn_node = (
+                                        self.node_list.get(fn_key) if fn_key else None
+                                    )
 
                                     if fn_node:
-                                        last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                        last_stmt = (
+                                            self.get_last_statement_in_function_body(
+                                                fn_node, self.node_list
+                                            )
+                                        )
                                         if last_stmt:
                                             last_stmt_id, _ = last_stmt
-                                            self.add_edge(last_stmt_id, return_target, "operator_return")
+                                            self.add_edge(
+                                                last_stmt_id,
+                                                return_target,
+                                                "operator_return",
+                                            )
                                         else:
-                                            self.add_edge(fn_id, return_target, "operator_return")
+                                            self.add_edge(
+                                                fn_id, return_target, "operator_return"
+                                            )
                                 else:
                                     return_node = self.node_list.get(return_key)
                                     if return_node:
-                                        parent_func = self.get_containing_function(parent_node)
-                                        return_func = self.get_containing_function(return_node)
-                                        if parent_func != return_func or parent_func is None:
-                                            self.add_edge(return_id, return_target, "operator_return")
+                                        parent_func = self.get_containing_function(
+                                            parent_node
+                                        )
+                                        return_func = self.get_containing_function(
+                                            return_node
+                                        )
+                                        if (
+                                            parent_func != return_func
+                                            or parent_func is None
+                                        ):
+                                            self.add_edge(
+                                                return_id,
+                                                return_target,
+                                                "operator_return",
+                                            )
 
-        for ((namespace_prefix, class_name), signature), call_list in self.records["constructor_calls"].items():
+        for ((namespace_prefix, class_name), signature), call_list in self.records[
+            "constructor_calls"
+        ].items():
             found_constructor = False
-            for ((fn_class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+            for ((fn_class_name, fn_name), fn_sig), fn_id in self.records[
+                "function_list"
+            ].items():
                 is_constructor_match = False
                 if namespace_prefix is None:
-                    is_constructor_match = (fn_class_name == class_name and fn_name == class_name)
+                    is_constructor_match = (
+                        fn_class_name == class_name and fn_name == class_name
+                    )
                 else:
-                    is_constructor_match = (fn_class_name == namespace_prefix and fn_name == class_name)
+                    is_constructor_match = (
+                        fn_class_name == namespace_prefix and fn_name == class_name
+                    )
                 if is_constructor_match:
                     sig_match = False
 
                     if fn_sig == signature:
                         sig_match = True
-                    elif signature == (f"const {class_name}&",) and len(fn_sig) == 1 and class_name in fn_sig[0]:
+                    elif (
+                        signature == (f"const {class_name}&",)
+                        and len(fn_sig) == 1
+                        and class_name in fn_sig[0]
+                    ):
                         sig_match = True
-                    elif signature == (f"{class_name}&&",) and len(fn_sig) == 1 and class_name in fn_sig[0]:
+                    elif (
+                        signature == (f"{class_name}&&",)
+                        and len(fn_sig) == 1
+                        and class_name in fn_sig[0]
+                    ):
                         sig_match = True
                     elif len(signature) <= len(fn_sig):
                         all_match = True
                         for i, call_param in enumerate(signature):
                             if i < len(fn_sig):
                                 fn_param = fn_sig[i]
-                                fn_param_simple = fn_param.replace('const', '').replace('&', '').replace('*', '').strip()
-                                call_param_simple = call_param.replace('const', '').replace('&', '').replace('*', '').strip()
+                                fn_param_simple = (
+                                    fn_param.replace("const", "")
+                                    .replace("&", "")
+                                    .replace("*", "")
+                                    .strip()
+                                )
+                                call_param_simple = (
+                                    call_param.replace("const", "")
+                                    .replace("&", "")
+                                    .replace("*", "")
+                                    .strip()
+                                )
 
-                                if call_param_simple == 'unknown':
+                                if call_param_simple == "unknown":
                                     continue
 
-                                numeric_types = ['int', 'double', 'float', 'long', 'short', 'char',
-                                                 'size_t', 'uint', 'int8', 'int16', 'int32', 'int64',
-                                                 'uint8', 'uint16', 'uint32', 'uint64', 'ptrdiff']
-                                fn_is_numeric = any(nt in fn_param_simple for nt in numeric_types)
-                                call_is_numeric = any(nt in call_param_simple for nt in numeric_types)
+                                numeric_types = [
+                                    "int",
+                                    "double",
+                                    "float",
+                                    "long",
+                                    "short",
+                                    "char",
+                                    "size_t",
+                                    "uint",
+                                    "int8",
+                                    "int16",
+                                    "int32",
+                                    "int64",
+                                    "uint8",
+                                    "uint16",
+                                    "uint32",
+                                    "uint64",
+                                    "ptrdiff",
+                                ]
+                                fn_is_numeric = any(
+                                    nt in fn_param_simple for nt in numeric_types
+                                )
+                                call_is_numeric = any(
+                                    nt in call_param_simple for nt in numeric_types
+                                )
 
                                 if fn_is_numeric and call_is_numeric:
                                     continue
 
-                                if call_param == 'const char*' and ('string' in fn_param_simple.lower()):
+                                if call_param == "const char*" and (
+                                    "string" in fn_param_simple.lower()
+                                ):
                                     continue
 
                                 if fn_param_simple != call_param_simple:
@@ -2824,12 +3563,16 @@ class CFGGraph_cpp(CFGGraph):
                         if not base_classes and fn_node:
                             containing_class = self.get_containing_class(fn_node)
                             if containing_class:
-                                base_classes = list(self.get_base_classes(containing_class))
+                                base_classes = list(
+                                    self.get_base_classes(containing_class)
+                                )
 
                         explicit_base_calls = set()
                         if fn_node and base_classes:
-                            explicit_base_calls = self.get_explicit_base_constructors_in_initializer_list(
-                                fn_node, set(base_classes)
+                            explicit_base_calls = (
+                                self.get_explicit_base_constructors_in_initializer_list(
+                                    fn_node, set(base_classes)
+                                )
                             )
 
                         implicit_base_constructors = []
@@ -2837,11 +3580,22 @@ class CFGGraph_cpp(CFGGraph):
                             if base_class not in explicit_base_calls:
                                 base_constructor_id = None
                                 base_constructor_key = ((base_class, base_class), ())
-                                if base_constructor_key in self.records["function_list"]:
-                                    base_constructor_id = self.records["function_list"][base_constructor_key]
+                                if (
+                                    base_constructor_key
+                                    in self.records["function_list"]
+                                ):
+                                    base_constructor_id = self.records["function_list"][
+                                        base_constructor_key
+                                    ]
                                 else:
-                                    for ((bc_class, bc_name), bc_sig), bc_id in self.records["function_list"].items():
-                                        if bc_class == base_class and bc_name == base_class:
+                                    for (
+                                        (bc_class, bc_name),
+                                        bc_sig,
+                                    ), bc_id in self.records["function_list"].items():
+                                        if (
+                                            bc_class == base_class
+                                            and bc_name == base_class
+                                        ):
                                             if bc_sig == ():
                                                 base_constructor_id = bc_id
                                                 break
@@ -2849,22 +3603,43 @@ class CFGGraph_cpp(CFGGraph):
                                                 base_constructor_id = bc_id
 
                                 if base_constructor_id:
-                                    implicit_base_constructors.append((base_class, base_constructor_id))
+                                    implicit_base_constructors.append(
+                                        (base_class, base_constructor_id)
+                                    )
 
                         for call_id, parent_id in call_list:
                             if implicit_base_constructors:
                                 prev_target = parent_id
 
-                                for base_class, base_constructor_id in implicit_base_constructors:
+                                for (
+                                    base_class,
+                                    base_constructor_id,
+                                ) in implicit_base_constructors:
                                     if prev_target == parent_id:
-                                        self.add_edge(parent_id, base_constructor_id, f"implicit_base_constructor_call|{call_id}")
+                                        self.add_edge(
+                                            parent_id,
+                                            base_constructor_id,
+                                            f"implicit_base_constructor_call|{call_id}",
+                                        )
                                     else:
-                                        self.add_edge(prev_target, base_constructor_id, "implicit_base_constructor_call")
+                                        self.add_edge(
+                                            prev_target,
+                                            base_constructor_id,
+                                            "implicit_base_constructor_call",
+                                        )
 
                                     base_fn_key = index_to_key.get(base_constructor_id)
-                                    base_fn_node = self.node_list.get(base_fn_key) if base_fn_key else None
+                                    base_fn_node = (
+                                        self.node_list.get(base_fn_key)
+                                        if base_fn_key
+                                        else None
+                                    )
                                     if base_fn_node:
-                                        base_last_stmt = self.get_last_statement_in_function_body(base_fn_node, self.node_list)
+                                        base_last_stmt = (
+                                            self.get_last_statement_in_function_body(
+                                                base_fn_node, self.node_list
+                                            )
+                                        )
                                         if base_last_stmt:
                                             prev_target = base_last_stmt[0]
                                         else:
@@ -2873,11 +3648,19 @@ class CFGGraph_cpp(CFGGraph):
                                         prev_target = base_constructor_id
 
                                 if prev_target != parent_id:
-                                    self.add_edge(prev_target, fn_id, "base_constructor_return_to_derived")
+                                    self.add_edge(
+                                        prev_target,
+                                        fn_id,
+                                        "base_constructor_return_to_derived",
+                                    )
                                 else:
-                                    self.add_edge(parent_id, fn_id, f"constructor_call|{call_id}")
+                                    self.add_edge(
+                                        parent_id, fn_id, f"constructor_call|{call_id}"
+                                    )
                             else:
-                                self.add_edge(parent_id, fn_id, f"constructor_call|{call_id}")
+                                self.add_edge(
+                                    parent_id, fn_id, f"constructor_call|{call_id}"
+                                )
 
                         if fn_node:
                             for call_id, parent_id in call_list:
@@ -2896,7 +3679,9 @@ class CFGGraph_cpp(CFGGraph):
                                             break
 
                                 if is_base_constructor_call:
-                                    first_line = self.edge_first_line(parent_node, self.node_list)
+                                    first_line = self.edge_first_line(
+                                        parent_node, self.node_list
+                                    )
                                     if first_line:
                                         return_target = first_line[0]
                                     else:
@@ -2905,22 +3690,51 @@ class CFGGraph_cpp(CFGGraph):
                                     return_target = parent_id
 
                                 if return_target and parent_id != fn_id:
-                                    last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                    last_stmt = (
+                                        self.get_last_statement_in_function_body(
+                                            fn_node, self.node_list
+                                        )
+                                    )
                                     if last_stmt:
                                         last_stmt_id, _ = last_stmt
                                         if is_base_constructor_call:
-                                            self.add_edge(last_stmt_id, return_target, "base_constructor_return")
+                                            self.add_edge(
+                                                last_stmt_id,
+                                                return_target,
+                                                "base_constructor_return",
+                                            )
                                         else:
-                                            self.add_edge(last_stmt_id, return_target, "constructor_return")
+                                            self.add_edge(
+                                                last_stmt_id,
+                                                return_target,
+                                                "constructor_return",
+                                            )
                                     else:
                                         if is_base_constructor_call:
-                                            self.add_edge(fn_id, return_target, "base_constructor_return")
+                                            self.add_edge(
+                                                fn_id,
+                                                return_target,
+                                                "base_constructor_return",
+                                            )
                                         else:
-                                            self.add_edge(fn_id, return_target, "constructor_return")
+                                            self.add_edge(
+                                                fn_id,
+                                                return_target,
+                                                "constructor_return",
+                                            )
 
-                        if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
-                            for return_id in self.records["return_statement_map"][fn_id]:
-                                is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                        if (
+                            self.records.get("return_statement_map")
+                            and fn_id in self.records["return_statement_map"]
+                        ):
+                            for return_id in self.records["return_statement_map"][
+                                fn_id
+                            ]:
+                                is_implicit_return = (
+                                    self.records.get("implicit_return_map")
+                                    and return_id
+                                    in self.records["implicit_return_map"].values()
+                                )
 
                                 for call_id, parent_id in call_list:
                                     parent_key = index_to_key.get(parent_id)
@@ -2938,12 +3752,18 @@ class CFGGraph_cpp(CFGGraph):
                                                 break
 
                                     if is_base_constructor_call:
-                                        first_line = self.edge_first_line(parent_node, self.node_list)
+                                        first_line = self.edge_first_line(
+                                            parent_node, self.node_list
+                                        )
                                         if first_line:
                                             return_target = first_line[0]
                                         else:
-                                            if parent_id in self.records.get("implicit_return_map", {}):
-                                                return_target = self.records["implicit_return_map"][parent_id]
+                                            if parent_id in self.records.get(
+                                                "implicit_return_map", {}
+                                            ):
+                                                return_target = self.records[
+                                                    "implicit_return_map"
+                                                ][parent_id]
                                             else:
                                                 return_target = None
                                     else:
@@ -2951,41 +3771,91 @@ class CFGGraph_cpp(CFGGraph):
 
                                     if is_implicit_return:
                                         fn_key = index_to_key.get(fn_id)
-                                        fn_node = self.node_list.get(fn_key) if fn_key else None
+                                        fn_node = (
+                                            self.node_list.get(fn_key)
+                                            if fn_key
+                                            else None
+                                        )
 
                                         if fn_node and return_target:
-                                            last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                            last_stmt = self.get_last_statement_in_function_body(
+                                                fn_node, self.node_list
+                                            )
                                             if last_stmt:
                                                 last_stmt_id, _ = last_stmt
                                                 if parent_id != fn_id:
-                                                    self.add_edge(last_stmt_id, return_target, "constructor_return")
+                                                    self.add_edge(
+                                                        last_stmt_id,
+                                                        return_target,
+                                                        "constructor_return",
+                                                    )
                                                 elif is_base_constructor_call:
-                                                    self.add_edge(last_stmt_id, return_target, "base_constructor_return")
+                                                    self.add_edge(
+                                                        last_stmt_id,
+                                                        return_target,
+                                                        "base_constructor_return",
+                                                    )
                                             else:
                                                 if parent_id != fn_id:
-                                                    self.add_edge(fn_id, return_target, "constructor_return")
+                                                    self.add_edge(
+                                                        fn_id,
+                                                        return_target,
+                                                        "constructor_return",
+                                                    )
                                                 elif is_base_constructor_call:
-                                                    self.add_edge(fn_id, return_target, "base_constructor_return")
+                                                    self.add_edge(
+                                                        fn_id,
+                                                        return_target,
+                                                        "base_constructor_return",
+                                                    )
                                     else:
                                         if parent_id != fn_id and return_target:
                                             return_key = index_to_key.get(return_id)
 
                                             if return_key:
-                                                return_node = self.node_list.get(return_key)
+                                                return_node = self.node_list.get(
+                                                    return_key
+                                                )
 
                                                 if return_node:
-                                                    parent_func = self.get_containing_function(parent_node)
-                                                    return_func = self.get_containing_function(return_node)
-                                                    if parent_func != return_func or parent_func is None:
-                                                        self.add_edge(return_id, return_target, "constructor_return")
+                                                    parent_func = (
+                                                        self.get_containing_function(
+                                                            parent_node
+                                                        )
+                                                    )
+                                                    return_func = (
+                                                        self.get_containing_function(
+                                                            return_node
+                                                        )
+                                                    )
+                                                    if (
+                                                        parent_func != return_func
+                                                        or parent_func is None
+                                                    ):
+                                                        self.add_edge(
+                                                            return_id,
+                                                            return_target,
+                                                            "constructor_return",
+                                                        )
                                         elif is_base_constructor_call and return_target:
-                                            self.add_edge(return_id, return_target, "base_constructor_return")
+                                            self.add_edge(
+                                                return_id,
+                                                return_target,
+                                                "base_constructor_return",
+                                            )
 
             if not found_constructor and signature == ():
                 synthetic_constructor_id = self.get_new_synthetic_index()
                 synthetic_label = f"implicit_default_constructor_{class_name}"
 
-                self.CFG_node_list.append((synthetic_constructor_id, 0, synthetic_label, "synthetic_constructor"))
+                self.CFG_node_list.append(
+                    (
+                        synthetic_constructor_id,
+                        0,
+                        synthetic_label,
+                        "synthetic_constructor",
+                    )
+                )
 
                 key = ((class_name, class_name), ())
                 self.records["function_list"][key] = synthetic_constructor_id
@@ -2997,30 +3867,67 @@ class CFGGraph_cpp(CFGGraph):
                         base_classes = [base_classes]
 
                 for call_id, parent_id in call_list:
-                    self.add_edge(parent_id, synthetic_constructor_id, f"constructor_call|{call_id}")
+                    self.add_edge(
+                        parent_id,
+                        synthetic_constructor_id,
+                        f"constructor_call|{call_id}",
+                    )
 
                     if base_classes:
                         for base_class in base_classes:
                             base_constructor_key = ((base_class, base_class), ())
                             if base_constructor_key in self.records["function_list"]:
-                                base_constructor_id = self.records["function_list"][base_constructor_key]
-                                self.add_edge(synthetic_constructor_id, base_constructor_id, "base_constructor_call")
+                                base_constructor_id = self.records["function_list"][
+                                    base_constructor_key
+                                ]
+                                self.add_edge(
+                                    synthetic_constructor_id,
+                                    base_constructor_id,
+                                    "base_constructor_call",
+                                )
 
                                 if parent_id and parent_id != 2:
-                                    self.add_edge(base_constructor_id, parent_id, "constructor_return")
+                                    self.add_edge(
+                                        base_constructor_id,
+                                        parent_id,
+                                        "constructor_return",
+                                    )
                             else:
                                 base_synthetic_id = self.get_new_synthetic_index()
-                                base_synthetic_label = f"implicit_default_constructor_{base_class}"
-                                self.CFG_node_list.append((base_synthetic_id, 0, base_synthetic_label, "synthetic_constructor"))
-                                self.records["function_list"][base_constructor_key] = base_synthetic_id
+                                base_synthetic_label = (
+                                    f"implicit_default_constructor_{base_class}"
+                                )
+                                self.CFG_node_list.append(
+                                    (
+                                        base_synthetic_id,
+                                        0,
+                                        base_synthetic_label,
+                                        "synthetic_constructor",
+                                    )
+                                )
+                                self.records["function_list"][
+                                    base_constructor_key
+                                ] = base_synthetic_id
 
-                                self.add_edge(synthetic_constructor_id, base_synthetic_id, "base_constructor_call")
+                                self.add_edge(
+                                    synthetic_constructor_id,
+                                    base_synthetic_id,
+                                    "base_constructor_call",
+                                )
 
                                 if parent_id and parent_id != 2:
-                                    self.add_edge(base_synthetic_id, parent_id, "constructor_return")
+                                    self.add_edge(
+                                        base_synthetic_id,
+                                        parent_id,
+                                        "constructor_return",
+                                    )
                     else:
                         if parent_id and parent_id != 2:
-                            self.add_edge(synthetic_constructor_id, parent_id, "constructor_return")
+                            self.add_edge(
+                                synthetic_constructor_id,
+                                parent_id,
+                                "constructor_return",
+                            )
 
         if self.records.get("destructor_calls"):
             for class_name, call_list in self.records["destructor_calls"].items():
@@ -3029,18 +3936,35 @@ class CFGGraph_cpp(CFGGraph):
                 destructor_chain = []
 
                 derived_destructor_name = f"~{class_name}"
-                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
-                    if fn_name == derived_destructor_name and fn_class_name == class_name:
-                        implicit_ret = self.records.get("implicit_return_map", {}).get(fn_id)
+                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records[
+                    "function_list"
+                ].items():
+                    if (
+                        fn_name == derived_destructor_name
+                        and fn_class_name == class_name
+                    ):
+                        implicit_ret = self.records.get("implicit_return_map", {}).get(
+                            fn_id
+                        )
                         destructor_chain.append((class_name, fn_id, implicit_ret))
                         break
 
                 all_destructors = []
-                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+                for ((fn_class_name, fn_name), fn_sig), fn_id in self.records[
+                    "function_list"
+                ].items():
                     if fn_name.startswith("~") and fn_name != derived_destructor_name:
-                        if self.records.get("virtual_functions", {}).get(fn_id, {}).get("is_virtual"):
-                            implicit_ret = self.records.get("implicit_return_map", {}).get(fn_id)
-                            all_destructors.append((fn_class_name, fn_id, implicit_ret, fn_name))
+                        if (
+                            self.records.get("virtual_functions", {})
+                            .get(fn_id, {})
+                            .get("is_virtual")
+                        ):
+                            implicit_ret = self.records.get(
+                                "implicit_return_map", {}
+                            ).get(fn_id)
+                            all_destructors.append(
+                                (fn_class_name, fn_id, implicit_ret, fn_name)
+                            )
 
                 for fn_class_name, fn_id, implicit_ret, fn_name in all_destructors:
                     destructor_chain.append((fn_class_name, fn_id, implicit_ret))
@@ -3053,21 +3977,33 @@ class CFGGraph_cpp(CFGGraph):
                     if not parent_node:
                         continue
 
-                    next_index, next_node = self.get_next_index(parent_node, self.node_list)
+                    next_index, next_node = self.get_next_index(
+                        parent_node, self.node_list
+                    )
                     final_return_target = next_index if next_index != 2 else None
 
                     if destructor_chain:
-                        first_class, first_fn_id, first_implicit_ret = destructor_chain[0]
-                        self.add_edge(parent_id, first_fn_id, f"destructor_call|{call_id}")
+                        first_class, first_fn_id, first_implicit_ret = destructor_chain[
+                            0
+                        ]
+                        self.add_edge(
+                            parent_id, first_fn_id, f"destructor_call|{call_id}"
+                        )
 
                         for i in range(len(destructor_chain)):
-                            curr_class, curr_fn_id, curr_implicit_ret = destructor_chain[i]
+                            curr_class, curr_fn_id, curr_implicit_ret = (
+                                destructor_chain[i]
+                            )
 
                             curr_fn_key = index_to_key.get(curr_fn_id)
-                            curr_fn_node = self.node_list.get(curr_fn_key) if curr_fn_key else None
+                            curr_fn_node = (
+                                self.node_list.get(curr_fn_key) if curr_fn_key else None
+                            )
 
                             if i < len(destructor_chain) - 1:
-                                next_class, next_fn_id, next_implicit_ret = destructor_chain[i + 1]
+                                next_class, next_fn_id, next_implicit_ret = (
+                                    destructor_chain[i + 1]
+                                )
                                 return_target = next_fn_id
                                 edge_label = "destructor_chain"
                             else:
@@ -3075,27 +4011,53 @@ class CFGGraph_cpp(CFGGraph):
                                 edge_label = "destructor_return"
 
                             if return_target and curr_fn_node:
-                                last_stmt = self.get_last_statement_in_function_body(curr_fn_node, self.node_list)
+                                last_stmt = self.get_last_statement_in_function_body(
+                                    curr_fn_node, self.node_list
+                                )
 
                                 if last_stmt:
                                     last_stmt_id, last_stmt_node = last_stmt
-                                    self.add_edge(last_stmt_id, return_target, edge_label)
+                                    self.add_edge(
+                                        last_stmt_id, return_target, edge_label
+                                    )
                                 else:
                                     self.add_edge(curr_fn_id, return_target, edge_label)
 
-        for (pointer_var, signature), call_list in self.records["indirect_calls"].items():
-            if self.records.get("function_pointer_assignments") and pointer_var in self.records["function_pointer_assignments"]:
-                function_names = self.records["function_pointer_assignments"][pointer_var]
+        for (pointer_var, signature), call_list in self.records[
+            "indirect_calls"
+        ].items():
+            if (
+                self.records.get("function_pointer_assignments")
+                and pointer_var in self.records["function_pointer_assignments"]
+            ):
+                function_names = self.records["function_pointer_assignments"][
+                    pointer_var
+                ]
 
                 for func_name in function_names:
-                    for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+                    for ((class_name, fn_name), fn_sig), fn_id in self.records[
+                        "function_list"
+                    ].items():
                         if fn_name == func_name:
                             for call_id, parent_id in call_list:
-                                self.add_edge(parent_id, fn_id, f"function_call|{call_id}")
+                                self.add_edge(
+                                    parent_id, fn_id, f"function_call|{call_id}"
+                                )
 
-                                if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
-                                    for return_id in self.records["return_statement_map"][fn_id]:
-                                        is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                                if (
+                                    self.records.get("return_statement_map")
+                                    and fn_id in self.records["return_statement_map"]
+                                ):
+                                    for return_id in self.records[
+                                        "return_statement_map"
+                                    ][fn_id]:
+                                        is_implicit_return = (
+                                            self.records.get("implicit_return_map")
+                                            and return_id
+                                            in self.records[
+                                                "implicit_return_map"
+                                            ].values()
+                                        )
 
                                         parent_key = index_to_key.get(parent_id)
                                         if not parent_key:
@@ -3109,47 +4071,96 @@ class CFGGraph_cpp(CFGGraph):
                                         if is_implicit_return:
                                             if parent_id != fn_id and return_target:
                                                 fn_key = index_to_key.get(fn_id)
-                                                fn_node = self.node_list.get(fn_key) if fn_key else None
+                                                fn_node = (
+                                                    self.node_list.get(fn_key)
+                                                    if fn_key
+                                                    else None
+                                                )
 
                                                 if fn_node:
-                                                    last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                                    last_stmt = self.get_last_statement_in_function_body(
+                                                        fn_node, self.node_list
+                                                    )
                                                     if last_stmt:
                                                         last_stmt_id, _ = last_stmt
-                                                        self.add_edge(last_stmt_id, return_target, "function_return")
+                                                        self.add_edge(
+                                                            last_stmt_id,
+                                                            return_target,
+                                                            "function_return",
+                                                        )
                                                     else:
-                                                        self.add_edge(fn_id, return_target, "function_return")
+                                                        self.add_edge(
+                                                            fn_id,
+                                                            return_target,
+                                                            "function_return",
+                                                        )
                                         else:
                                             if parent_id != fn_id and return_target:
                                                 return_key = index_to_key.get(return_id)
 
                                                 if return_key:
-                                                    return_node = self.node_list.get(return_key)
+                                                    return_node = self.node_list.get(
+                                                        return_key
+                                                    )
 
                                                     if return_node:
-                                                        parent_func = self.get_containing_function(parent_node)
-                                                        return_func = self.get_containing_function(return_node)
-                                                        if parent_func != return_func or parent_func is None:
-                                                            self.add_edge(return_id, return_target, "function_return")
+                                                        parent_func = self.get_containing_function(
+                                                            parent_node
+                                                        )
+                                                        return_func = self.get_containing_function(
+                                                            return_node
+                                                        )
+                                                        if (
+                                                            parent_func != return_func
+                                                            or parent_func is None
+                                                        ):
+                                                            self.add_edge(
+                                                                return_id,
+                                                                return_target,
+                                                                "function_return",
+                                                            )
 
-        for (func_name, signature), call_list in list(self.records["function_calls"].items()):
+        for (func_name, signature), call_list in list(
+            self.records["function_calls"].items()
+        ):
             found_direct_match = False
-            for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+            for ((class_name, fn_name), fn_sig), fn_id in self.records[
+                "function_list"
+            ].items():
                 if fn_name == func_name:
                     found_direct_match = True
                     break
 
-            if not found_direct_match and func_name in self.records["function_pointer_assignments"]:
+            if (
+                not found_direct_match
+                and func_name in self.records["function_pointer_assignments"]
+            ):
                 function_names = self.records["function_pointer_assignments"][func_name]
 
                 for target_func in function_names:
-                    for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+                    for ((class_name, fn_name), fn_sig), fn_id in self.records[
+                        "function_list"
+                    ].items():
                         if fn_name == target_func:
                             for call_id, parent_id in call_list:
-                                self.add_edge(parent_id, fn_id, f"function_call|{call_id}")
+                                self.add_edge(
+                                    parent_id, fn_id, f"function_call|{call_id}"
+                                )
 
-                                if self.records.get("return_statement_map") and fn_id in self.records["return_statement_map"]:
-                                    for return_id in self.records["return_statement_map"][fn_id]:
-                                        is_implicit_return = self.records.get("implicit_return_map") and return_id in self.records["implicit_return_map"].values()
+                                if (
+                                    self.records.get("return_statement_map")
+                                    and fn_id in self.records["return_statement_map"]
+                                ):
+                                    for return_id in self.records[
+                                        "return_statement_map"
+                                    ][fn_id]:
+                                        is_implicit_return = (
+                                            self.records.get("implicit_return_map")
+                                            and return_id
+                                            in self.records[
+                                                "implicit_return_map"
+                                            ].values()
+                                        )
 
                                         parent_key = index_to_key.get(parent_id)
                                         if not parent_key:
@@ -3163,27 +4174,54 @@ class CFGGraph_cpp(CFGGraph):
                                         if is_implicit_return:
                                             if parent_id != fn_id and return_target:
                                                 fn_key = index_to_key.get(fn_id)
-                                                fn_node = self.node_list.get(fn_key) if fn_key else None
+                                                fn_node = (
+                                                    self.node_list.get(fn_key)
+                                                    if fn_key
+                                                    else None
+                                                )
 
                                                 if fn_node:
-                                                    last_stmt = self.get_last_statement_in_function_body(fn_node, self.node_list)
+                                                    last_stmt = self.get_last_statement_in_function_body(
+                                                        fn_node, self.node_list
+                                                    )
                                                     if last_stmt:
                                                         last_stmt_id, _ = last_stmt
-                                                        self.add_edge(last_stmt_id, return_target, "function_return")
+                                                        self.add_edge(
+                                                            last_stmt_id,
+                                                            return_target,
+                                                            "function_return",
+                                                        )
                                                     else:
-                                                        self.add_edge(fn_id, return_target, "function_return")
+                                                        self.add_edge(
+                                                            fn_id,
+                                                            return_target,
+                                                            "function_return",
+                                                        )
                                         else:
                                             if parent_id != fn_id and return_target:
                                                 return_key = index_to_key.get(return_id)
 
                                                 if return_key:
-                                                    return_node = self.node_list.get(return_key)
+                                                    return_node = self.node_list.get(
+                                                        return_key
+                                                    )
 
                                                     if return_node:
-                                                        parent_func = self.get_containing_function(parent_node)
-                                                        return_func = self.get_containing_function(return_node)
-                                                        if parent_func != return_func or parent_func is None:
-                                                            self.add_edge(return_id, return_target, "function_return")
+                                                        parent_func = self.get_containing_function(
+                                                            parent_node
+                                                        )
+                                                        return_func = self.get_containing_function(
+                                                            return_node
+                                                        )
+                                                        if (
+                                                            parent_func != return_func
+                                                            or parent_func is None
+                                                        ):
+                                                            self.add_edge(
+                                                                return_id,
+                                                                return_target,
+                                                                "function_return",
+                                                            )
 
         for (func_name, signature), call_list in self.records["function_calls"].items():
             for call_id, parent_id in call_list:
@@ -3198,7 +4236,11 @@ class CFGGraph_cpp(CFGGraph):
                 if not containing_func:
                     continue
 
-                containing_func_key = (containing_func.start_point, containing_func.end_point, containing_func.type)
+                containing_func_key = (
+                    containing_func.start_point,
+                    containing_func.end_point,
+                    containing_func.type,
+                )
                 if containing_func_key not in self.node_list:
                     continue
 
@@ -3212,18 +4254,26 @@ class CFGGraph_cpp(CFGGraph):
                     if lambda_key:
                         lambda_node = self.node_list.get(lambda_key)
                         if lambda_node:
-                            lambda_body_first_id = self.get_lambda_body_first_stmt(lambda_node, self.node_list)
+                            lambda_body_first_id = self.get_lambda_body_first_stmt(
+                                lambda_node, self.node_list
+                            )
 
                             if lambda_body_first_id:
-                                self.add_edge(parent_id, lambda_body_first_id, "lambda_invocation")
+                                self.add_edge(
+                                    parent_id, lambda_body_first_id, "lambda_invocation"
+                                )
 
                                 lambda_id = self.index[lambda_key]
-                                self.add_lambda_return_edges(lambda_node, lambda_id, parent_id, self.node_list)
+                                self.add_lambda_return_edges(
+                                    lambda_node, lambda_id, parent_id, self.node_list
+                                )
 
         edges_to_remove = []
 
         for (func_name, signature), call_list in self.records["function_calls"].items():
-            for ((class_name, fn_name), fn_sig), fn_id in self.records["function_list"].items():
+            for ((class_name, fn_name), fn_sig), fn_id in self.records[
+                "function_list"
+            ].items():
                 if fn_name == func_name and self.signatures_match(signature, fn_sig):
                     has_noreturn = False
                     if fn_id in self.records.get("attributed_functions", {}):
@@ -3249,7 +4299,9 @@ class CFGGraph_cpp(CFGGraph):
         Populates self.records["lambda_variables"]: lambda_var_name -> lambda_node_key
         """
         for lambda_key, statement_node in self.records["lambda_map"].items():
-            var_name = self.extract_lambda_variable_name(statement_node, self.node_list.get(lambda_key))
+            var_name = self.extract_lambda_variable_name(
+                statement_node, self.node_list.get(lambda_key)
+            )
 
             if var_name:
                 self.records["lambda_variables"][var_name] = lambda_key
@@ -3274,7 +4326,7 @@ class CFGGraph_cpp(CFGGraph):
         arg_index = 0
         for child in args_node.named_children:
             if child.type == "identifier":
-                arg_name = child.text.decode('utf-8')
+                arg_name = child.text.decode("utf-8")
                 if arg_name in self.records["lambda_variables"]:
                     key = (call_index, arg_index)
                     self.records["lambda_arguments"][key] = arg_name
@@ -3321,11 +4373,11 @@ class CFGGraph_cpp(CFGGraph):
                 declarator_child = param.child_by_field_name("declarator")
                 if declarator_child:
                     if declarator_child.type == "identifier":
-                        param_names.append(declarator_child.text.decode('utf-8'))
+                        param_names.append(declarator_child.text.decode("utf-8"))
                     elif declarator_child.type == "reference_declarator":
                         for child in declarator_child.named_children:
                             if child.type == "identifier":
-                                param_names.append(child.text.decode('utf-8'))
+                                param_names.append(child.text.decode("utf-8"))
                                 break
 
         for arg_index, param_name in enumerate(param_names):
@@ -3352,7 +4404,7 @@ class CFGGraph_cpp(CFGGraph):
                 if decl_child.type == "init_declarator":
                     for init_child in decl_child.named_children:
                         if init_child.type == "identifier":
-                            return init_child.text.decode('utf-8')
+                            return init_child.text.decode("utf-8")
         return None
 
     def find_lambda_call_sites(self, var_name, definition_node):
@@ -3388,7 +4440,7 @@ class CFGGraph_cpp(CFGGraph):
         if node.type == "call_expression":
             func = node.child_by_field_name("function")
             if func and func.type == "identifier":
-                if func.text.decode('utf-8') == var_name:
+                if func.text.decode("utf-8") == var_name:
                     return True
         for child in node.named_children:
             if self.is_lambda_call(child, var_name):
@@ -3405,7 +4457,11 @@ class CFGGraph_cpp(CFGGraph):
             children = list(body.named_children)
             if children:
                 first_stmt = children[0]
-                first_stmt_key = (first_stmt.start_point, first_stmt.end_point, first_stmt.type)
+                first_stmt_key = (
+                    first_stmt.start_point,
+                    first_stmt.end_point,
+                    first_stmt.type,
+                )
                 if first_stmt_key in node_list:
                     return self.get_index(first_stmt)
         return None
@@ -3444,7 +4500,10 @@ class CFGGraph_cpp(CFGGraph):
                         if node.type != "return":
                             exit_points.append(node)
 
-            if node.type not in ["function_definition", "lambda_expression"] or node == lambda_node:
+            if (
+                node.type not in ["function_definition", "lambda_expression"]
+                or node == lambda_node
+            ):
                 for child in node.named_children:
                     find_exit_points(child, in_lambda_body)
 
@@ -3472,7 +4531,9 @@ class CFGGraph_cpp(CFGGraph):
                     if func:
                         func_index = self.get_index(func)
                         if func_index in self.records["implicit_return_map"]:
-                            implicit_return_id = self.records["implicit_return_map"][func_index]
+                            implicit_return_id = self.records["implicit_return_map"][
+                                func_index
+                            ]
                             self.add_edge(exit_id, implicit_return_id, "lambda_return")
 
     def add_lambda_edges(self):
@@ -3492,7 +4553,11 @@ class CFGGraph_cpp(CFGGraph):
             if lambda_node is None:
                 continue
 
-            stmt_key = (statement_node.start_point, statement_node.end_point, statement_node.type)
+            stmt_key = (
+                statement_node.start_point,
+                statement_node.end_point,
+                statement_node.type,
+            )
             if stmt_key not in self.node_list:
                 continue
 
@@ -3505,20 +4570,30 @@ class CFGGraph_cpp(CFGGraph):
                     if child.type == "call_expression":
                         func_child = child.child_by_field_name("function")
                         if func_child and func_child.type == "lambda_expression":
-                            if (func_child.start_point, func_child.end_point, func_child.type) == lambda_key:
+                            if (
+                                func_child.start_point,
+                                func_child.end_point,
+                                func_child.type,
+                            ) == lambda_key:
                                 is_immediately_invoked = True
                                 break
 
-            lambda_body_first_id = self.get_lambda_body_first_stmt(lambda_node, self.node_list)
+            lambda_body_first_id = self.get_lambda_body_first_stmt(
+                lambda_node, self.node_list
+            )
             if lambda_body_first_id is None:
                 continue
 
             if is_immediately_invoked:
                 self.add_edge(stmt_id, lambda_body_first_id, "lambda_invocation")
 
-                self.add_lambda_return_edges(lambda_node, lambda_id, stmt_id, self.node_list)
+                self.add_lambda_return_edges(
+                    lambda_node, lambda_id, stmt_id, self.node_list
+                )
             else:
-                var_name = self.extract_lambda_variable_name(statement_node, lambda_node)
+                var_name = self.extract_lambda_variable_name(
+                    statement_node, lambda_node
+                )
 
                 if var_name:
                     if var_name not in self.records["lambda_variables"]:
@@ -3527,13 +4602,21 @@ class CFGGraph_cpp(CFGGraph):
                     call_sites = self.find_lambda_call_sites(var_name, statement_node)
 
                     for call_site_node in call_sites:
-                        call_site_key = (call_site_node.start_point, call_site_node.end_point, call_site_node.type)
+                        call_site_key = (
+                            call_site_node.start_point,
+                            call_site_node.end_point,
+                            call_site_node.type,
+                        )
                         if call_site_key in self.node_list:
                             call_site_id = self.get_index(call_site_node)
 
-                            self.add_edge(call_site_id, lambda_body_first_id, "lambda_invocation")
+                            self.add_edge(
+                                call_site_id, lambda_body_first_id, "lambda_invocation"
+                            )
 
-                            self.add_lambda_return_edges(lambda_node, lambda_id, call_site_id, self.node_list)
+                            self.add_lambda_return_edges(
+                                lambda_node, lambda_id, call_site_id, self.node_list
+                            )
 
     def CFG_cpp(self):
         """
@@ -3556,7 +4639,7 @@ class CFGGraph_cpp(CFGGraph):
             node_list={},
             graph_node_list=[],
             index=self.index,
-            records=self.records
+            records=self.records,
         )
 
         self.node_list = node_list
@@ -3573,7 +4656,10 @@ class CFGGraph_cpp(CFGGraph):
                 if self.is_last_in_control_block(node):
                     continue
 
-                if node.type not in ["field_declaration", "access_specifier"] and cpp_nodes.has_inner_definition(node):
+                if node.type not in [
+                    "field_declaration",
+                    "access_specifier",
+                ] and cpp_nodes.has_inner_definition(node):
                     continue
 
                 parent = node.parent
@@ -3607,10 +4693,18 @@ class CFGGraph_cpp(CFGGraph):
                         if next_case:
                             for child in next_case.named_children:
                                 if child.type in self.statement_types["node_list_type"]:
-                                    if (child.start_point, child.end_point, child.type) in node_list:
+                                    if (
+                                        child.start_point,
+                                        child.end_point,
+                                        child.type,
+                                    ) in node_list:
                                         current_index = self.get_index(node)
                                         first_stmt_index = self.get_index(child)
-                                        self.add_edge(current_index, first_stmt_index, "fallthrough")
+                                        self.add_edge(
+                                            current_index,
+                                            first_stmt_index,
+                                            "fallthrough",
+                                        )
                                         break
                             continue
 
@@ -3623,7 +4717,10 @@ class CFGGraph_cpp(CFGGraph):
 
                     if next_parent and next_parent.type == "declaration_list":
                         next_grandparent = next_parent.parent if next_parent else None
-                        if next_grandparent and next_grandparent.type == "namespace_definition":
+                        if (
+                            next_grandparent
+                            and next_grandparent.type == "namespace_definition"
+                        ):
                             continue
 
                     if next_parent and next_parent.type == "translation_unit":
@@ -3653,7 +4750,10 @@ class CFGGraph_cpp(CFGGraph):
             current_index = self.get_index(node)
 
             if node.type == "function_definition":
-                if "main_function" in self.records and self.records["main_function"] == current_index:
+                if (
+                    "main_function" in self.records
+                    and self.records["main_function"] == current_index
+                ):
                     pass
 
                 attributes = self.extract_attributes_from_node(node)
@@ -3673,7 +4773,7 @@ class CFGGraph_cpp(CFGGraph):
                 is_pure_virtual = False
 
                 if return_type_node:
-                    return_type_text = return_type_node.text.decode('utf-8')
+                    return_type_text = return_type_node.text.decode("utf-8")
                     is_void = return_type_text == "void"
                 else:
                     declarator = node.child_by_field_name("declarator")
@@ -3683,8 +4783,8 @@ class CFGGraph_cpp(CFGGraph):
                                 is_destructor = True
                                 break
                             elif child.type == "qualified_identifier":
-                                qualified_text = child.text.decode('utf-8')
-                                if '~' in qualified_text:
+                                qualified_text = child.text.decode("utf-8")
+                                if "~" in qualified_text:
                                     is_destructor = True
                                     break
                             elif child.type == "identifier":
@@ -3713,57 +4813,96 @@ class CFGGraph_cpp(CFGGraph):
                     if declarator:
                         for child in declarator.named_children:
                             if child.type == "identifier":
-                                func_name = child.text.decode('utf-8')
+                                func_name = child.text.decode("utf-8")
                                 break
                             elif child.type == "field_identifier":
-                                func_name = child.text.decode('utf-8')
+                                func_name = child.text.decode("utf-8")
                                 break
                             elif child.type == "destructor_name":
-                                func_name = child.text.decode('utf-8')
+                                func_name = child.text.decode("utf-8")
                                 break
                             elif child.type == "qualified_identifier":
-                                func_name = child.text.decode('utf-8')
+                                func_name = child.text.decode("utf-8")
                                 break
 
                     implicit_return_label = f"implicit_return_{func_name}"
-                    self.CFG_node_list.append((implicit_return_id, 0, implicit_return_label, "implicit_return"))
+                    self.CFG_node_list.append(
+                        (
+                            implicit_return_id,
+                            0,
+                            implicit_return_label,
+                            "implicit_return",
+                        )
+                    )
 
-                    self.records["implicit_return_map"][current_index] = implicit_return_id
+                    self.records["implicit_return_map"][
+                        current_index
+                    ] = implicit_return_id
 
                     if current_index not in self.records["return_statement_map"]:
                         self.records["return_statement_map"][current_index] = []
-                    self.records["return_statement_map"][current_index].append(implicit_return_id)
+                    self.records["return_statement_map"][current_index].append(
+                        implicit_return_id
+                    )
 
                     has_noreturn = "noreturn" in attributes if attributes else False
 
                     if not has_noreturn:
                         if not has_statements:
-                            self.add_edge(current_index, implicit_return_id, "implicit_return")
+                            self.add_edge(
+                                current_index, implicit_return_id, "implicit_return"
+                            )
                         else:
-                            last_stmt = self.get_last_statement_in_function_body(node, node_list)
+                            last_stmt = self.get_last_statement_in_function_body(
+                                node, node_list
+                            )
                             if last_stmt:
                                 last_stmt_id, last_stmt_node = last_stmt
-                                compound_control_stmts = ["if_statement", "while_statement", "for_statement",
-                                                          "for_range_loop", "do_statement", "switch_statement",
-                                                          "try_statement"]
+                                compound_control_stmts = [
+                                    "if_statement",
+                                    "while_statement",
+                                    "for_statement",
+                                    "for_range_loop",
+                                    "do_statement",
+                                    "switch_statement",
+                                    "try_statement",
+                                ]
 
-                                invokes_lambda = self.statement_invokes_lambda(last_stmt_node)
+                                invokes_lambda = self.statement_invokes_lambda(
+                                    last_stmt_node
+                                )
 
-                                if (not self.is_jump_statement(last_stmt_node)
-                                    and last_stmt_node.type not in compound_control_stmts
-                                    and not invokes_lambda):
-                                    self.add_edge(last_stmt_id, implicit_return_id, "implicit_return")
+                                if (
+                                    not self.is_jump_statement(last_stmt_node)
+                                    and last_stmt_node.type
+                                    not in compound_control_stmts
+                                    and not invokes_lambda
+                                ):
+                                    self.add_edge(
+                                        last_stmt_id,
+                                        implicit_return_id,
+                                        "implicit_return",
+                                    )
 
                 if should_add_last_stmt_as_return:
-                    has_explicit_returns = current_index in self.records.get("return_statement_map", {})
+                    has_explicit_returns = current_index in self.records.get(
+                        "return_statement_map", {}
+                    )
 
                     if not has_explicit_returns:
-                        last_stmt = self.get_last_statement_in_function_body(node, node_list)
+                        last_stmt = self.get_last_statement_in_function_body(
+                            node, node_list
+                        )
                         if last_stmt:
                             last_stmt_id, last_stmt_node = last_stmt
-                            if current_index not in self.records["return_statement_map"]:
+                            if (
+                                current_index
+                                not in self.records["return_statement_map"]
+                            ):
                                 self.records["return_statement_map"][current_index] = []
-                            self.records["return_statement_map"][current_index].append(last_stmt_id)
+                            self.records["return_statement_map"][current_index].append(
+                                last_stmt_id
+                            )
 
             elif node.type in ["class_specifier", "struct_specifier"]:
                 pass
@@ -3778,25 +4917,54 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(consequence.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "pos_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "pos_next",
+                                )
                     else:
-                        if (consequence.start_point, consequence.end_point, consequence.type) in node_list:
-                            self.add_edge(current_index, self.get_index(consequence), "pos_next")
+                        if (
+                            consequence.start_point,
+                            consequence.end_point,
+                            consequence.type,
+                        ) in node_list:
+                            self.add_edge(
+                                current_index, self.get_index(consequence), "pos_next"
+                            )
 
                     last_line, _ = self.get_block_last_line(node, "consequence")
-                    if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
+                    if (
+                        last_line
+                        and (last_line.start_point, last_line.end_point, last_line.type)
+                        in node_list
+                    ):
                         if not self.is_jump_statement(last_line):
                             next_index, next_node = self.get_next_index(node, node_list)
                             if next_index != 2:
-                                self.add_edge(self.get_index(last_line), next_index, "next_line")
+                                self.add_edge(
+                                    self.get_index(last_line), next_index, "next_line"
+                                )
                             else:
                                 func = self.get_containing_function(node)
                                 if func:
                                     func_index = self.get_index(func)
-                                    if func_index in self.records["implicit_return_map"]:
-                                        implicit_return_id = self.records["implicit_return_map"][func_index]
-                                        self.add_edge(self.get_index(last_line), implicit_return_id, "next_line")
+                                    if (
+                                        func_index
+                                        in self.records["implicit_return_map"]
+                                    ):
+                                        implicit_return_id = self.records[
+                                            "implicit_return_map"
+                                        ][func_index]
+                                        self.add_edge(
+                                            self.get_index(last_line),
+                                            implicit_return_id,
+                                            "next_line",
+                                        )
 
                 alternative = node.child_by_field_name("alternative")
                 if alternative:
@@ -3810,59 +4978,145 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(else_body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "neg_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "neg_next",
+                                )
                     elif else_body.type == "if_statement":
-                        if (else_body.start_point, else_body.end_point, else_body.type) in node_list:
-                            self.add_edge(current_index, self.get_index(else_body), "neg_next")
+                        if (
+                            else_body.start_point,
+                            else_body.end_point,
+                            else_body.type,
+                        ) in node_list:
+                            self.add_edge(
+                                current_index, self.get_index(else_body), "neg_next"
+                            )
                     else:
-                        if (else_body.start_point, else_body.end_point, else_body.type) in node_list:
-                            self.add_edge(current_index, self.get_index(else_body), "neg_next")
+                        if (
+                            else_body.start_point,
+                            else_body.end_point,
+                            else_body.type,
+                        ) in node_list:
+                            self.add_edge(
+                                current_index, self.get_index(else_body), "neg_next"
+                            )
 
                     if alternative.type == "else_clause":
                         if else_body.type == "compound_statement":
                             children = list(else_body.named_children)
                             if children:
                                 last_stmt = children[-1]
-                                if (last_stmt.start_point, last_stmt.end_point, last_stmt.type) in node_list:
+                                if (
+                                    last_stmt.start_point,
+                                    last_stmt.end_point,
+                                    last_stmt.type,
+                                ) in node_list:
                                     if not self.is_jump_statement(last_stmt):
-                                        next_index, next_node = self.get_next_index(node, node_list)
+                                        next_index, next_node = self.get_next_index(
+                                            node, node_list
+                                        )
                                         if next_index != 2:
-                                            self.add_edge(self.get_index(last_stmt), next_index, "next_line")
+                                            self.add_edge(
+                                                self.get_index(last_stmt),
+                                                next_index,
+                                                "next_line",
+                                            )
                                         else:
                                             func = self.get_containing_function(node)
                                             if func:
                                                 func_index = self.get_index(func)
-                                                if func_index in self.records["implicit_return_map"]:
-                                                    implicit_return_id = self.records["implicit_return_map"][func_index]
-                                                    self.add_edge(self.get_index(last_stmt), implicit_return_id, "next_line")
+                                                if (
+                                                    func_index
+                                                    in self.records[
+                                                        "implicit_return_map"
+                                                    ]
+                                                ):
+                                                    implicit_return_id = self.records[
+                                                        "implicit_return_map"
+                                                    ][func_index]
+                                                    self.add_edge(
+                                                        self.get_index(last_stmt),
+                                                        implicit_return_id,
+                                                        "next_line",
+                                                    )
                         elif else_body.type != "if_statement":
-                            if (else_body.start_point, else_body.end_point, else_body.type) in node_list:
+                            if (
+                                else_body.start_point,
+                                else_body.end_point,
+                                else_body.type,
+                            ) in node_list:
                                 if not self.is_jump_statement(else_body):
-                                    next_index, next_node = self.get_next_index(node, node_list)
+                                    next_index, next_node = self.get_next_index(
+                                        node, node_list
+                                    )
                                     if next_index != 2:
-                                        self.add_edge(self.get_index(else_body), next_index, "next_line")
+                                        self.add_edge(
+                                            self.get_index(else_body),
+                                            next_index,
+                                            "next_line",
+                                        )
                                     else:
                                         func = self.get_containing_function(node)
                                         if func:
                                             func_index = self.get_index(func)
-                                            if func_index in self.records["implicit_return_map"]:
-                                                implicit_return_id = self.records["implicit_return_map"][func_index]
-                                                self.add_edge(self.get_index(else_body), implicit_return_id, "next_line")
-                    elif else_body.type == "compound_statement" or else_body.type != "if_statement":
+                                            if (
+                                                func_index
+                                                in self.records["implicit_return_map"]
+                                            ):
+                                                implicit_return_id = self.records[
+                                                    "implicit_return_map"
+                                                ][func_index]
+                                                self.add_edge(
+                                                    self.get_index(else_body),
+                                                    implicit_return_id,
+                                                    "next_line",
+                                                )
+                    elif (
+                        else_body.type == "compound_statement"
+                        or else_body.type != "if_statement"
+                    ):
                         last_line, _ = self.get_block_last_line(node, "alternative")
-                        if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
+                        if (
+                            last_line
+                            and (
+                                last_line.start_point,
+                                last_line.end_point,
+                                last_line.type,
+                            )
+                            in node_list
+                        ):
                             if not self.is_jump_statement(last_line):
-                                next_index, next_node = self.get_next_index(node, node_list)
+                                next_index, next_node = self.get_next_index(
+                                    node, node_list
+                                )
                                 if next_index != 2:
-                                    self.add_edge(self.get_index(last_line), next_index, "next_line")
+                                    self.add_edge(
+                                        self.get_index(last_line),
+                                        next_index,
+                                        "next_line",
+                                    )
                                 else:
                                     func = self.get_containing_function(node)
                                     if func:
                                         func_index = self.get_index(func)
-                                        if func_index in self.records["implicit_return_map"]:
-                                            implicit_return_id = self.records["implicit_return_map"][func_index]
-                                            self.add_edge(self.get_index(last_line), implicit_return_id, "next_line")
+                                        if (
+                                            func_index
+                                            in self.records["implicit_return_map"]
+                                        ):
+                                            implicit_return_id = self.records[
+                                                "implicit_return_map"
+                                            ][func_index]
+                                            self.add_edge(
+                                                self.get_index(last_line),
+                                                implicit_return_id,
+                                                "next_line",
+                                            )
                 else:
                     next_index, next_node = self.get_next_index(node, node_list)
                     if next_index != 2:
@@ -3872,8 +5126,12 @@ class CFGGraph_cpp(CFGGraph):
                         if func:
                             func_index = self.get_index(func)
                             if func_index in self.records["implicit_return_map"]:
-                                implicit_return_id = self.records["implicit_return_map"][func_index]
-                                self.add_edge(current_index, implicit_return_id, "neg_next")
+                                implicit_return_id = self.records[
+                                    "implicit_return_map"
+                                ][func_index]
+                                self.add_edge(
+                                    current_index, implicit_return_id, "neg_next"
+                                )
 
             elif node.type == "while_statement":
                 body = node.child_by_field_name("body")
@@ -3882,16 +5140,35 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "pos_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "pos_next",
+                                )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
-                            self.add_edge(current_index, self.get_index(body), "pos_next")
+                            self.add_edge(
+                                current_index, self.get_index(body), "pos_next"
+                            )
 
                     last_line, _ = self.get_block_last_line(node, "body")
-                    if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
-                        if not self.is_jump_statement(last_line) and last_line.type != "try_statement":
-                            self.add_edge(self.get_index(last_line), current_index, "loop_control")
+                    if (
+                        last_line
+                        and (last_line.start_point, last_line.end_point, last_line.type)
+                        in node_list
+                    ):
+                        if (
+                            not self.is_jump_statement(last_line)
+                            and last_line.type != "try_statement"
+                        ):
+                            self.add_edge(
+                                self.get_index(last_line), current_index, "loop_control"
+                            )
 
                 next_index, next_node = self.get_next_index(node, node_list)
                 if next_index != 2:
@@ -3904,16 +5181,35 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "pos_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "pos_next",
+                                )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
-                            self.add_edge(current_index, self.get_index(body), "pos_next")
+                            self.add_edge(
+                                current_index, self.get_index(body), "pos_next"
+                            )
 
                     last_line, _ = self.get_block_last_line(node, "body")
-                    if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
-                        if not self.is_jump_statement(last_line) and last_line.type != "try_statement":
-                            self.add_edge(self.get_index(last_line), current_index, "loop_control")
+                    if (
+                        last_line
+                        and (last_line.start_point, last_line.end_point, last_line.type)
+                        in node_list
+                    ):
+                        if (
+                            not self.is_jump_statement(last_line)
+                            and last_line.type != "try_statement"
+                        ):
+                            self.add_edge(
+                                self.get_index(last_line), current_index, "loop_control"
+                            )
 
                 next_index, next_node = self.get_next_index(node, node_list)
                 if next_index != 2:
@@ -3928,16 +5224,35 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "pos_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "pos_next",
+                                )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
-                            self.add_edge(current_index, self.get_index(body), "pos_next")
+                            self.add_edge(
+                                current_index, self.get_index(body), "pos_next"
+                            )
 
                     last_line, _ = self.get_block_last_line(node, "body")
-                    if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
-                        if not self.is_jump_statement(last_line) and last_line.type != "try_statement":
-                            self.add_edge(self.get_index(last_line), current_index, "loop_control")
+                    if (
+                        last_line
+                        and (last_line.start_point, last_line.end_point, last_line.type)
+                        in node_list
+                    ):
+                        if (
+                            not self.is_jump_statement(last_line)
+                            and last_line.type != "try_statement"
+                        ):
+                            self.add_edge(
+                                self.get_index(last_line), current_index, "loop_control"
+                            )
 
                 next_index, next_node = self.get_next_index(node, node_list)
                 if next_index != 2:
@@ -3953,27 +5268,54 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
                                 first_stmt_index = self.get_index(first_stmt)
-                                self.add_edge(current_index, first_stmt_index, "first_next_line")
+                                self.add_edge(
+                                    current_index, first_stmt_index, "first_next_line"
+                                )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
                             first_stmt_index = self.get_index(body)
-                            self.add_edge(current_index, first_stmt_index, "first_next_line")
+                            self.add_edge(
+                                current_index, first_stmt_index, "first_next_line"
+                            )
 
                     last_line, _ = self.get_block_last_line(node, "body")
-                    if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
+                    if (
+                        last_line
+                        and (last_line.start_point, last_line.end_point, last_line.type)
+                        in node_list
+                    ):
                         condition = node.child_by_field_name("condition")
                         if condition:
-                            cond_key = (condition.start_point, condition.end_point, condition.type)
+                            cond_key = (
+                                condition.start_point,
+                                condition.end_point,
+                                condition.type,
+                            )
                             if cond_key in node_list:
                                 cond_index = self.get_index(condition)
-                                if not self.is_jump_statement(last_line) and last_line.type != "try_statement":
-                                    self.add_edge(self.get_index(last_line), cond_index, "next_line")
+                                if (
+                                    not self.is_jump_statement(last_line)
+                                    and last_line.type != "try_statement"
+                                ):
+                                    self.add_edge(
+                                        self.get_index(last_line),
+                                        cond_index,
+                                        "next_line",
+                                    )
 
                 condition = node.child_by_field_name("condition")
                 if condition:
-                    cond_key = (condition.start_point, condition.end_point, condition.type)
+                    cond_key = (
+                        condition.start_point,
+                        condition.end_point,
+                        condition.type,
+                    )
                     if cond_key in node_list:
                         cond_index = self.get_index(condition)
 
@@ -3987,7 +5329,13 @@ class CFGGraph_cpp(CFGGraph):
             elif node.type == "break_statement":
                 parent = node.parent
                 while parent is not None:
-                    if parent.type in ["while_statement", "for_statement", "for_range_loop", "do_statement", "switch_statement"]:
+                    if parent.type in [
+                        "while_statement",
+                        "for_statement",
+                        "for_range_loop",
+                        "do_statement",
+                        "switch_statement",
+                    ]:
                         next_index, next_node = self.get_next_index(parent, node_list)
                         if next_index != 2:
                             self.add_edge(current_index, next_index, "jump_next")
@@ -3998,7 +5346,11 @@ class CFGGraph_cpp(CFGGraph):
                 parent = node.parent
                 while parent is not None:
                     if parent.type in self.statement_types["loop_control_statement"]:
-                        if (parent.start_point, parent.end_point, parent.type) in node_list:
+                        if (
+                            parent.start_point,
+                            parent.end_point,
+                            parent.type,
+                        ) in node_list:
                             loop_index = self.get_index(parent)
                             self.add_edge(current_index, loop_index, "jump_next")
                         break
@@ -4010,13 +5362,18 @@ class CFGGraph_cpp(CFGGraph):
                     func_index = self.get_index(func)
                     if func_index not in self.records["return_statement_map"]:
                         self.records["return_statement_map"][func_index] = []
-                    if current_index not in self.records["return_statement_map"][func_index]:
-                        self.records["return_statement_map"][func_index].append(current_index)
+                    if (
+                        current_index
+                        not in self.records["return_statement_map"][func_index]
+                    ):
+                        self.records["return_statement_map"][func_index].append(
+                            current_index
+                        )
 
             elif node.type == "goto_statement":
                 label_node = node.child_by_field_name("label")
                 if label_node:
-                    label_name = label_node.text.decode('utf-8') + ":"
+                    label_name = label_node.text.decode("utf-8") + ":"
                     if label_name in self.records["label_statement_map"]:
                         label_key = self.records["label_statement_map"][label_name]
                         if label_key in node_list:
@@ -4042,7 +5399,11 @@ class CFGGraph_cpp(CFGGraph):
                                 has_default = True
 
                     for case_node in case_nodes:
-                        if (case_node.start_point, case_node.end_point, case_node.type) in node_list:
+                        if (
+                            case_node.start_point,
+                            case_node.end_point,
+                            case_node.type,
+                        ) in node_list:
                             case_index = self.get_index(case_node)
                             self.add_edge(current_index, case_index, "switch_case")
 
@@ -4060,8 +5421,16 @@ class CFGGraph_cpp(CFGGraph):
 
                     for i in range(start_index, len(children)):
                         if children[i].type in self.statement_types["node_list_type"]:
-                            if (children[i].start_point, children[i].end_point, children[i].type) in node_list:
-                                self.add_edge(current_index, self.get_index(children[i]), "case_next")
+                            if (
+                                children[i].start_point,
+                                children[i].end_point,
+                                children[i].type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(children[i]),
+                                    "case_next",
+                                )
                             break
 
             elif node.type == "try_statement":
@@ -4071,8 +5440,16 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "try_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "try_next",
+                                )
 
                 catch_clauses = []
                 for child in node.children:
@@ -4080,16 +5457,26 @@ class CFGGraph_cpp(CFGGraph):
                         catch_clauses.append(child)
 
                 for catch_node in catch_clauses:
-                    if (catch_node.start_point, catch_node.end_point, catch_node.type) in node_list:
+                    if (
+                        catch_node.start_point,
+                        catch_node.end_point,
+                        catch_node.type,
+                    ) in node_list:
                         catch_index = self.get_index(catch_node)
                         self.add_edge(current_index, catch_index, "catch_exception")
 
                 last_line, _ = self.get_block_last_line(node, "body")
-                if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
+                if (
+                    last_line
+                    and (last_line.start_point, last_line.end_point, last_line.type)
+                    in node_list
+                ):
                     if not self.is_jump_statement(last_line):
                         next_index, next_node = self.get_next_index(node, node_list)
                         if next_index != 2:
-                            self.add_edge(self.get_index(last_line), next_index, "try_exit")
+                            self.add_edge(
+                                self.get_index(last_line), next_index, "try_exit"
+                            )
 
             elif node.type == "catch_clause":
                 body = node.child_by_field_name("body")
@@ -4098,17 +5485,33 @@ class CFGGraph_cpp(CFGGraph):
                         children = list(body.named_children)
                         if children:
                             first_stmt = children[0]
-                            if (first_stmt.start_point, first_stmt.end_point, first_stmt.type) in node_list:
-                                self.add_edge(current_index, self.get_index(first_stmt), "catch_next")
+                            if (
+                                first_stmt.start_point,
+                                first_stmt.end_point,
+                                first_stmt.type,
+                            ) in node_list:
+                                self.add_edge(
+                                    current_index,
+                                    self.get_index(first_stmt),
+                                    "catch_next",
+                                )
 
                 last_line, _ = self.get_block_last_line(node, "body")
-                if last_line and (last_line.start_point, last_line.end_point, last_line.type) in node_list:
+                if (
+                    last_line
+                    and (last_line.start_point, last_line.end_point, last_line.type)
+                    in node_list
+                ):
                     if not self.is_jump_statement(last_line):
                         parent_try = node.parent
                         if parent_try and parent_try.type == "try_statement":
-                            next_index, next_node = self.get_next_index(parent_try, node_list)
+                            next_index, next_node = self.get_next_index(
+                                parent_try, node_list
+                            )
                             if next_index != 2:
-                                self.add_edge(self.get_index(last_line), next_index, "catch_exit")
+                                self.add_edge(
+                                    self.get_index(last_line), next_index, "catch_exit"
+                                )
 
             elif node.type == "throw_statement":
                 thrown_type = self.extract_thrown_type(node)
@@ -4119,12 +5522,22 @@ class CFGGraph_cpp(CFGGraph):
                     if parent.type == "try_statement":
                         for child in parent.children:
                             if child.type == "catch_clause":
-                                if (child.start_point, child.end_point, child.type) in node_list:
-                                    catch_type = self.extract_catch_parameter_type(child)
+                                if (
+                                    child.start_point,
+                                    child.end_point,
+                                    child.type,
+                                ) in node_list:
+                                    catch_type = self.extract_catch_parameter_type(
+                                        child
+                                    )
 
-                                    if self.exception_type_matches(thrown_type, catch_type):
+                                    if self.exception_type_matches(
+                                        thrown_type, catch_type
+                                    ):
                                         catch_index = self.get_index(child)
-                                        self.add_edge(current_index, catch_index, "throw_exit")
+                                        self.add_edge(
+                                            current_index, catch_index, "throw_exit"
+                                        )
                                         found_try = True
                                         break
 
@@ -4133,12 +5546,20 @@ class CFGGraph_cpp(CFGGraph):
 
                 if not found_try:
                     func = self.get_containing_function(node)
-                    if func and (func.start_point, func.end_point, func.type) in node_list:
+                    if (
+                        func
+                        and (func.start_point, func.end_point, func.type) in node_list
+                    ):
                         func_index = self.get_index(func)
                         if func_index not in self.records["return_statement_map"]:
                             self.records["return_statement_map"][func_index] = []
-                        if current_index not in self.records["return_statement_map"][func_index]:
-                            self.records["return_statement_map"][func_index].append(current_index)
+                        if (
+                            current_index
+                            not in self.records["return_statement_map"][func_index]
+                        ):
+                            self.records["return_statement_map"][func_index].append(
+                                current_index
+                            )
 
             elif node.type == "lambda_expression":
                 pass
@@ -4151,9 +5572,14 @@ class CFGGraph_cpp(CFGGraph):
 
         for key, node in node_list.items():
             if node.parent and node.parent.type == "translation_unit":
-                if node.type in ["class_specifier", "struct_specifier",
-                                "enum_specifier", "type_definition", "namespace_definition",
-                                "declaration"]:
+                if node.type in [
+                    "class_specifier",
+                    "struct_specifier",
+                    "enum_specifier",
+                    "type_definition",
+                    "namespace_definition",
+                    "declaration",
+                ]:
                     node_id = self.get_index(node)
                     global_declarations.append((node_id, node.start_point[0]))
 

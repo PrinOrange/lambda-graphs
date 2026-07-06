@@ -1,5 +1,6 @@
 from .CFG_c import CFGGraph_c
 from .CFG_cpp import CFGGraph_cpp
+from .CFG_java import CFGGraph_java
 from ...tree_parser.parser_driver import ParserDriver
 from ...utils import postprocessor
 
@@ -22,6 +23,7 @@ class CFGDriver:
         self.CFG_map = {
             "c": CFGGraph_c,
             "cpp": CFGGraph_cpp,
+            "java": CFGGraph_java,
         }
 
         self.CFG = self.CFG_map[self.src_language](
@@ -36,6 +38,8 @@ class CFGDriver:
         if output_file:
             self.json = postprocessor.write_networkx_to_json(self.graph, output_file)
             postprocessor.write_to_dot(
-                self.graph, output_file.split(".")[0] + ".dot",
-                output_png=True, src_language=self.src_language
+                self.graph,
+                output_file.split(".")[0] + ".dot",
+                output_png=True,
+                src_language=self.src_language,
             )

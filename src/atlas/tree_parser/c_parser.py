@@ -18,7 +18,12 @@ class CParser(CustomParser):
         - parameter_declaration (function parameters)
         - pointer_declarator (pointer variables)
         """
-        parent_types = ["init_declarator", "parameter_declaration", "pointer_declarator", "array_declarator"]
+        parent_types = [
+            "init_declarator",
+            "parameter_declaration",
+            "pointer_declarator",
+            "array_declarator",
+        ]
         current_types = ["identifier"]
 
         if (
@@ -27,7 +32,10 @@ class CParser(CustomParser):
             and current_node.type in current_types
         ):
             if current_node.parent.type == "init_declarator":
-                if current_node.parent.children and current_node.parent.children[0] == current_node:
+                if (
+                    current_node.parent.children
+                    and current_node.parent.children[0] == current_node
+                ):
                     return True
                 if current_node.parent.children[0].type == "pointer_declarator":
                     pointer_node = current_node.parent.children[0]
@@ -37,7 +45,10 @@ class CParser(CustomParser):
                 if current_node.type == "identifier":
                     return True
             elif current_node.parent.type == "array_declarator":
-                if current_node.parent.children and current_node.parent.children[0] == current_node:
+                if (
+                    current_node.parent.children
+                    and current_node.parent.children[0] == current_node
+                ):
                     return True
             elif current_node.parent.type == "parameter_declaration":
                 return True
@@ -49,19 +60,36 @@ class CParser(CustomParser):
         ):
             for i, child in enumerate(current_node.parent.children):
                 if child == current_node and i > 0:
-                    prev_sibling = current_node.parent.children[i-1]
-                    if prev_sibling.type in ['primitive_type', 'type_identifier', 'sized_type_specifier',
-                                             'struct_specifier', 'union_specifier', 'enum_specifier',
-                                             'storage_class_specifier', 'type_qualifier']:
+                    prev_sibling = current_node.parent.children[i - 1]
+                    if prev_sibling.type in [
+                        "primitive_type",
+                        "type_identifier",
+                        "sized_type_specifier",
+                        "struct_specifier",
+                        "union_specifier",
+                        "enum_specifier",
+                        "storage_class_specifier",
+                        "type_qualifier",
+                    ]:
                         return True
             return False
 
         if current_node.parent is not None and current_node.parent.type == "declarator":
-            if current_node.parent.parent is not None and current_node.parent.parent.type in ["declaration", "parameter_declaration"]:
+            if (
+                current_node.parent.parent is not None
+                and current_node.parent.parent.type
+                in ["declaration", "parameter_declaration"]
+            ):
                 return True
 
-        if current_node.parent is not None and current_node.parent.type == "function_declarator":
-            if current_node.parent.children and current_node.parent.children[0] == current_node:
+        if (
+            current_node.parent is not None
+            and current_node.parent.type == "function_declarator"
+        ):
+            if (
+                current_node.parent.children
+                and current_node.parent.children[0] == current_node
+            ):
                 return True
 
         return False
@@ -87,8 +115,14 @@ class CParser(CustomParser):
 
         Returns the full type including pointers, e.g., "char*", "int**", "uint32_t*"
         """
-        datatypes = ['primitive_type', 'type_identifier', 'sized_type_specifier',
-                     'struct_specifier', 'union_specifier', 'enum_specifier']
+        datatypes = [
+            "primitive_type",
+            "type_identifier",
+            "sized_type_specifier",
+            "struct_specifier",
+            "union_specifier",
+            "enum_specifier",
+        ]
 
         current = node
         pointer_count = 0
@@ -107,7 +141,7 @@ class CParser(CustomParser):
                 base_type = None
                 for child in current.children:
                     if child.type in datatypes:
-                        base_type = child.text.decode('utf-8')
+                        base_type = child.text.decode("utf-8")
                         break
 
                 if base_type:
@@ -133,7 +167,7 @@ class CParser(CustomParser):
 
     def longest_scope_match(self, name_matches, symbol_table):
         """Given a list of name matches, return the longest scope match."""
-        scope_array = list(map(lambda x: symbol_table['scope_map'][x[0]], name_matches))
+        scope_array = list(map(lambda x: symbol_table["scope_map"][x[0]], name_matches))
         max_val = max(scope_array, key=lambda x: len(x))
         for i in range(len(scope_array)):
             if scope_array[i] == max_val:
@@ -175,10 +209,15 @@ class CParser(CustomParser):
 
         if (
             root_node.is_named
-            and (len(root_node.children) == 0 or root_node.type in ["string_literal", "variadic_parameter"])
+            and (
+                len(root_node.children) == 0
+                or root_node.type in ["string_literal", "variadic_parameter"]
+            )
             and root_node.type != "comment"
         ):
-            index = self.index[(root_node.start_point, root_node.end_point, root_node.type)]
+            index = self.index[
+                (root_node.start_point, root_node.end_point, root_node.type)
+            ]
 
             label[index] = root_node.text.decode("UTF-8")
 
@@ -190,28 +229,57 @@ class CParser(CustomParser):
 
             current_node = root_node
 
-            if current_node.parent is not None and current_node.parent.type in remove_list:
+            if (
+                current_node.parent is not None
+                and current_node.parent.type in remove_list
+            ):
                 method_map.append(index)
-                if current_node.next_named_sibling is not None and current_node.next_named_sibling.type == "argument_list":
+                if (
+                    current_node.next_named_sibling is not None
+                    and current_node.next_named_sibling.type == "argument_list"
+                ):
                     method_calls.append(index)
 
-            if current_node.parent is not None and current_node.parent.type == "call_expression":
-                if current_node.parent.children and current_node.parent.children[0] == current_node:
+            if (
+                current_node.parent is not None
+                and current_node.parent.type == "call_expression"
+            ):
+                if (
+                    current_node.parent.children
+                    and current_node.parent.children[0] == current_node
+                ):
                     method_map.append(index)
                     method_calls.append(index)
 
-            if current_node.parent is not None and current_node.parent.type == "field_expression":
+            if (
+                current_node.parent is not None
+                and current_node.parent.type == "field_expression"
+            ):
                 field_node = current_node.parent.child_by_field_name("field")
                 if field_node is not None:
-                    field_index = self.index[(field_node.start_point, field_node.end_point, field_node.type)]
-                    current_index = self.index[(current_node.start_point, current_node.end_point, current_node.type)]
+                    field_index = self.index[
+                        (field_node.start_point, field_node.end_point, field_node.type)
+                    ]
+                    current_index = self.index[
+                        (
+                            current_node.start_point,
+                            current_node.end_point,
+                            current_node.type,
+                        )
+                    ]
                     if field_index == current_index:
                         method_map.append(current_index)
 
-                while current_node.parent is not None and current_node.parent.type == "field_expression":
+                while (
+                    current_node.parent is not None
+                    and current_node.parent.type == "field_expression"
+                ):
                     current_node = current_node.parent
 
-                if current_node.parent is not None and current_node.parent.type == "call_expression":
+                if (
+                    current_node.parent is not None
+                    and current_node.parent.type == "call_expression"
+                ):
                     method_map.append(index)
                     method_calls.append(index)
                 label[index] = current_node.text.decode("UTF-8")
@@ -224,28 +292,33 @@ class CParser(CustomParser):
                 if variable_type is not None:
                     symbol_table["data_type"][index] = variable_type
             else:
-                current_scope = symbol_table['scope_map'][index]
+                current_scope = symbol_table["scope_map"][index]
 
-                if current_node.parent is not None and current_node.parent.type == "field_expression":
+                if (
+                    current_node.parent is not None
+                    and current_node.parent.type == "field_expression"
+                ):
                     field_variable = current_node.parent.children[-1]
-                    field_variable_name = field_variable.text.decode('utf-8')
+                    field_variable_name = field_variable.text.decode("utf-8")
 
-                    for (ind, var) in declaration.items():
+                    for ind, var in declaration.items():
                         if var == field_variable_name:
-                            parent_scope = symbol_table['scope_map'][ind]
+                            parent_scope = symbol_table["scope_map"][ind]
                             if self.scope_check(parent_scope, current_scope):
                                 declaration_map[index] = ind
                                 break
                 else:
                     name_matches = []
-                    for (ind, var) in declaration.items():
+                    for ind, var in declaration.items():
                         if var == label[index]:
-                            parent_scope = symbol_table['scope_map'][ind]
+                            parent_scope = symbol_table["scope_map"][ind]
                             if self.scope_check(parent_scope, current_scope):
                                 name_matches.append((ind, var))
 
                     if name_matches:
-                        closest_index = self.longest_scope_match(name_matches, symbol_table)
+                        closest_index = self.longest_scope_match(
+                            name_matches, symbol_table
+                        )
                         declaration_map[index] = closest_index
 
         else:
@@ -285,6 +358,7 @@ class CParser(CustomParser):
         This allows us to resolve struct field types when we encounter
         field_expression nodes like p.x or ptr->field.
         """
+
         def traverse_for_structs(node):
             if node.type == "struct_specifier":
                 struct_name = None
@@ -292,7 +366,7 @@ class CParser(CustomParser):
 
                 for child in node.children:
                     if child.type == "type_identifier":
-                        struct_name = child.text.decode('utf-8')
+                        struct_name = child.text.decode("utf-8")
                     elif child.type == "field_declaration_list":
                         field_list = child
 
@@ -304,29 +378,40 @@ class CParser(CustomParser):
                             field_names = []
 
                             for fc in field_decl.children:
-                                if fc.type in ['primitive_type', 'type_identifier', 'sized_type_specifier', 'struct_specifier']:
-                                    if fc.type == 'struct_specifier':
+                                if fc.type in [
+                                    "primitive_type",
+                                    "type_identifier",
+                                    "sized_type_specifier",
+                                    "struct_specifier",
+                                ]:
+                                    if fc.type == "struct_specifier":
                                         for sc in fc.children:
                                             if sc.type == "type_identifier":
-                                                field_type = "struct " + sc.text.decode('utf-8')
+                                                field_type = "struct " + sc.text.decode(
+                                                    "utf-8"
+                                                )
                                                 break
                                     else:
-                                        field_type = fc.text.decode('utf-8')
+                                        field_type = fc.text.decode("utf-8")
 
                                 elif fc.type == "field_identifier":
-                                    field_names.append(fc.text.decode('utf-8'))
+                                    field_names.append(fc.text.decode("utf-8"))
                                 elif fc.type == "pointer_declarator":
-                                    pointer_count = fc.text.decode('utf-8').count('*')
+                                    pointer_count = fc.text.decode("utf-8").count("*")
                                     for pchild in fc.named_children:
                                         if pchild.type == "field_identifier":
-                                            field_names.append(pchild.text.decode('utf-8'))
+                                            field_names.append(
+                                                pchild.text.decode("utf-8")
+                                            )
                                             break
                                     if field_type:
                                         field_type += "*" * pointer_count
                                 elif fc.type == "array_declarator":
                                     for achild in fc.children:
                                         if achild.type == "field_identifier":
-                                            field_names.append(achild.text.decode('utf-8'))
+                                            field_names.append(
+                                                achild.text.decode("utf-8")
+                                            )
                                             break
                                     if field_type:
                                         field_type += "*"
@@ -352,7 +437,7 @@ class CParser(CustomParser):
         Returns:
             Type string or "unknown" if not found
         """
-        if struct_name.startswith('struct '):
+        if struct_name.startswith("struct "):
             struct_name = struct_name[7:]
 
         if struct_name in self.struct_definitions:
@@ -366,9 +451,12 @@ class CParser(CustomParser):
 
         This allows us to expand typedef aliases when resolving types.
         """
+
         def traverse_for_typedefs(node):
             if node.type == "type_definition":
-                children = [c for c in node.children if c.type != ';' and c.type != 'typedef']
+                children = [
+                    c for c in node.children if c.type != ";" and c.type != "typedef"
+                ]
 
                 if len(children) < 2:
                     return
@@ -377,17 +465,21 @@ class CParser(CustomParser):
                 actual_type = None
                 pointer_count = 0
 
-                if any(c.type == 'pointer_declarator' for c in children):
-                    if children[0].type in ['primitive_type', 'sized_type_specifier', 'type_identifier']:
-                        actual_type = children[0].text.decode('utf-8')
+                if any(c.type == "pointer_declarator" for c in children):
+                    if children[0].type in [
+                        "primitive_type",
+                        "sized_type_specifier",
+                        "type_identifier",
+                    ]:
+                        actual_type = children[0].text.decode("utf-8")
 
                     for child in children:
-                        if child.type == 'pointer_declarator':
-                            pointer_count = child.text.decode('utf-8').count('*')
+                        if child.type == "pointer_declarator":
+                            pointer_count = child.text.decode("utf-8").count("*")
 
                             def find_typedef_name(node):
-                                if node.type in ['type_identifier', 'identifier']:
-                                    return node.text.decode('utf-8')
+                                if node.type in ["type_identifier", "identifier"]:
+                                    return node.text.decode("utf-8")
                                 for c in node.named_children:
                                     result = find_typedef_name(c)
                                     if result:
@@ -396,39 +488,49 @@ class CParser(CustomParser):
 
                             typedef_name = find_typedef_name(child)
 
-                elif any(c.type == 'function_declarator' for c in children):
-                    if children[0].type in ['primitive_type', 'type_identifier']:
+                elif any(c.type == "function_declarator" for c in children):
+                    if children[0].type in ["primitive_type", "type_identifier"]:
                         actual_type = "function_pointer"
 
                     for child in children:
-                        if child.type == 'function_declarator':
+                        if child.type == "function_declarator":
                             for fc in child.children:
-                                if fc.type == 'pointer_declarator':
+                                if fc.type == "pointer_declarator":
                                     for pdc in fc.named_children:
-                                        if pdc.type in ['identifier', 'type_identifier']:
-                                            typedef_name = pdc.text.decode('utf-8')
+                                        if pdc.type in [
+                                            "identifier",
+                                            "type_identifier",
+                                        ]:
+                                            typedef_name = pdc.text.decode("utf-8")
                                             break
 
-                elif any(c.type == 'struct_specifier' for c in children):
+                elif any(c.type == "struct_specifier" for c in children):
                     for i, child in enumerate(children):
-                        if child.type == 'struct_specifier':
+                        if child.type == "struct_specifier":
                             for sc in child.children:
                                 if sc.type == "type_identifier":
-                                    actual_type = "struct " + sc.text.decode('utf-8')
+                                    actual_type = "struct " + sc.text.decode("utf-8")
                                     break
                             if not actual_type:
-                                actual_type = child.text.decode('utf-8')
+                                actual_type = child.text.decode("utf-8")
 
-                        elif child.type in ['type_identifier', 'primitive_type'] and i > 0:
-                            typedef_name = child.text.decode('utf-8')
+                        elif (
+                            child.type in ["type_identifier", "primitive_type"]
+                            and i > 0
+                        ):
+                            typedef_name = child.text.decode("utf-8")
 
                 else:
                     if len(children) >= 2:
-                        if children[0].type in ['primitive_type', 'sized_type_specifier', 'type_identifier']:
-                            actual_type = children[0].text.decode('utf-8')
+                        if children[0].type in [
+                            "primitive_type",
+                            "sized_type_specifier",
+                            "type_identifier",
+                        ]:
+                            actual_type = children[0].text.decode("utf-8")
 
-                        if children[-1].type in ['type_identifier', 'primitive_type']:
-                            typedef_name = children[-1].text.decode('utf-8')
+                        if children[-1].type in ["type_identifier", "primitive_type"]:
+                            typedef_name = children[-1].text.decode("utf-8")
 
                 if actual_type and pointer_count > 0:
                     actual_type += "*" * pointer_count
@@ -451,9 +553,9 @@ class CParser(CustomParser):
         Returns:
             Expanded type string, or original if not a typedef
         """
-        if type_name.endswith('*'):
-            base = type_name.rstrip('*')
-            stars = '*' * type_name.count('*')
+        if type_name.endswith("*"):
+            base = type_name.rstrip("*")
+            stars = "*" * type_name.count("*")
             expanded = self.expand_typedef(base.strip())
             return expanded + stars
 

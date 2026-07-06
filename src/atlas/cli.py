@@ -1,4 +1,5 @@
 """CLI for ATLAS"""
+
 from __future__ import annotations
 
 import sys
@@ -18,8 +19,10 @@ app = typer.Typer()
 
 @app.callback(invoke_without_command=True)
 def main(
-        lang: str = typer.Option(..., help="c, cpp"),
-        code: Optional[str] = typer.Option(None, help="""
+    lang: str = typer.Option(..., help="c, cpp, java"),
+    code: Optional[str] = typer.Option(
+        None,
+        help="""
     int main() {
         int x = 3;
         x = x + 3;
@@ -27,18 +30,30 @@ def main(
         y += 1;
         return 0;
     }
-    """),
-        code_file: Optional[Path] = typer.Option(None, help="./test_file.c"),
-        code_folder: Optional[Path] = typer.Option(None, help="./project_folder/ - combines all source files"),
-        combined_name: Optional[str] = typer.Option(None, help="Custom name for combined file (without extension), e.g., 'myproject'"),
-        graphs: str = typer.Option("ast,dfg", help="ast, cfg, dfg"),
-        output: str = typer.Option("dot", help="all/json/dot (dot generates png as well)"),
-        blacklisted: str = typer.Option("", help="Nodes to be removed from the AST"),
-        collapsed: bool = typer.Option(False, help="Collapses all occurrences of a variable into one node"),
-        last_def: bool = typer.Option(False, help="Adds last definition information to the DFG"),
-        last_use: bool = typer.Option(False, help="Adds last use information to the DFG"),
-        throw_parse_error: bool = typer.Option(False, help="Throws an error if the code cannot be parsed"),
-        debug: bool = typer.Option(False, help="Enables debug logs"),
+    """,
+    ),
+    code_file: Optional[Path] = typer.Option(None, help="./test_file.c"),
+    code_folder: Optional[Path] = typer.Option(
+        None, help="./project_folder/ - combines all source files"
+    ),
+    combined_name: Optional[str] = typer.Option(
+        None,
+        help="Custom name for combined file (without extension), e.g., 'myproject'",
+    ),
+    graphs: str = typer.Option("ast,dfg", help="ast, cfg, dfg"),
+    output: str = typer.Option("dot", help="all/json/dot (dot generates png as well)"),
+    blacklisted: str = typer.Option("", help="Nodes to be removed from the AST"),
+    collapsed: bool = typer.Option(
+        False, help="Collapses all occurrences of a variable into one node"
+    ),
+    last_def: bool = typer.Option(
+        False, help="Adds last definition information to the DFG"
+    ),
+    last_use: bool = typer.Option(False, help="Adds last use information to the DFG"),
+    throw_parse_error: bool = typer.Option(
+        False, help="Throws an error if the code cannot be parsed"
+    ),
+    debug: bool = typer.Option(False, help="Enables debug logs"),
 ):
     """
     Atlas
@@ -62,7 +77,7 @@ def main(
             "exists": False,
             "collapsed": collapsed,
             "minimized": bool(blacklisted),
-            "blacklisted": blacklisted.split(",")
+            "blacklisted": blacklisted.split(","),
         },
         "DFG": {
             "exists": False,
@@ -70,11 +85,11 @@ def main(
             "minimized": False,
             "statements": True,
             "last_def": last_def,
-            "last_use": last_use
+            "last_use": last_use,
         },
         "CFG": {
             "exists": False,
-        }
+        },
     }
 
     if "ast" in graphs.lower():
@@ -82,7 +97,7 @@ def main(
             "exists": True,
             "collapsed": collapsed,
             "minimized": bool(blacklisted),
-            "blacklisted": blacklisted.split(",")
+            "blacklisted": blacklisted.split(","),
         }
     if "dfg" in graphs.lower():
         codeviews["DFG"] = {
@@ -91,7 +106,7 @@ def main(
             "minimized": False,
             "statements": True,
             "last_def": last_def,
-            "last_use": last_use
+            "last_use": last_use,
         }
     if "cfg" in graphs.lower():
         codeviews["CFG"] = {
@@ -115,35 +130,52 @@ def main(
 
             if lang == "c":
                 combined_source_file = str(temp_dir / f"{output_base_name}.c")
+            elif lang == "java":
+                combined_source_file = str(temp_dir / f"{output_base_name}.java")
             else:
                 combined_source_file = str(temp_dir / f"{output_base_name}.cpp")
 
-            combined_file_path = merge_files(str(code_folder), lang, combined_source_file)
+            combined_file_path = merge_files(
+                str(code_folder), lang, combined_source_file
+            )
             logger.info(f"Combined source written to: {combined_file_path}")
 
             with open(combined_file_path, "r") as file_handle:
                 src_code = file_handle.read()
 
             output_file_name = str(output_dir / f"{output_base_name}.json")
-            CombinedDriver(src_language=lang, src_code=src_code, output_file=output_file_name,
-                           graph_format=output, codeviews=codeviews)
+            CombinedDriver(
+                src_language=lang,
+                src_code=src_code,
+                output_file=output_file_name,
+                graph_format=output,
+                codeviews=codeviews,
+            )
         elif code_file:
             file_handle = open(code_file, "r")
             src_code = file_handle.read()
             file_handle.close()
             output_base_name = code_file.stem
             output_file_name = str(output_dir / f"{output_base_name}.json")
-            CombinedDriver(src_language=lang, src_code=src_code, output_file=output_file_name,
-                           graph_format=output, codeviews=codeviews)
+            CombinedDriver(
+                src_language=lang,
+                src_code=src_code,
+                output_file=output_file_name,
+                graph_format=output,
+                codeviews=codeviews,
+            )
         else:
             if not code:
                 raise Exception("No code provided")
             output_file_name = str(output_dir / "output.json")
-            CombinedDriver(src_language=lang, src_code=code, output_file=output_file_name, graph_format=output,
-                           codeviews=codeviews)
-    except (
-            Exception
-    ) as e:
+            CombinedDriver(
+                src_language=lang,
+                src_code=code,
+                output_file=output_file_name,
+                graph_format=output,
+                codeviews=codeviews,
+            )
+    except Exception as e:
         try:
             logger.error(e.msg)
         except AttributeError:

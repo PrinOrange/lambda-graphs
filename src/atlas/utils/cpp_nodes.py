@@ -101,17 +101,17 @@ statement_types = {
         "enum_specifier",
         "union_specifier",
         "type_definition",
-    ]
+    ],
 }
 
 method_return_types = [
-    'primitive_type',
-    'type_identifier',
-    'template_type',
-    'qualified_identifier',
-    'sized_type_specifier',
-    'auto',
-    'decltype'
+    "primitive_type",
+    "type_identifier",
+    "template_type",
+    "qualified_identifier",
+    "sized_type_specifier",
+    "auto",
+    "decltype",
 ]
 
 
@@ -140,7 +140,10 @@ def return_switch_child(node):
 
 
 def return_switch_parent(node, non_control_statement):
-    while node.parent is not None and (node.parent.type != "class_specifier" and node.parent.type != "compound_statement"):
+    while node.parent is not None and (
+        node.parent.type != "class_specifier"
+        and node.parent.type != "compound_statement"
+    ):
         if node.parent.type == "compound_statement" and node.type == "switch_statement":
             return node
         if node.parent.type in non_control_statement:
@@ -150,7 +153,10 @@ def return_switch_parent(node, non_control_statement):
 
 
 def return_switch_parent_statement(node, non_control_statement):
-    while node.parent is not None and (node.parent.type != "class_specifier" and node.parent.type != "compound_statement"):
+    while node.parent is not None and (
+        node.parent.type != "class_specifier"
+        and node.parent.type != "compound_statement"
+    ):
         if node.parent.type in non_control_statement:
             return node.parent
         node = node.parent
@@ -159,7 +165,9 @@ def return_switch_parent_statement(node, non_control_statement):
 
 def has_inner_definition(node):
     if node.type in ["struct_specifier", "class_specifier", "union_specifier"]:
-        has_body = any(child.type == "field_declaration_list" for child in node.named_children)
+        has_body = any(
+            child.type == "field_declaration_list" for child in node.named_children
+        )
         if has_body:
             return True
         for child in node.children:
@@ -320,7 +328,7 @@ def is_rvalue_reference(node):
     for child in node.children:
         if child.type == "rvalue_reference_declarator":
             return True
-        if hasattr(child, 'children'):
+        if hasattr(child, "children"):
             for subchild in child.children:
                 if subchild.type == "rvalue_reference_declarator":
                     return True
@@ -341,7 +349,7 @@ def is_template_specialization(node):
 
 def get_signature(node):
     signature = []
-    parameter_list = node.child_by_field_name('parameters')
+    parameter_list = node.child_by_field_name("parameters")
     if parameter_list is None:
         return tuple(signature)
 
@@ -355,33 +363,39 @@ def get_signature(node):
         return count
 
     for param in parameter_list.children:
-        if param.type in ['parameter_declaration', 'optional_parameter_declaration']:
+        if param.type in ["parameter_declaration", "optional_parameter_declaration"]:
             base_type = None
             for child in param.children:
-                if child.type in ['primitive_type', 'type_identifier', 'template_type', 'qualified_identifier', 'sized_type_specifier']:
-                    base_type = child.text.decode('utf-8')
+                if child.type in [
+                    "primitive_type",
+                    "type_identifier",
+                    "template_type",
+                    "qualified_identifier",
+                    "sized_type_specifier",
+                ]:
+                    base_type = child.text.decode("utf-8")
                     break
 
             if base_type:
-                declarator = param.child_by_field_name('declarator')
+                declarator = param.child_by_field_name("declarator")
                 if declarator:
-                    if declarator.type == 'reference_declarator':
-                        declarator_text = declarator.text.decode('utf-8')
-                        if declarator_text.startswith('&&'):
-                            signature.append(base_type + '&&')
+                    if declarator.type == "reference_declarator":
+                        declarator_text = declarator.text.decode("utf-8")
+                        if declarator_text.startswith("&&"):
+                            signature.append(base_type + "&&")
                         else:
-                            signature.append(base_type + '&')
-                    elif declarator.type == 'pointer_declarator':
-                        signature.append(base_type + '*')
-                    elif declarator.type == 'array_declarator':
+                            signature.append(base_type + "&")
+                    elif declarator.type == "pointer_declarator":
+                        signature.append(base_type + "*")
+                    elif declarator.type == "array_declarator":
                         pointer_count = count_array_dimensions(declarator)
-                        signature.append(base_type + '*' * pointer_count)
+                        signature.append(base_type + "*" * pointer_count)
                     else:
                         signature.append(base_type)
                 else:
                     signature.append(base_type)
-        elif param.type == '...':
-            signature.append('...')
+        elif param.type == "...":
+            signature.append("...")
 
     return tuple(signature)
 
@@ -407,7 +421,10 @@ def get_all_lambda_body(node):
         if top.type == "lambda_expression":
             output.append(top)
         for child in top.children:
-            if child.type == "lambda_expression" or child.type not in statement_types["node_list_type"]:
+            if (
+                child.type == "lambda_expression"
+                or child.type not in statement_types["node_list_type"]
+            ):
                 bfs_queue.append(child)
     return output
 
@@ -453,13 +470,18 @@ def get_class_name(node, index):
         temp_node = node
         while temp_node is not None:
             if temp_node.type == "namespace_definition":
-                namespace_index = index.get((temp_node.start_point, temp_node.end_point, temp_node.type))
+                namespace_index = index.get(
+                    (temp_node.start_point, temp_node.end_point, temp_node.type)
+                )
                 if namespace_index is not None:
                     return namespace_index, [qualified_namespace]
             temp_node = temp_node.parent
 
     while node is not None:
-        if node.type == "field_declaration_list" and node.parent.type == "class_specifier":
+        if (
+            node.type == "field_declaration_list"
+            and node.parent.type == "class_specifier"
+        ):
             node = node.parent
             class_index = index[(node.start_point, node.end_point, node.type)]
             class_name_node = get_child_of_type(node, ["type_identifier"])
@@ -476,7 +498,10 @@ def get_class_name(node, index):
 
             return class_index, class_name
 
-        elif node.type == "field_declaration_list" and node.parent.type == "struct_specifier":
+        elif (
+            node.type == "field_declaration_list"
+            and node.parent.type == "struct_specifier"
+        ):
             node = node.parent
             class_index = index[(node.start_point, node.end_point, node.type)]
             class_name_node = get_child_of_type(node, ["type_identifier"])
@@ -505,20 +530,24 @@ def evaluate_preprocessor_condition(condition_text, macro_definitions):
     """
     import re
 
-    if not any(op in condition_text for op in ['==', '!=', '>', '<', '&&', '||', 'defined']):
+    if not any(
+        op in condition_text for op in ["==", "!=", ">", "<", "&&", "||", "defined"]
+    ):
         identifier = condition_text.strip()
         return identifier in macro_definitions
 
-    defined_pattern = r'defined\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)'
-    condition_text = re.sub(defined_pattern,
-                           lambda m: '1' if m.group(1) in macro_definitions else '0',
-                           condition_text)
+    defined_pattern = r"defined\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)"
+    condition_text = re.sub(
+        defined_pattern,
+        lambda m: "1" if m.group(1) in macro_definitions else "0",
+        condition_text,
+    )
 
     for macro, value in macro_definitions.items():
-        condition_text = re.sub(r'\b' + macro + r'\b', str(value), condition_text)
+        condition_text = re.sub(r"\b" + macro + r"\b", str(value), condition_text)
 
     try:
-        if re.match(r'^[\d\s+\-*/<>=!&|()]+$', condition_text):
+        if re.match(r"^[\d\s+\-*/<>=!&|()]+$", condition_text):
             result = eval(condition_text)
             return bool(result)
     except:
@@ -527,7 +556,14 @@ def evaluate_preprocessor_condition(condition_text, macro_definitions):
     return None
 
 
-def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, records={}, macro_definitions=None):
+def get_nodes(
+    root_node=None,
+    node_list={},
+    graph_node_list=[],
+    index={},
+    records={},
+    macro_definitions=None,
+):
     """
     Returns statement level nodes recursively from the concrete syntax tree passed to it.
     Uses records to maintain required supplementary information.
@@ -542,8 +578,12 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
         macro_definitions = {}
 
     if root_node.type == "catch_clause":
-        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
-        catch_parameter = list(filter(lambda child: child.type == "parameter_list", root_node.children))
+        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = (
+            root_node
+        )
+        catch_parameter = list(
+            filter(lambda child: child.type == "parameter_list", root_node.children)
+        )
         if catch_parameter:
             param_text = catch_parameter[0].text.decode("UTF-8")
             if param_text.startswith("(") and param_text.endswith(")"):
@@ -556,7 +596,14 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
         else:
             label = "catch (...)"
         type_label = "catch"
-        graph_node_list.append((index[(root_node.start_point, root_node.end_point, root_node.type)], root_node.start_point[0], label, type_label))
+        graph_node_list.append(
+            (
+                index[(root_node.start_point, root_node.end_point, root_node.type)],
+                root_node.start_point[0],
+                label,
+                type_label,
+            )
+        )
 
     elif (
         root_node.type == "parenthesized_expression"
@@ -565,11 +612,28 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
     ):
         label = "while" + root_node.text.decode("UTF-8")
         type_label = "while"
-        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
-        graph_node_list.append((index[(root_node.start_point, root_node.end_point, root_node.type)], root_node.start_point[0], label, type_label))
+        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = (
+            root_node
+        )
+        graph_node_list.append(
+            (
+                index[(root_node.start_point, root_node.end_point, root_node.type)],
+                root_node.start_point[0],
+                label,
+                type_label,
+            )
+        )
 
-    elif root_node.type in ["preproc_include", "preproc_def", "preproc_function_def", "preproc_call",
-                            "preproc_if", "preproc_ifdef", "preproc_elif", "preproc_else"]:
+    elif root_node.type in [
+        "preproc_include",
+        "preproc_def",
+        "preproc_function_def",
+        "preproc_call",
+        "preproc_if",
+        "preproc_ifdef",
+        "preproc_elif",
+        "preproc_else",
+    ]:
 
         if root_node.type == "preproc_def":
             text = root_node.text.decode("UTF-8")
@@ -578,7 +642,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 macro_name = parts[1]
                 macro_value = parts[2].strip() if len(parts) > 2 else "1"
                 macro_definitions[macro_name] = macro_value
-                if os.environ.get('DEBUG_PREPROC'):
+                if os.environ.get("DEBUG_PREPROC"):
                     print(f"[DEFINE] {macro_name} = {macro_value}")
 
     elif root_node.type in statement_types["node_list_type"]:
@@ -592,7 +656,10 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             if parent and parent.type in ["translation_unit", "declaration_list"]:
                 if parent.type == "declaration_list":
                     grandparent = parent.parent if parent else None
-                    if grandparent and grandparent.type in ["namespace_definition", "translation_unit"]:
+                    if grandparent and grandparent.type in [
+                        "namespace_definition",
+                        "translation_unit",
+                    ]:
                         should_skip = True
                 else:
                     should_skip = True
@@ -616,20 +683,32 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 parent = parent.parent
 
             if parent and parent.type != "lambda_expression":
-                node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
+                node_list[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ] = root_node
             else:
-                node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
+                node_list[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ] = root_node
                 label = root_node.text.decode("UTF-8")
                 type_label = "expression_statement"
                 try:
                     if "{" in label:
                         label = label.split("{")[0] + label.split("}")[-1]
                     else:
-                        label = root_node.text.decode('utf-8')
+                        label = root_node.text.decode("utf-8")
                 except:
                     pass
-                graph_node_list.append((index[(root_node.start_point, root_node.end_point, root_node.type)],
-                                       root_node.start_point[0], label, type_label))
+                graph_node_list.append(
+                    (
+                        index[
+                            (root_node.start_point, root_node.end_point, root_node.type)
+                        ],
+                        root_node.start_point[0],
+                        label,
+                        type_label,
+                    )
+                )
         elif (
             root_node.type in statement_types["inner_node_type"]
             and root_node.parent is not None
@@ -642,23 +721,38 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             and return_switch_child(root_node) is not None
         ):
             switch_child = return_switch_child(root_node)
-            child_index = index[(switch_child.start_point, switch_child.end_point, switch_child.type)]
-            current_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+            child_index = index[
+                (switch_child.start_point, switch_child.end_point, switch_child.type)
+            ]
+            current_index = index[
+                (root_node.start_point, root_node.end_point, root_node.type)
+            ]
             records["switch_child_map"][current_index] = child_index
         else:
-            node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
+            node_list[(root_node.start_point, root_node.end_point, root_node.type)] = (
+                root_node
+            )
             label = root_node.text.decode("UTF-8")
             type_label = "expression_statement"
 
-            if check_lambda(root_node) and root_node.type not in statement_types["definition_types"]:
+            if (
+                check_lambda(root_node)
+                and root_node.type not in statement_types["definition_types"]
+            ):
                 raw_label = root_node.text.decode("utf-8")
                 label = ""
                 for lambda_expression in get_all_lambda_body(root_node):
-                    split_label = raw_label.split(lambda_expression.text.decode("utf-8"), 2)
+                    split_label = raw_label.split(
+                        lambda_expression.text.decode("utf-8"), 2
+                    )
                     raw_label = split_label[0]
                     if len(split_label) > 1:
                         label = split_label[1] + label
-                    lambda_node = (lambda_expression.start_point, lambda_expression.end_point, lambda_expression.type)
+                    lambda_node = (
+                        lambda_expression.start_point,
+                        lambda_expression.end_point,
+                        lambda_expression.type,
+                    )
                     records["lambda_map"][lambda_node] = root_node
                 label = raw_label + label
 
@@ -679,8 +773,12 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
 
                 if declarator:
                     for child in root_node.children:
-                        if child.type not in ["compound_statement", "function_body", "field_initializer_list"]:
-                            label = label + " " + child.text.decode('utf-8')
+                        if child.type not in [
+                            "compound_statement",
+                            "function_body",
+                            "field_initializer_list",
+                        ]:
+                            label = label + " " + child.text.decode("utf-8")
 
                 function_name_node = None
                 if declarator:
@@ -694,13 +792,25 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                         if operator_name_node:
                             function_name_node = operator_name_node
                         else:
-                            function_name_node = declarator.child_by_field_name("declarator")
-                    elif declarator.type == "pointer_declarator" or declarator.type == "reference_declarator":
+                            function_name_node = declarator.child_by_field_name(
+                                "declarator"
+                            )
+                    elif (
+                        declarator.type == "pointer_declarator"
+                        or declarator.type == "reference_declarator"
+                    ):
                         nested = declarator
-                        while nested and nested.type in ["pointer_declarator", "reference_declarator"]:
+                        while nested and nested.type in [
+                            "pointer_declarator",
+                            "reference_declarator",
+                        ]:
                             found_nested = None
                             for child in nested.children:
-                                if child.type in ["function_declarator", "pointer_declarator", "reference_declarator"]:
+                                if child.type in [
+                                    "function_declarator",
+                                    "pointer_declarator",
+                                    "reference_declarator",
+                                ]:
                                     found_nested = child
                                     break
                             nested = found_nested
@@ -715,34 +825,51 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                             if operator_name_node:
                                 function_name_node = operator_name_node
                             else:
-                                function_name_node = nested.child_by_field_name("declarator")
+                                function_name_node = nested.child_by_field_name(
+                                    "declarator"
+                                )
 
                 if function_name_node:
                     function_name = function_name_node.text.decode("UTF-8")
                 else:
                     function_name = "unknown"
 
-                function_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                function_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 type_label = root_node.type
 
                 try:
                     sig_node = declarator
-                    if declarator and declarator.type in ["pointer_declarator", "reference_declarator"]:
+                    if declarator and declarator.type in [
+                        "pointer_declarator",
+                        "reference_declarator",
+                    ]:
                         nested = declarator
-                        while nested and nested.type in ["pointer_declarator", "reference_declarator"]:
+                        while nested and nested.type in [
+                            "pointer_declarator",
+                            "reference_declarator",
+                        ]:
                             found_nested = None
                             for child in nested.children:
                                 if child.type == "function_declarator":
                                     sig_node = child
                                     break
-                                elif child.type in ["pointer_declarator", "reference_declarator"]:
+                                elif child.type in [
+                                    "pointer_declarator",
+                                    "reference_declarator",
+                                ]:
                                     found_nested = child
                                     break
                             if sig_node and sig_node.type == "function_declarator":
                                 break
                             nested = found_nested
 
-                    signature = get_signature(sig_node if sig_node and sig_node.type == "function_declarator" else root_node)
+                    signature = get_signature(
+                        sig_node
+                        if sig_node and sig_node.type == "function_declarator"
+                        else root_node
+                    )
                     class_info = get_class_name(root_node, index)
 
                     if class_info:
@@ -755,7 +882,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                             key = ((class_name, function_name), signature)
                             records["function_list"][key] = function_index
 
-                            if len(signature) > 0 and signature[-1] == '...':
+                            if len(signature) > 0 and signature[-1] == "...":
                                 records["variadic_functions"][key] = True
 
                             return_type_node = root_node.child_by_field_name("type")
@@ -768,14 +895,20 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                             if is_virtual or is_pure_virtual:
                                 records["virtual_functions"][function_index] = {
                                     "is_virtual": is_virtual,
-                                    "is_pure_virtual": is_pure_virtual
+                                    "is_pure_virtual": is_pure_virtual,
                                 }
                             if is_operator:
-                                records["operator_overloads"][function_index] = function_name
+                                records["operator_overloads"][
+                                    function_index
+                                ] = function_name
                             if deleted_or_defaulted:
-                                records["special_functions"][function_index] = deleted_or_defaulted
+                                records["special_functions"][
+                                    function_index
+                                ] = deleted_or_defaulted
                             if has_initializers:
-                                records["functions_with_initializers"][function_index] = True
+                                records["functions_with_initializers"][
+                                    function_index
+                                ] = True
 
                             if is_constexpr:
                                 records["constexpr_functions"][function_index] = True
@@ -784,24 +917,35 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                             if has_noexcept:
                                 records["noexcept_functions"][function_index] = True
                             if attributes:
-                                records["attributed_functions"][function_index] = attributes
+                                records["attributed_functions"][
+                                    function_index
+                                ] = attributes
                     else:
                         if function_name == "main":
                             records["main_function"] = function_index
 
-                        records["function_list"][((None, function_name), signature)] = function_index
+                        records["function_list"][
+                            ((None, function_name), signature)
+                        ] = function_index
                         return_type_node = root_node.child_by_field_name("type")
                         if return_type_node:
                             return_type = return_type_node.text.decode("UTF-8")
                         else:
                             return_type = "void"
-                        records["return_type"][((None, function_name), signature)] = return_type
+                        records["return_type"][
+                            ((None, function_name), signature)
+                        ] = return_type
                 except:
                     pass
 
-                graph_node_list.append((function_index, root_node.start_point[0], label, type_label))
+                graph_node_list.append(
+                    (function_index, root_node.start_point[0], label, type_label)
+                )
 
-            elif root_node.type == "class_specifier" or root_node.type == "struct_specifier":
+            elif (
+                root_node.type == "class_specifier"
+                or root_node.type == "struct_specifier"
+            ):
                 class_name_node = get_child_of_type(root_node, ["type_identifier"])
                 if class_name_node:
                     class_name = class_name_node.text.decode("UTF-8")
@@ -811,18 +955,24 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     class_name = label
 
                 type_label = root_node.type
-                class_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                class_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 records["class_list"][class_name] = class_index
 
                 base_list = root_node.child_by_field_name("base_class_clause")
                 if base_list is not None:
                     for child in base_list.children:
-                        if child.type in ["type_identifier", "template_type", "qualified_identifier"]:
+                        if child.type in [
+                            "type_identifier",
+                            "template_type",
+                            "qualified_identifier",
+                        ]:
                             parent_name = child.text.decode("UTF-8")
                             try:
-                                records['extends'][class_name].append(parent_name)
+                                records["extends"][class_name].append(parent_name)
                             except:
-                                records['extends'][class_name] = [parent_name]
+                                records["extends"][class_name] = [parent_name]
 
             elif root_node.type == "namespace_definition":
                 namespace_name_node = root_node.child_by_field_name("name")
@@ -865,7 +1015,9 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             elif root_node.type == "for_range_loop":
                 try:
                     declarator = root_node.child_by_field_name("declarator")
-                    declarator_text = declarator.text.decode("UTF-8") if declarator else ""
+                    declarator_text = (
+                        declarator.text.decode("UTF-8") if declarator else ""
+                    )
                     range_expr = root_node.child_by_field_name("right")
                     range_text = range_expr.text.decode("UTF-8") if range_expr else ""
                     label = f"for({declarator_text} : {range_text})"
@@ -938,7 +1090,9 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "enum (anonymous)"
                 type_label = "enum"
 
-                enum_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                enum_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 if enum_name_node:
                     records["enum_list"][enum_name] = enum_index
 
@@ -951,7 +1105,9 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "union (anonymous)"
                 type_label = "union"
 
-                union_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                union_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 if union_name_node:
                     records["union_list"][union_name] = union_index
 
@@ -964,12 +1120,17 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "typedef"
                 type_label = "typedef"
 
-                typedef_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                typedef_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 if type_identifier_node:
                     records["typedef_list"][typedef_name] = typedef_index
 
             elif root_node.type == "friend_declaration":
-                label = "friend " + root_node.text.decode("UTF-8").replace("friend", "").strip()
+                label = (
+                    "friend "
+                    + root_node.text.decode("UTF-8").replace("friend", "").strip()
+                )
                 if len(label) > 80:
                     label = label[:77] + "..."
                 type_label = "friend"
@@ -998,8 +1159,8 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     if child.type == "attribute_declaration":
                         for attr_child in child.named_children:
                             if attr_child.type == "attribute":
-                                attr_text = attr_child.text.decode('utf-8')
-                                attr_name = attr_text.split('(')[0].strip()
+                                attr_text = attr_child.text.decode("utf-8")
+                                attr_name = attr_text.split("(")[0].strip()
                                 attributes.append(attr_name)
 
                 label = root_node.text.decode("UTF-8")
@@ -1015,8 +1176,14 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
 
             excluded_from_graph = {
                 "function_definition",
-                "preproc_include", "preproc_def", "preproc_function_def", "preproc_call",
-                "preproc_if", "preproc_ifdef", "preproc_elif", "preproc_else",
+                "preproc_include",
+                "preproc_def",
+                "preproc_function_def",
+                "preproc_call",
+                "preproc_if",
+                "preproc_ifdef",
+                "preproc_elif",
+                "preproc_else",
                 "using_declaration",
                 "alias_declaration",
                 "namespace_alias_definition",
@@ -1025,7 +1192,9 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             if root_node.type not in excluded_from_graph:
                 graph_node_list.append(
                     (
-                        index[(root_node.start_point, root_node.end_point, root_node.type)],
+                        index[
+                            (root_node.start_point, root_node.end_point, root_node.type)
+                        ],
                         root_node.start_point[0],
                         label,
                         type_label,
@@ -1048,7 +1217,17 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             for child in root_node.children:
                 if child.type in ["#if", "#elif"]:
                     found_directive = True
-                elif found_directive and child.is_named and child.type not in ["preproc_elif", "preproc_else", "declaration", "expression_statement"]:
+                elif (
+                    found_directive
+                    and child.is_named
+                    and child.type
+                    not in [
+                        "preproc_elif",
+                        "preproc_else",
+                        "declaration",
+                        "expression_statement",
+                    ]
+                ):
                     condition = child.text.decode("UTF-8")
                     break
 
@@ -1057,17 +1236,24 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             result = evaluate_preprocessor_condition(condition, macro_definitions)
             if result is not None:
                 condition_met = (not result) if is_ifndef else result
-                if os.environ.get('DEBUG_PREPROC'):
-                    print(f"[PREPROC] {root_node.type} condition='{condition}' is_ifndef={is_ifndef} macros={macro_definitions} result={result} condition_met={condition_met}")
+                if os.environ.get("DEBUG_PREPROC"):
+                    print(
+                        f"[PREPROC] {root_node.type} condition='{condition}' is_ifndef={is_ifndef} macros={macro_definitions} result={result} condition_met={condition_met}"
+                    )
             else:
                 condition_met = True
-                if os.environ.get('DEBUG_PREPROC'):
-                    print(f"[PREPROC] {root_node.type} condition='{condition}' macros={macro_definitions} CANNOT_EVALUATE, including by default")
+                if os.environ.get("DEBUG_PREPROC"):
+                    print(
+                        f"[PREPROC] {root_node.type} condition='{condition}' macros={macro_definitions} CANNOT_EVALUATE, including by default"
+                    )
 
         if root_node.type == "preproc_elif":
             if condition_met:
                 for child in root_node.children:
-                    if child.is_named and child.type not in ["preproc_else", "preproc_elif"]:
+                    if child.is_named and child.type not in [
+                        "preproc_else",
+                        "preproc_elif",
+                    ]:
                         root_node, node_list, graph_node_list, records = get_nodes(
                             root_node=child,
                             node_list=node_list,
@@ -1100,13 +1286,15 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     if not condition_met:
                         for else_child in child.children:
                             if else_child.is_named:
-                                root_node, node_list, graph_node_list, records = get_nodes(
-                                    root_node=else_child,
-                                    node_list=node_list,
-                                    graph_node_list=graph_node_list,
-                                    index=index,
-                                    records=records,
-                                    macro_definitions=macro_definitions,
+                                root_node, node_list, graph_node_list, records = (
+                                    get_nodes(
+                                        root_node=else_child,
+                                        node_list=node_list,
+                                        graph_node_list=graph_node_list,
+                                        index=index,
+                                        records=records,
+                                        macro_definitions=macro_definitions,
+                                    )
                                 )
                 elif condition_met:
                     root_node, node_list, graph_node_list, records = get_nodes(
@@ -1121,7 +1309,12 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
     elif root_node.type == "preproc_else":
         pass
 
-    elif root_node.type in ["preproc_include", "preproc_def", "preproc_function_def", "preproc_call"]:
+    elif root_node.type in [
+        "preproc_include",
+        "preproc_def",
+        "preproc_function_def",
+        "preproc_call",
+    ]:
         pass
 
     else:

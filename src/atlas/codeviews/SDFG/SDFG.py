@@ -7,6 +7,7 @@ from loguru import logger
 from atlas.codeviews.CFG.CFG_driver import CFGDriver
 from atlas.codeviews.SDFG.SDFG_c import dfg_c
 from atlas.codeviews.SDFG.SDFG_cpp import dfg_cpp
+from atlas.codeviews.SDFG.SDFG_java import dfg_java
 from atlas.utils import postprocessor, DFG_utils
 
 debug = False
@@ -14,12 +15,12 @@ debug = False
 
 class DfgRda:
     def __init__(
-            self,
-            src_language="c",
-            src_code="",
-            output_file=None,
-            graph_format="dot",
-            properties=None,
+        self,
+        src_language="c",
+        src_code="",
+        output_file=None,
+        graph_format="dot",
+        properties=None,
     ):
         if not properties:
             properties = {
@@ -48,7 +49,12 @@ class DfgRda:
         )
         end_dfg = time.time()
         if debug:
-            logger.warning("CFG time: " + str(end - start) + " DFG time: " + str(end_dfg - start_dfg))
+            logger.warning(
+                "CFG time: "
+                + str(end - start)
+                + " DFG time: "
+                + str(end_dfg - start_dfg)
+            )
         if output_file:
             if graph_format == "all" or graph_format == "json":
                 self.json = postprocessor.write_networkx_to_json(
@@ -56,11 +62,17 @@ class DfgRda:
                 )
             if graph_format == "all" or graph_format == "dot":
                 postprocessor.write_to_dot(
-                    self.graph, output_file.rsplit(".", 1)[0] + ".dot", output_png=True, src_language=self.src_language
+                    self.graph,
+                    output_file.rsplit(".", 1)[0] + ".dot",
+                    output_png=True,
+                    src_language=self.src_language,
                 )
             if graph_format == "all" or graph_format == "dot":
                 postprocessor.write_to_dot(
-                    self.debug_graph, output_file.rsplit(".", 1)[0] + "_debug.dot", output_png=True, src_language=self.src_language
+                    self.debug_graph,
+                    output_file.rsplit(".", 1)[0] + "_debug.dot",
+                    output_png=True,
+                    src_language=self.src_language,
                 )
             self.json = postprocessor.write_networkx_to_json(self.graph, output_file)
 
@@ -73,7 +85,7 @@ class DfgRda:
         code_tokens = [DFG_utils.index_to_code_token(x, code) for x in tokens_index]
         index_to_code = {}
 
-        for (ind, code) in zip(tokens_index, code_tokens):
+        for ind, code in zip(tokens_index, code_tokens):
             if ind in self.CFG_Results.parser.index:
                 idx = self.CFG_Results.parser.index[ind]
             else:
@@ -86,12 +98,13 @@ class DfgRda:
         lang_map = {
             "c": dfg_c,
             "cpp": dfg_cpp,
+            "java": dfg_java,
         }
         driver = lang_map[self.src_language]
         return driver(properties, self.CFG_Results)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for extension in ("c", "cpp"):
         file = f"data/test_manual.{extension}"
         if not os.path.isfile(file):

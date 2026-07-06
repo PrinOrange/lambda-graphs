@@ -31,35 +31,47 @@ def write_to_dot(og_graph, filename, output_png=False, src_language=None):
     graph = copy.deepcopy(og_graph)
     if not os.getenv("GITHUB_ACTIONS"):
         dot_reserved_keywords = {
-            'node', 'edge', 'graph', 'digraph', 'subgraph', 'strict',
-            'Node', 'Edge', 'Graph', 'Digraph', 'Subgraph', 'Strict'
+            "node",
+            "edge",
+            "graph",
+            "digraph",
+            "subgraph",
+            "strict",
+            "Node",
+            "Edge",
+            "Graph",
+            "Digraph",
+            "Subgraph",
+            "Strict",
         }
 
         for node in graph.nodes:
-            if 'label' in graph.nodes[node]:
-                label = graph.nodes[node]['label']
+            if "label" in graph.nodes[node]:
+                label = graph.nodes[node]["label"]
 
-                if src_language in ['c', 'cpp']:
+                if src_language in ["c", "cpp", "java"]:
                     label = str(label)
-                    label = label.replace('\\', '\\\\')
+                    label = label.replace("\\", "\\\\")
                     label = label.replace('"', '\\"')
-                    label = label.replace('\n', ' ')
-                    label = label.replace('\r', ' ')
+                    label = label.replace("\n", " ")
+                    label = label.replace("\r", " ")
                 else:
                     label = re.escape(label)
 
-                if src_language in ['c', 'cpp'] or label in dot_reserved_keywords:
+                if (
+                    src_language in ["c", "cpp", "java"]
+                    or label in dot_reserved_keywords
+                ):
                     label = f'"{label}"'
 
-                graph.nodes[node]['label'] = label
+                graph.nodes[node]["label"] = label
 
         for u, v, key, data in graph.edges(keys=True, data=True):
-            for attr_name in ['used_def', 'used_var', 'returned_value']:
+            for attr_name in ["used_def", "used_var", "returned_value"]:
                 if attr_name in data:
                     attr_value = str(data[attr_name])
-                    needs_quoting = (
-                        attr_value in dot_reserved_keywords or
-                        (src_language in ['c', 'cpp'] and '::' in attr_value)
+                    needs_quoting = attr_value in dot_reserved_keywords or (
+                        src_language in ["c", "cpp", "java"] and "::" in attr_value
                     )
                     if needs_quoting:
                         graph.edges[u, v, key][attr_name] = f'"{attr_value}"'

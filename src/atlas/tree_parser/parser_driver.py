@@ -1,6 +1,8 @@
 from ..tree_parser.c_parser import CParser
 from ..tree_parser.cpp_parser import CppParser
+from ..tree_parser.java_parser import JavaParser
 from ..utils import preprocessor
+
 
 class ParserDriver:
     """Driver class for the parser"""
@@ -13,8 +15,11 @@ class ParserDriver:
         self.parser_map = {
             "c": CParser,
             "cpp": CppParser,
+            "java": JavaParser,
         }
-        self.parser = self.parser_map[self.src_language](self.src_language, self.src_code)
+        self.parser = self.parser_map[self.src_language](
+            self.src_language, self.src_code
+        )
         self.root_node, self.tree = self.parser.parse()
         (
             self.all_tokens,
@@ -26,7 +31,6 @@ class ParserDriver:
             self.declaration_map,
             self.symbol_table,
         ) = self.create_all_tokens()
-
 
     def pre_process_src_code(self, src_language, src_code):
         """Pre-process the source code"""

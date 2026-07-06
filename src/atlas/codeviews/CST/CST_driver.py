@@ -24,9 +24,9 @@ class CSTGraph:
     def create_CST_id(self, root_node, CST_index, CST_id):
         current_node_id = CST_id[0]
         CST_id[0] += 1
-        CST_index[
-            (root_node.start_point, root_node.end_point, root_node.type)
-        ] = current_node_id
+        CST_index[(root_node.start_point, root_node.end_point, root_node.type)] = (
+            current_node_id
+        )
         for child in root_node.children:
 
             child_id = self.create_CST_id(child, CST_index, CST_id)

@@ -22,7 +22,7 @@ statement_types = {
         "preproc_if",
         "preproc_ifdef",
         "preproc_elif",
-        "preproc_else"
+        "preproc_else",
     ],
     "non_control_statement": [
         "declaration",
@@ -30,7 +30,7 @@ statement_types = {
         "preproc_include",
         "preproc_def",
         "preproc_function_def",
-        "preproc_call"
+        "preproc_call",
     ],
     "control_statement": [
         "if_statement",
@@ -46,7 +46,7 @@ statement_types = {
         "preproc_if",
         "preproc_ifdef",
         "preproc_elif",
-        "preproc_else"
+        "preproc_else",
     ],
     "loop_control_statement": [
         "while_statement",
@@ -63,12 +63,27 @@ statement_types = {
         "compound_statement",
         "translation_unit",
         "case_statement",
-        "function_definition"
+        "function_definition",
     ],
-    "definition_types": ["function_definition", "declaration", "struct_specifier", "union_specifier", "enum_specifier"]
+    "definition_types": [
+        "function_definition",
+        "declaration",
+        "struct_specifier",
+        "union_specifier",
+        "enum_specifier",
+    ],
 }
 
-function_return_types = ['primitive_type', 'type_identifier', 'sized_type_specifier', 'struct_specifier', 'union_specifier', 'enum_specifier', 'pointer_declarator']
+function_return_types = [
+    "primitive_type",
+    "type_identifier",
+    "sized_type_specifier",
+    "struct_specifier",
+    "union_specifier",
+    "enum_specifier",
+    "pointer_declarator",
+]
+
 
 def extract_parameter_type(param_node):
     """
@@ -94,15 +109,22 @@ def extract_parameter_type(param_node):
         if child.type == "type_qualifier":
             continue
 
-        if child.type in ['primitive_type', 'type_identifier', 'sized_type_specifier',
-                         'struct_specifier', 'union_specifier', 'enum_specifier']:
-            base_type = child.text.decode('utf-8')
+        if child.type in [
+            "primitive_type",
+            "type_identifier",
+            "sized_type_specifier",
+            "struct_specifier",
+            "union_specifier",
+            "enum_specifier",
+        ]:
+            base_type = child.text.decode("utf-8")
 
         elif child.type == "pointer_declarator":
-            pointer_text = child.text.decode('utf-8')
-            pointer_count = pointer_text.count('*')
+            pointer_text = child.text.decode("utf-8")
+            pointer_count = pointer_text.count("*")
 
         elif child.type == "array_declarator":
+
             def count_array_dimensions(node):
                 count = 0
                 if node.type == "array_declarator":
@@ -115,16 +137,18 @@ def extract_parameter_type(param_node):
             pointer_count = count_array_dimensions(child)
 
     if base_type:
-        return base_type + ('*' * pointer_count)
+        return base_type + ("*" * pointer_count)
 
     return "unknown"
 
+
 def get_child_of_type(node, type_list):
-    out = list(filter(lambda x : x.type in type_list, node.children))
+    out = list(filter(lambda x: x.type in type_list, node.children))
     if len(out) > 0:
         return out[0]
     else:
         return None
+
 
 def return_switch_child(node):
     bfs_queue = []
@@ -137,6 +161,7 @@ def return_switch_child(node):
         for child in top.children:
             bfs_queue.append(child)
     return None
+
 
 def get_function_signature(node):
     """
@@ -155,15 +180,16 @@ def get_function_signature(node):
     signature = []
     for child in node.children:
         if child.type == "function_declarator":
-            param_list = child.child_by_field_name('parameters')
+            param_list = child.child_by_field_name("parameters")
             if param_list:
                 for param in param_list.children:
                     if param.type == "parameter_declaration":
                         param_type = extract_parameter_type(param)
                         signature.append(param_type)
                     elif param.type == "variadic_parameter":
-                        signature.append('...')
+                        signature.append("...")
     return tuple(signature)
+
 
 def get_function_name(node):
     """Extract function name from function_definition"""
@@ -171,12 +197,13 @@ def get_function_name(node):
         if child.type == "function_declarator":
             for dchild in child.children:
                 if dchild.type == "identifier":
-                    return dchild.text.decode('utf-8')
+                    return dchild.text.decode("utf-8")
                 elif dchild.type == "pointer_declarator":
                     for pchild in dchild.children:
                         if pchild.type == "identifier":
-                            return pchild.text.decode('utf-8')
+                            return pchild.text.decode("utf-8")
     return None
+
 
 def is_function_declaration(node):
     """
@@ -196,6 +223,7 @@ def is_function_declaration(node):
 
     return False
 
+
 def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, records={}):
     """
     Returns statement level nodes recursively from the C AST.
@@ -209,8 +237,17 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
     ):
         label = "while" + root_node.text.decode("UTF-8")
         type_label = "while"
-        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
-        graph_node_list.append((index[(root_node.start_point, root_node.end_point, root_node.type)], root_node.start_point[0], label, type_label))
+        node_list[(root_node.start_point, root_node.end_point, root_node.type)] = (
+            root_node
+        )
+        graph_node_list.append(
+            (
+                index[(root_node.start_point, root_node.end_point, root_node.type)],
+                root_node.start_point[0],
+                label,
+                type_label,
+            )
+        )
 
     elif root_node.type in statement_types["node_list_type"]:
         if (
@@ -223,22 +260,43 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 if body != root_node:
                     pass
                 else:
-                    node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
+                    node_list[
+                        (root_node.start_point, root_node.end_point, root_node.type)
+                    ] = root_node
                     label = root_node.text.decode("UTF-8")
                     type_label = root_node.type
-                    graph_node_list.append((index[(root_node.start_point, root_node.end_point, root_node.type)], root_node.start_point[0], label, type_label))
+                    graph_node_list.append(
+                        (
+                            index[
+                                (
+                                    root_node.start_point,
+                                    root_node.end_point,
+                                    root_node.type,
+                                )
+                            ],
+                            root_node.start_point[0],
+                            label,
+                            type_label,
+                        )
+                    )
 
         elif (
             root_node.type in statement_types["inner_node_type"]
             and return_switch_child(root_node) is not None
         ):
             switch_child = return_switch_child(root_node)
-            child_index = index[(switch_child.start_point, switch_child.end_point, switch_child.type)]
-            current_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+            child_index = index[
+                (switch_child.start_point, switch_child.end_point, switch_child.type)
+            ]
+            current_index = index[
+                (root_node.start_point, root_node.end_point, root_node.type)
+            ]
             records["switch_child_map"][current_index] = child_index
 
         else:
-            node_list[(root_node.start_point, root_node.end_point, root_node.type)] = root_node
+            node_list[(root_node.start_point, root_node.end_point, root_node.type)] = (
+                root_node
+            )
             label = root_node.text.decode("UTF-8")
             type_label = root_node.type
 
@@ -246,10 +304,12 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 label = ""
                 for child in root_node.children:
                     if child.type != "compound_statement":
-                        label = label + " " + child.text.decode('utf-8')
+                        label = label + " " + child.text.decode("utf-8")
 
                 func_name = get_function_name(root_node)
-                func_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
+                func_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
                 type_label = "function_definition"
 
                 if func_name:
@@ -262,11 +322,13 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     return_type = None
                     for child in root_node.children:
                         if child.type in function_return_types:
-                            return_type = child.text.decode('utf-8')
+                            return_type = child.text.decode("utf-8")
                             break
                     records["return_type"][(func_name, signature)] = return_type
 
-                graph_node_list.append((func_index, root_node.start_point[0], label, type_label))
+                graph_node_list.append(
+                    (func_index, root_node.start_point[0], label, type_label)
+                )
 
             elif root_node.type == "if_statement":
                 condition = root_node.child_by_field_name("condition")
@@ -325,8 +387,14 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 if label_node:
                     label_name = label_node.text.decode("UTF-8")
                     label = label_name + ":"
-                    current_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
-                    records["label_statement_map"][label_name] = (root_node.start_point, root_node.end_point, root_node.type)
+                    current_index = index[
+                        (root_node.start_point, root_node.end_point, root_node.type)
+                    ]
+                    records["label_statement_map"][label_name] = (
+                        root_node.start_point,
+                        root_node.end_point,
+                        root_node.type,
+                    )
                 type_label = "label"
 
             elif root_node.type == "return_statement":
@@ -350,8 +418,12 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 type_label = "goto"
 
             if root_node.type not in ["function_definition"]:
-                node_index = index[(root_node.start_point, root_node.end_point, root_node.type)]
-                graph_node_list.append((node_index, root_node.start_point[0], label, type_label))
+                node_index = index[
+                    (root_node.start_point, root_node.end_point, root_node.type)
+                ]
+                graph_node_list.append(
+                    (node_index, root_node.start_point[0], label, type_label)
+                )
 
     for child in root_node.children:
         get_nodes(child, node_list, graph_node_list, index, records)

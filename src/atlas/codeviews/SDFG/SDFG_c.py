@@ -13,18 +13,40 @@ assignment = ["assignment_expression"]
 def_statement = ["init_declarator"]
 declaration_statement = ["declaration"]
 increment_statement = ["update_expression"]
-variable_type = ['identifier']
+variable_type = ["identifier"]
 function_calls = ["call_expression"]
-literal_types = ["number_literal", "string_literal", "char_literal",
-                 "true", "false", "null"]
+literal_types = [
+    "number_literal",
+    "string_literal",
+    "char_literal",
+    "true",
+    "false",
+    "null",
+]
 
-input_functions = ["scanf", "gets", "fgets", "getline", "fscanf", "sscanf",
-                   "fread", "read", "recv", "recvfrom", "getchar", "fgetc"]
+input_functions = [
+    "scanf",
+    "gets",
+    "fgets",
+    "getline",
+    "fscanf",
+    "sscanf",
+    "fread",
+    "read",
+    "recv",
+    "recvfrom",
+    "getchar",
+    "fgetc",
+]
 
 inner_types = ["declaration", "expression_statement"]
-handled_types = (assignment + def_statement + increment_statement +
-                function_calls + ["function_definition", "return_statement",
-                                 "for_statement", "switch_statement"])
+handled_types = (
+    assignment
+    + def_statement
+    + increment_statement
+    + function_calls
+    + ["function_definition", "return_statement", "for_statement", "switch_statement"]
+)
 
 debug = False
 
@@ -106,8 +128,9 @@ def return_first_parent_of_types(node, parent_types, stop_types=None):
     return None
 
 
-def recursively_get_children_of_types(node, st_types, check_list=None,
-                                     index=None, result=None, stop_types=None):
+def recursively_get_children_of_types(
+    node, st_types, check_list=None, index=None, result=None, stop_types=None
+):
     """Recursively find child nodes of given types"""
     if isinstance(st_types, str):
         st_types = [st_types]
@@ -120,22 +143,25 @@ def recursively_get_children_of_types(node, st_types, check_list=None,
         return result
 
     if check_list and index:
-        result.extend([
-            child for child in node.children
-            if child.type in st_types and
-               get_index(child, index) in check_list
-        ])
+        result.extend(
+            [
+                child
+                for child in node.children
+                if child.type in st_types and get_index(child, index) in check_list
+            ]
+        )
     else:
-        result.extend([
-            child for child in node.children
-            if child.type in st_types
-        ])
+        result.extend([child for child in node.children if child.type in st_types])
 
     for child in node.named_children:
         if child.type not in stop_types:
             result = recursively_get_children_of_types(
-                child, st_types, result=result, stop_types=stop_types,
-                index=index, check_list=check_list
+                child,
+                st_types,
+                result=result,
+                stop_types=stop_types,
+                index=index,
+                check_list=check_list,
             )
 
     return result
@@ -191,9 +217,11 @@ class Identifier:
         return st(node)
 
     def __eq__(self, other):
-        return (self.name == other.name and
-                self.line == other.line and
-                sorted(self.scope) == sorted(other.scope))
+        return (
+            self.name == other.name
+            and self.line == other.line
+            and sorted(self.scope) == sorted(other.scope)
+        )
 
     def __hash__(self):
         return hash((self.name, self.line, str(self.scope)))
@@ -202,7 +230,7 @@ class Identifier:
         result = [self.name]
         if self.line:
             result += [str(self.real_line_no)]
-            result += ['|'.join(map(str, self.scope))]
+            result += ["|".join(map(str, self.scope))]
         else:
             result += ["?"]
         return f"{{{','.join(result)}}}"
@@ -225,8 +253,7 @@ class Literal:
             self.real_line_no = read_index(parser.index, line)[0][0]
 
     def __eq__(self, other):
-        return (self.name == other.name and
-                self.line == other.line)
+        return self.name == other.name and self.line == other.line
 
     def __hash__(self):
         return hash((self.name, self.line))
@@ -253,7 +280,11 @@ def extract_identifier_from_declarator(declarator_node):
             return extract_identifier_from_declarator(declarator_node.children[0])
     elif declarator_node.type == "function_declarator":
         for child in declarator_node.children:
-            if child.type in ["identifier", "pointer_declarator", "parenthesized_declarator"]:
+            if child.type in [
+                "identifier",
+                "pointer_declarator",
+                "parenthesized_declarator",
+            ]:
                 return extract_identifier_from_declarator(child)
     elif declarator_node.type == "parenthesized_declarator":
         for child in declarator_node.children:
@@ -267,7 +298,11 @@ def extract_param_identifier(param_node):
     for child in param_node.children:
         if child.type == "identifier":
             return child
-        elif child.type in ["pointer_declarator", "array_declarator", "function_declarator"]:
+        elif child.type in [
+            "pointer_declarator",
+            "array_declarator",
+            "function_declarator",
+        ]:
             return extract_identifier_from_declarator(child)
     return None
 
@@ -277,15 +312,20 @@ def extract_operator_text(assign_node, left_node, right_node):
     left_text = left_node.text
     right_text = right_node.text
     operator_bytes = (
-        assign_node.text.split(left_text, 1)[-1]
-        .rsplit(right_text, 1)[0]
-        .strip()
+        assign_node.text.split(left_text, 1)[-1].rsplit(right_text, 1)[0].strip()
     )
     return operator_bytes.decode()
 
 
-def add_entry(parser, rda_table, statement_id, used=None, defined=None,
-              declaration=False, core=None):
+def add_entry(
+    parser,
+    rda_table,
+    statement_id,
+    used=None,
+    defined=None,
+    declaration=False,
+    core=None,
+):
     """
     Add variable USE or DEF to RDA table.
 
@@ -310,20 +350,31 @@ def add_entry(parser, rda_table, statement_id, used=None, defined=None,
 
     if current_node.type in literal_types:
         if used:
-            set_add(rda_table[statement_id]["use"],
-                   Literal(parser, current_node, statement_id))
+            set_add(
+                rda_table[statement_id]["use"],
+                Literal(parser, current_node, statement_id),
+            )
         return
 
     if current_node.type == "field_expression":
         if defined is not None:
-            set_add(rda_table[statement_id]["def"],
-                   Identifier(parser, current_node.child_by_field_name("argument"),
-                            statement_id, full_ref=None,
-                            declaration=declaration))
+            set_add(
+                rda_table[statement_id]["def"],
+                Identifier(
+                    parser,
+                    current_node.child_by_field_name("argument"),
+                    statement_id,
+                    full_ref=None,
+                    declaration=declaration,
+                ),
+            )
         else:
-            set_add(rda_table[statement_id]["use"],
-                   Identifier(parser, current_node.child_by_field_name("argument"),
-                            full_ref=None))
+            set_add(
+                rda_table[statement_id]["use"],
+                Identifier(
+                    parser, current_node.child_by_field_name("argument"), full_ref=None
+                ),
+            )
         return
 
     if used and used.type == "unary_expression":
@@ -339,11 +390,15 @@ def add_entry(parser, rda_table, statement_id, used=None, defined=None,
             if argument.type in variable_type:
                 arg_index = get_index(argument, parser.index)
                 if arg_index and arg_index in parser.symbol_table["scope_map"]:
-                    set_add(rda_table[statement_id]["use"],
-                           Identifier(parser, argument, full_ref=argument))
+                    set_add(
+                        rda_table[statement_id]["use"],
+                        Identifier(parser, argument, full_ref=argument),
+                    )
                 elif arg_index and arg_index in parser.method_map:
-                    set_add(rda_table[statement_id]["use"],
-                           Identifier(parser, argument, full_ref=argument))
+                    set_add(
+                        rda_table[statement_id]["use"],
+                        Identifier(parser, argument, full_ref=argument),
+                    )
             return
 
     if current_node.type == "pointer_expression":
@@ -352,15 +407,26 @@ def add_entry(parser, rda_table, statement_id, used=None, defined=None,
         if defined is not None:
             pointer_index = get_index(pointer, parser.index)
             if pointer_index and pointer_index in parser.symbol_table["scope_map"]:
-                set_add(rda_table[statement_id]["use"],
-                       Identifier(parser, pointer, full_ref=pointer))
+                set_add(
+                    rda_table[statement_id]["use"],
+                    Identifier(parser, pointer, full_ref=pointer),
+                )
 
-            set_add(rda_table[statement_id]["def"],
-                   Identifier(parser, pointer, statement_id,
-                            full_ref=core, declaration=declaration))
+            set_add(
+                rda_table[statement_id]["def"],
+                Identifier(
+                    parser,
+                    pointer,
+                    statement_id,
+                    full_ref=core,
+                    declaration=declaration,
+                ),
+            )
         else:
-            set_add(rda_table[statement_id]["use"],
-                   Identifier(parser, pointer, full_ref=core))
+            set_add(
+                rda_table[statement_id]["use"],
+                Identifier(parser, pointer, full_ref=core),
+            )
         return
 
     if current_node.type == "subscript_expression":
@@ -368,37 +434,49 @@ def add_entry(parser, rda_table, statement_id, used=None, defined=None,
         index_expr = current_node.child_by_field_name("index")
 
         if defined is not None:
-            set_add(rda_table[statement_id]["def"],
-                   Identifier(parser, array, statement_id,
-                            full_ref=core, declaration=declaration))
-        set_add(rda_table[statement_id]["use"],
-               Identifier(parser, array, full_ref=core))
+            set_add(
+                rda_table[statement_id]["def"],
+                Identifier(
+                    parser, array, statement_id, full_ref=core, declaration=declaration
+                ),
+            )
+        set_add(
+            rda_table[statement_id]["use"], Identifier(parser, array, full_ref=core)
+        )
 
         if index_expr:
             if index_expr.type in variable_type:
                 index_id = get_index(index_expr, parser.index)
                 if index_id and index_id in parser.symbol_table["scope_map"]:
-                    set_add(rda_table[statement_id]["use"],
-                           Identifier(parser, index_expr, full_ref=index_expr))
+                    set_add(
+                        rda_table[statement_id]["use"],
+                        Identifier(parser, index_expr, full_ref=index_expr),
+                    )
             elif index_expr.type in literal_types:
-                set_add(rda_table[statement_id]["use"],
-                       Literal(parser, index_expr, statement_id))
+                set_add(
+                    rda_table[statement_id]["use"],
+                    Literal(parser, index_expr, statement_id),
+                )
             else:
                 identifiers_in_index = recursively_get_children_of_types(
-                    index_expr, variable_type + ["field_expression"],
+                    index_expr,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers_in_index:
-                    set_add(rda_table[statement_id]["use"],
-                           Identifier(parser, identifier, full_ref=identifier))
+                    set_add(
+                        rda_table[statement_id]["use"],
+                        Identifier(parser, identifier, full_ref=identifier),
+                    )
                 literals_in_index = recursively_get_children_of_types(
-                    index_expr, literal_types,
-                    index=parser.index
+                    index_expr, literal_types, index=parser.index
                 )
                 for literal in literals_in_index:
-                    set_add(rda_table[statement_id]["use"],
-                           Literal(parser, literal, statement_id))
+                    set_add(
+                        rda_table[statement_id]["use"],
+                        Literal(parser, literal, statement_id),
+                    )
         return
 
     node_index = get_index(current_node, parser.index)
@@ -406,12 +484,17 @@ def add_entry(parser, rda_table, statement_id, used=None, defined=None,
         return
 
     if defined is not None:
-        set_add(rda_table[statement_id]["def"],
-               Identifier(parser, defined, statement_id,
-                        full_ref=core, declaration=declaration))
+        set_add(
+            rda_table[statement_id]["def"],
+            Identifier(
+                parser, defined, statement_id, full_ref=core, declaration=declaration
+            ),
+        )
     else:
-        set_add(rda_table[statement_id]["use"],
-               Identifier(parser, used, full_ref=core, declaration=declaration))
+        set_add(
+            rda_table[statement_id]["use"],
+            Identifier(parser, used, full_ref=core, declaration=declaration),
+        )
 
 
 def is_return_value_used(call_expr_statement):
@@ -444,8 +527,13 @@ def is_return_value_used(call_expr_statement):
         if parent_type == "argument_list":
             return True
 
-        if parent_type in ["if_statement", "while_statement", "for_statement",
-                          "do_while_statement", "switch_statement"]:
+        if parent_type in [
+            "if_statement",
+            "while_statement",
+            "for_statement",
+            "do_while_statement",
+            "switch_statement",
+        ]:
             return True
 
         if parent_type == "expression_statement":
@@ -487,7 +575,9 @@ def collect_function_metadata(parser):
                         elif declarator.type == "pointer_declarator":
                             inner = declarator
                             while inner and inner.type == "pointer_declarator":
-                                inner_declarator = inner.child_by_field_name("declarator")
+                                inner_declarator = inner.child_by_field_name(
+                                    "declarator"
+                                )
                                 if inner_declarator:
                                     inner = inner_declarator
                                 else:
@@ -495,7 +585,7 @@ def collect_function_metadata(parser):
                             if inner and inner.type == "identifier":
                                 func_name = st(inner)
 
-                    param_list = child.child_by_field_name('parameters')
+                    param_list = child.child_by_field_name("parameters")
                     if param_list:
                         param_idx = 0
                         for param in param_list.named_children:
@@ -512,7 +602,9 @@ def collect_function_metadata(parser):
                                                 param_name = st(inner)
                                                 break
                                             elif inner.type == "pointer_declarator":
-                                                inner_decl = inner.child_by_field_name("declarator")
+                                                inner_decl = inner.child_by_field_name(
+                                                    "declarator"
+                                                )
                                                 if inner_decl:
                                                     inner = inner_decl
                                                 else:
@@ -521,7 +613,9 @@ def collect_function_metadata(parser):
                                                 break
                                     elif p_child.type == "array_declarator":
                                         is_pointer = True
-                                        param_name = st(extract_identifier_from_declarator(p_child))
+                                        param_name = st(
+                                            extract_identifier_from_declarator(p_child)
+                                        )
                                     elif p_child.type == "identifier":
                                         if param_name is None:
                                             param_name = st(p_child)
@@ -532,10 +626,7 @@ def collect_function_metadata(parser):
                     break
 
             if func_name:
-                metadata[func_name] = {
-                    "params": params,
-                    "node": node
-                }
+                metadata[func_name] = {"params": params, "node": node}
 
     return metadata
 
@@ -628,7 +719,9 @@ def analyze_pointer_modifications(parser, function_metadata):
     return modifications
 
 
-def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modifications=None):
+def build_rda_table(
+    parser, CFG_results, function_metadata=None, pointer_modifications=None
+):
     """
     Build RDA table by traversing AST and tracking DEF/USE.
 
@@ -654,23 +747,34 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             if parent_id is None or parent_id not in CFG_results.graph.nodes:
                 continue
 
-            return_expr = root_node.named_children[0] if root_node.named_children else None
-            if return_expr and return_expr.type in variable_type + ["field_expression",
-                                                                      "pointer_expression",
-                                                                      "subscript_expression"] + literal_types:
+            return_expr = (
+                root_node.named_children[0] if root_node.named_children else None
+            )
+            if (
+                return_expr
+                and return_expr.type
+                in variable_type
+                + ["field_expression", "pointer_expression", "subscript_expression"]
+                + literal_types
+            ):
                 add_entry(parser, rda_table, parent_id, used=return_expr)
             else:
                 vars_used = recursively_get_children_of_types(
-                    root_node, variable_type + ["field_expression", "pointer_expression", "subscript_expression"],
+                    root_node,
+                    variable_type
+                    + [
+                        "field_expression",
+                        "pointer_expression",
+                        "subscript_expression",
+                    ],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for var in vars_used:
                     add_entry(parser, rda_table, parent_id, used=var)
 
             literals_used = recursively_get_children_of_types(
-                root_node, literal_types,
-                index=parser.index
+                root_node, literal_types, index=parser.index
             )
             for literal in literals_used:
                 add_entry(parser, rda_table, parent_id, used=literal)
@@ -701,24 +805,39 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             var_identifier = extract_identifier_from_declarator(declarator)
 
             if var_identifier:
-                add_entry(parser, rda_table, parent_id,
-                         defined=var_identifier, declaration=True)
+                add_entry(
+                    parser,
+                    rda_table,
+                    parent_id,
+                    defined=var_identifier,
+                    declaration=True,
+                )
 
             initializer = root_node.child_by_field_name("value")
             if initializer:
-                if initializer.type in variable_type + ["field_expression", "pointer_expression", "subscript_expression", "unary_expression"] + literal_types:
+                if (
+                    initializer.type
+                    in variable_type
+                    + [
+                        "field_expression",
+                        "pointer_expression",
+                        "subscript_expression",
+                        "unary_expression",
+                    ]
+                    + literal_types
+                ):
                     add_entry(parser, rda_table, parent_id, used=initializer)
                 else:
                     vars_used = recursively_get_children_of_types(
-                        initializer, variable_type + ["field_expression"],
+                        initializer,
+                        variable_type + ["field_expression"],
                         index=parser.index,
-                        check_list=parser.symbol_table["scope_map"]
+                        check_list=parser.symbol_table["scope_map"],
                     )
                     for var in vars_used:
                         add_entry(parser, rda_table, parent_id, used=var)
                     literals_used = recursively_get_children_of_types(
-                        initializer, literal_types,
-                        index=parser.index
+                        initializer, literal_types, index=parser.index
                     )
                     for literal in literals_used:
                         add_entry(parser, rda_table, parent_id, used=literal)
@@ -739,20 +858,30 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     child_id = get_index(child, index)
                     if child_id:
                         from collections import defaultdict
+
                         if parent_id not in rda_table:
                             rda_table[parent_id] = defaultdict(list)
                         ident = Identifier(parser, child, parent_id, declaration=True)
                         ident.scope = [0]
                         ident.variable_scope = [0]
                         set_add(rda_table[parent_id]["def"], ident)
-                elif child.type in ["pointer_declarator", "array_declarator",
-                                   "function_declarator", "parenthesized_declarator"]:
+                elif child.type in [
+                    "pointer_declarator",
+                    "array_declarator",
+                    "function_declarator",
+                    "parenthesized_declarator",
+                ]:
                     var_identifier = extract_identifier_from_declarator(child)
                     if var_identifier:
                         var_id = get_index(var_identifier, index)
                         if var_id:
-                            add_entry(parser, rda_table, parent_id,
-                                     defined=var_identifier, declaration=True)
+                            add_entry(
+                                parser,
+                                rda_table,
+                                parent_id,
+                                defined=var_identifier,
+                                declaration=True,
+                            )
 
         elif root_node.type in assignment:
             parent_statement = return_first_parent_of_types(
@@ -788,14 +917,19 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     add_entry(parser, rda_table, parent_id, used=left_node)
                 elif left_node.type in variable_type:
                     left_node_index = get_index(left_node, index)
-                    if left_node_index and left_node_index in parser.symbol_table["scope_map"]:
+                    if (
+                        left_node_index
+                        and left_node_index in parser.symbol_table["scope_map"]
+                    ):
                         is_init_declarator = False
                         check_parent = root_node.parent
                         while check_parent:
                             if check_parent.type == "init_declarator":
                                 is_init_declarator = True
                                 break
-                            if check_parent.type in statement_types.get("node_list_type", []):
+                            if check_parent.type in statement_types.get(
+                                "node_list_type", []
+                            ):
                                 break
                             check_parent = check_parent.parent
 
@@ -804,19 +938,29 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
 
             add_entry(parser, rda_table, parent_id, defined=left_node)
 
-            if right_node.type in variable_type + ["field_expression", "pointer_expression", "subscript_expression", "unary_expression"] + literal_types:
+            if (
+                right_node.type
+                in variable_type
+                + [
+                    "field_expression",
+                    "pointer_expression",
+                    "subscript_expression",
+                    "unary_expression",
+                ]
+                + literal_types
+            ):
                 add_entry(parser, rda_table, parent_id, used=right_node)
             else:
                 vars_used = recursively_get_children_of_types(
-                    right_node, variable_type + ["field_expression"],
+                    right_node,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for var in vars_used:
                     add_entry(parser, rda_table, parent_id, used=var)
                 literals_used = recursively_get_children_of_types(
-                    right_node, literal_types,
-                    index=parser.index
+                    right_node, literal_types, index=parser.index
                 )
                 for literal in literals_used:
                     add_entry(parser, rda_table, parent_id, used=literal)
@@ -845,9 +989,10 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                 add_entry(parser, rda_table, parent_id, defined=root_node)
             else:
                 identifiers = recursively_get_children_of_types(
-                    root_node, variable_type + ["field_expression"],
+                    root_node,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers:
                     add_entry(parser, rda_table, parent_id, used=identifier)
@@ -885,43 +1030,76 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                             inner_arg = arg.child_by_field_name("argument")
                             if inner_arg:
                                 if inner_arg.type in variable_type:
-                                    add_entry(parser, rda_table, parent_id,
-                                             defined=inner_arg, declaration=False)
-                                elif inner_arg.type in ["field_expression", "subscript_expression"]:
-                                    add_entry(parser, rda_table, parent_id,
-                                             defined=inner_arg, declaration=False)
+                                    add_entry(
+                                        parser,
+                                        rda_table,
+                                        parent_id,
+                                        defined=inner_arg,
+                                        declaration=False,
+                                    )
+                                elif inner_arg.type in [
+                                    "field_expression",
+                                    "subscript_expression",
+                                ]:
+                                    add_entry(
+                                        parser,
+                                        rda_table,
+                                        parent_id,
+                                        defined=inner_arg,
+                                        declaration=False,
+                                    )
                                     if inner_arg.type == "subscript_expression":
-                                        index_expr = inner_arg.child_by_field_name("index")
+                                        index_expr = inner_arg.child_by_field_name(
+                                            "index"
+                                        )
                                         if index_expr:
-                                            vars_in_index = recursively_get_children_of_types(
-                                                index_expr, variable_type + ["field_expression"],
-                                                index=parser.index,
-                                                check_list=parser.symbol_table["scope_map"]
+                                            vars_in_index = (
+                                                recursively_get_children_of_types(
+                                                    index_expr,
+                                                    variable_type
+                                                    + ["field_expression"],
+                                                    index=parser.index,
+                                                    check_list=parser.symbol_table[
+                                                        "scope_map"
+                                                    ],
+                                                )
                                             )
                                             for var in vars_in_index:
-                                                add_entry(parser, rda_table, parent_id, used=var)
+                                                add_entry(
+                                                    parser,
+                                                    rda_table,
+                                                    parent_id,
+                                                    used=var,
+                                                )
                         elif arg.type in variable_type + ["field_expression"]:
                             add_entry(parser, rda_table, parent_id, used=arg)
                         elif arg.type in literal_types:
                             add_entry(parser, rda_table, parent_id, used=arg)
                         else:
                             identifiers_used = recursively_get_children_of_types(
-                                arg, variable_type + ["field_expression"],
+                                arg,
+                                variable_type + ["field_expression"],
                                 index=parser.index,
-                                check_list=parser.symbol_table["scope_map"]
+                                check_list=parser.symbol_table["scope_map"],
                             )
                             for identifier in identifiers_used:
                                 add_entry(parser, rda_table, parent_id, used=identifier)
                             literals_used = recursively_get_children_of_types(
-                                arg, literal_types,
-                                index=parser.index
+                                arg, literal_types, index=parser.index
                             )
                             for literal in literals_used:
                                 add_entry(parser, rda_table, parent_id, used=literal)
                 elif not is_input_function and child.type == "argument_list":
                     modifies_params = set()
-                    if function_name and function_metadata and function_name in function_metadata:
-                        if pointer_modifications and function_name in pointer_modifications:
+                    if (
+                        function_name
+                        and function_metadata
+                        and function_name in function_metadata
+                    ):
+                        if (
+                            pointer_modifications
+                            and function_name in pointer_modifications
+                        ):
                             modifies_params = pointer_modifications[function_name]
 
                     for arg_idx, arg in enumerate(child.named_children):
@@ -931,38 +1109,68 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                             inner_arg = arg.child_by_field_name("argument")
                             if inner_arg:
                                 if inner_arg.type in variable_type:
-                                    add_entry(parser, rda_table, parent_id, used=inner_arg)
-                                    add_entry(parser, rda_table, parent_id,
-                                             defined=inner_arg, declaration=False)
-                                elif inner_arg.type in ["field_expression", "subscript_expression"]:
-                                    add_entry(parser, rda_table, parent_id, used=inner_arg)
-                                    add_entry(parser, rda_table, parent_id,
-                                             defined=inner_arg, declaration=False)
+                                    add_entry(
+                                        parser, rda_table, parent_id, used=inner_arg
+                                    )
+                                    add_entry(
+                                        parser,
+                                        rda_table,
+                                        parent_id,
+                                        defined=inner_arg,
+                                        declaration=False,
+                                    )
+                                elif inner_arg.type in [
+                                    "field_expression",
+                                    "subscript_expression",
+                                ]:
+                                    add_entry(
+                                        parser, rda_table, parent_id, used=inner_arg
+                                    )
+                                    add_entry(
+                                        parser,
+                                        rda_table,
+                                        parent_id,
+                                        defined=inner_arg,
+                                        declaration=False,
+                                    )
                                     if inner_arg.type == "subscript_expression":
-                                        index_expr = inner_arg.child_by_field_name("index")
+                                        index_expr = inner_arg.child_by_field_name(
+                                            "index"
+                                        )
                                         if index_expr:
-                                            vars_in_index = recursively_get_children_of_types(
-                                                index_expr, variable_type + ["field_expression"],
-                                                index=parser.index,
-                                                check_list=parser.symbol_table["scope_map"]
+                                            vars_in_index = (
+                                                recursively_get_children_of_types(
+                                                    index_expr,
+                                                    variable_type
+                                                    + ["field_expression"],
+                                                    index=parser.index,
+                                                    check_list=parser.symbol_table[
+                                                        "scope_map"
+                                                    ],
+                                                )
                                             )
                                             for var in vars_in_index:
-                                                add_entry(parser, rda_table, parent_id, used=var)
+                                                add_entry(
+                                                    parser,
+                                                    rda_table,
+                                                    parent_id,
+                                                    used=var,
+                                                )
                         elif arg.type in variable_type + ["field_expression"]:
                             add_entry(parser, rda_table, parent_id, used=arg)
                         elif arg.type in literal_types:
                             add_entry(parser, rda_table, parent_id, used=arg)
                         else:
                             identifiers_used = recursively_get_children_of_types(
-                                arg, variable_type + ["field_expression"],
+                                arg,
+                                variable_type + ["field_expression"],
                                 index=parser.index,
-                                check_list=parser.symbol_table["scope_map"]
+                                check_list=parser.symbol_table["scope_map"],
                             )
                             for identifier in identifiers_used:
                                 add_entry(parser, rda_table, parent_id, used=identifier)
                             literals_used = recursively_get_children_of_types(
-                                arg, literal_types,
-                                index=parser.index
+                                arg, literal_types, index=parser.index
                             )
                             for literal in literals_used:
                                 add_entry(parser, rda_table, parent_id, used=literal)
@@ -973,15 +1181,15 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     add_entry(parser, rda_table, parent_id, used=child)
                 else:
                     identifiers_used = recursively_get_children_of_types(
-                        child, variable_type + ["field_expression"],
+                        child,
+                        variable_type + ["field_expression"],
                         index=parser.index,
-                        check_list=parser.symbol_table["scope_map"]
+                        check_list=parser.symbol_table["scope_map"],
                     )
                     for identifier in identifiers_used:
                         add_entry(parser, rda_table, parent_id, used=identifier)
                     literals_used = recursively_get_children_of_types(
-                        child, literal_types,
-                        index=parser.index
+                        child, literal_types, index=parser.index
                     )
                     for literal in literals_used:
                         add_entry(parser, rda_table, parent_id, used=literal)
@@ -996,18 +1204,31 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     func_name_node = child.child_by_field_name("declarator")
                     if func_name_node and func_name_node.type in variable_type:
                         func_name_idx = get_index(func_name_node, index)
-                        if func_name_idx and func_name_idx in parser.symbol_table["scope_map"]:
-                            add_entry(parser, rda_table, parent_id,
-                                     defined=func_name_node, declaration=True)
+                        if (
+                            func_name_idx
+                            and func_name_idx in parser.symbol_table["scope_map"]
+                        ):
+                            add_entry(
+                                parser,
+                                rda_table,
+                                parent_id,
+                                defined=func_name_node,
+                                declaration=True,
+                            )
 
-                    param_list = child.child_by_field_name('parameters')
+                    param_list = child.child_by_field_name("parameters")
                     if param_list:
                         for param in param_list.named_children:
                             if param.type == "parameter_declaration":
                                 param_id = extract_param_identifier(param)
                                 if param_id:
-                                    add_entry(parser, rda_table, parent_id,
-                                            defined=param_id, declaration=True)
+                                    add_entry(
+                                        parser,
+                                        rda_table,
+                                        parent_id,
+                                        defined=param_id,
+                                        declaration=True,
+                                    )
                     break
 
         elif root_node.type == "switch_statement":
@@ -1018,9 +1239,10 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             condition = root_node.child_by_field_name("condition")
             if condition:
                 identifiers_used = recursively_get_children_of_types(
-                    condition, variable_type + ["field_expression"],
+                    condition,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers_used:
                     add_entry(parser, rda_table, parent_id, used=identifier)
@@ -1033,9 +1255,10 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             condition = root_node.child_by_field_name("condition")
             if condition:
                 identifiers_used = recursively_get_children_of_types(
-                    condition, variable_type + ["field_expression"],
+                    condition,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers_used:
                     add_entry(parser, rda_table, parent_id, used=identifier)
@@ -1048,24 +1271,28 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             condition = root_node.child_by_field_name("condition")
             if condition:
                 identifiers_used = recursively_get_children_of_types(
-                    condition, variable_type + ["field_expression"],
+                    condition,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers_used:
                     add_entry(parser, rda_table, parent_id, used=identifier)
 
-        elif (root_node.type == "parenthesized_expression" and
-              root_node.parent is not None and
-              root_node.parent.type == "do_statement"):
+        elif (
+            root_node.type == "parenthesized_expression"
+            and root_node.parent is not None
+            and root_node.parent.type == "do_statement"
+        ):
             parent_id = get_index(root_node, index)
             if parent_id is None or parent_id not in CFG_results.graph.nodes:
                 continue
 
             identifiers_used = recursively_get_children_of_types(
-                root_node, variable_type + ["field_expression"],
+                root_node,
+                variable_type + ["field_expression"],
                 index=parser.index,
-                check_list=parser.symbol_table["scope_map"]
+                check_list=parser.symbol_table["scope_map"],
             )
             for identifier in identifiers_used:
                 add_entry(parser, rda_table, parent_id, used=identifier)
@@ -1081,9 +1308,10 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             condition = root_node.child_by_field_name("condition")
             if condition:
                 identifiers_used = recursively_get_children_of_types(
-                    condition, variable_type + ["field_expression"],
+                    condition,
+                    variable_type + ["field_expression"],
                     index=parser.index,
-                    check_list=parser.symbol_table["scope_map"]
+                    check_list=parser.symbol_table["scope_map"],
                 )
                 for identifier in identifiers_used:
                     add_entry(parser, rda_table, parent_id, used=identifier)
@@ -1105,15 +1333,15 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     add_entry(parser, rda_table, parent_id, used=condition)
                 else:
                     identifiers_used = recursively_get_children_of_types(
-                        condition, variable_type + ["field_expression"],
+                        condition,
+                        variable_type + ["field_expression"],
                         index=parser.index,
-                        check_list=parser.symbol_table["scope_map"]
+                        check_list=parser.symbol_table["scope_map"],
                     )
                     for identifier in identifiers_used:
                         add_entry(parser, rda_table, parent_id, used=identifier)
                     literals_used = recursively_get_children_of_types(
-                        condition, literal_types,
-                        index=parser.index
+                        condition, literal_types, index=parser.index
                     )
                     for literal in literals_used:
                         add_entry(parser, rda_table, parent_id, used=literal)
@@ -1124,15 +1352,15 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     add_entry(parser, rda_table, parent_id, used=consequence)
                 else:
                     identifiers_used = recursively_get_children_of_types(
-                        consequence, variable_type + ["field_expression"],
+                        consequence,
+                        variable_type + ["field_expression"],
                         index=parser.index,
-                        check_list=parser.symbol_table["scope_map"]
+                        check_list=parser.symbol_table["scope_map"],
                     )
                     for identifier in identifiers_used:
                         add_entry(parser, rda_table, parent_id, used=identifier)
                     literals_used = recursively_get_children_of_types(
-                        consequence, literal_types,
-                        index=parser.index
+                        consequence, literal_types, index=parser.index
                     )
                     for literal in literals_used:
                         add_entry(parser, rda_table, parent_id, used=literal)
@@ -1143,15 +1371,15 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
                     add_entry(parser, rda_table, parent_id, used=alternative)
                 else:
                     identifiers_used = recursively_get_children_of_types(
-                        alternative, variable_type + ["field_expression"],
+                        alternative,
+                        variable_type + ["field_expression"],
                         index=parser.index,
-                        check_list=parser.symbol_table["scope_map"]
+                        check_list=parser.symbol_table["scope_map"],
                     )
                     for identifier in identifiers_used:
                         add_entry(parser, rda_table, parent_id, used=identifier)
                     literals_used = recursively_get_children_of_types(
-                        alternative, literal_types,
-                        index=parser.index
+                        alternative, literal_types, index=parser.index
                     )
                     for literal in literals_used:
                         add_entry(parser, rda_table, parent_id, used=literal)
@@ -1163,9 +1391,11 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             in_do_while_condition = False
             temp_parent = root_node.parent
             while temp_parent is not None:
-                if (temp_parent.type == "parenthesized_expression" and
-                    temp_parent.parent is not None and
-                    temp_parent.parent.type == "do_statement"):
+                if (
+                    temp_parent.type == "parenthesized_expression"
+                    and temp_parent.parent is not None
+                    and temp_parent.parent.type == "do_statement"
+                ):
                     in_do_while_condition = True
                     break
                 temp_parent = temp_parent.parent
@@ -1173,12 +1403,18 @@ def build_rda_table(parser, CFG_results, function_metadata=None, pointer_modific
             if in_do_while_condition:
                 continue
 
-            handled_types = (def_statement + assignment + increment_statement +
-                           function_calls + ["return_statement"])
+            handled_types = (
+                def_statement
+                + assignment
+                + increment_statement
+                + function_calls
+                + ["return_statement"]
+            )
             parent_statement = return_first_parent_of_types(
                 root_node,
-                statement_types["non_control_statement"] + statement_types["control_statement"],
-                stop_types=statement_types.get("statement_holders", []) + handled_types
+                statement_types["non_control_statement"]
+                + statement_types["control_statement"],
+                stop_types=statement_types.get("statement_holders", []) + handled_types,
             )
 
             if parent_statement is None:
@@ -1213,8 +1449,10 @@ def start_rda(index, rda_table, cfg_graph, pre_solve=False):
         remove_edges = []
         for edge in graph.edges:
             edge_data = graph.edges[edge]
-            if "label" in edge_data and edge_data["label"] in \
-               ["function_call", "function_return"]:
+            if "label" in edge_data and edge_data["label"] in [
+                "function_call",
+                "function_return",
+            ]:
                 remove_edges.append(edge)
         graph.remove_edges_from(remove_edges)
 
@@ -1264,20 +1502,25 @@ def start_rda(index, rda_table, cfg_graph, pre_solve=False):
 def add_edge(final_graph, source, target, attrib=None):
     """Add edge to graph with attributes, preventing duplicates"""
     if attrib is not None:
-        used_def = attrib.get('used_def', None)
-        edge_type = attrib.get('edge_type', None)
-        dataflow_type = attrib.get('dataflow_type', None)
+        used_def = attrib.get("used_def", None)
+        edge_type = attrib.get("edge_type", None)
+        dataflow_type = attrib.get("dataflow_type", None)
 
         for u, v, k, data in final_graph.edges(keys=True, data=True):
-            if (u == source and v == target and
-                data.get('used_def') == used_def and
-                data.get('edge_type') == edge_type and
-                data.get('dataflow_type') == dataflow_type):
+            if (
+                u == source
+                and v == target
+                and data.get("used_def") == used_def
+                and data.get("edge_type") == edge_type
+                and data.get("dataflow_type") == dataflow_type
+            ):
                 return
 
     final_graph.add_edge(source, target)
     if attrib is not None:
-        edge_keys = [k for u, v, k in final_graph.edges(keys=True) if u == source and v == target]
+        edge_keys = [
+            k for u, v, k in final_graph.edges(keys=True) if u == source and v == target
+        ]
         if edge_keys:
             edge_key = max(edge_keys)
         else:
@@ -1296,8 +1539,9 @@ def name_match_with_fields(name1, name2):
     return False
 
 
-def get_required_edges_from_def_to_use(index, cfg, rda_solution, rda_table,
-                                       graph_nodes, processed_edges, properties):
+def get_required_edges_from_def_to_use(
+    index, cfg, rda_solution, rda_table, graph_nodes, processed_edges, properties
+):
     """
     Generate DFG edges from RDA solution.
 
@@ -1324,21 +1568,33 @@ def get_required_edges_from_def_to_use(index, cfg, rda_solution, rda_table,
             for available_def in rda_solution[node]["IN"]:
                 if available_def.name == used.name:
                     if scope_check(available_def.scope, used.scope):
-                        add_edge(final_graph, available_def.line, node,
-                               {'dataflow_type': 'comesFrom',
-                                'edge_type': 'DFG_edge',
-                                'color': '#00A3FF',
-                                'used_def': used.name})
+                        add_edge(
+                            final_graph,
+                            available_def.line,
+                            node,
+                            {
+                                "dataflow_type": "comesFrom",
+                                "edge_type": "DFG_edge",
+                                "color": "#00A3FF",
+                                "used_def": used.name,
+                            },
+                        )
                         used.satisfied = True
 
                 elif "." in used.name or "." in available_def.name:
                     if name_match_with_fields(used.name, available_def.name):
                         if scope_check(available_def.scope, used.scope):
-                            add_edge(final_graph, available_def.line, node,
-                                   {'dataflow_type': 'comesFrom',
-                                    'edge_type': 'DFG_edge',
-                                    'color': '#00A3FF',
-                                    'used_def': used.name})
+                            add_edge(
+                                final_graph,
+                                available_def.line,
+                                node,
+                                {
+                                    "dataflow_type": "comesFrom",
+                                    "edge_type": "DFG_edge",
+                                    "color": "#00A3FF",
+                                    "used_def": used.name,
+                                },
+                            )
                             used.satisfied = True
 
             if not used.satisfied:
@@ -1347,13 +1603,23 @@ def get_required_edges_from_def_to_use(index, cfg, rda_solution, rda_table,
                         continue
                     for definition in rda_table[def_node]["def"]:
                         if definition.name == used.name:
-                            node_type = read_index(index, def_node)[-1] if def_node in index.values() else None
+                            node_type = (
+                                read_index(index, def_node)[-1]
+                                if def_node in index.values()
+                                else None
+                            )
                             if node_type == "function_definition":
-                                add_edge(final_graph, def_node, node,
-                                       {'dataflow_type': 'comesFrom',
-                                        'edge_type': 'DFG_edge',
-                                        'color': '#00A3FF',
-                                        'used_def': used.name})
+                                add_edge(
+                                    final_graph,
+                                    def_node,
+                                    node,
+                                    {
+                                        "dataflow_type": "comesFrom",
+                                        "edge_type": "DFG_edge",
+                                        "color": "#00A3FF",
+                                        "used_def": used.name,
+                                    },
+                                )
                                 used.satisfied = True
                                 break
 
@@ -1362,16 +1628,27 @@ def get_required_edges_from_def_to_use(index, cfg, rda_solution, rda_table,
             for killed_def in killed_defs:
                 node_type = read_index(index, node)[-1]
                 def_node_type = read_index(index, killed_def.line)[-1]
-                ignore_types = ['for_statement', 'while_statement',
-                               'if_statement', 'switch_statement']
-                if node_type not in ignore_types and \
-                   def_node_type not in ignore_types:
-                    add_edge(final_graph, killed_def.line, node,
-                           {'color': 'orange', 'dataflow_type': 'lastDef'})
+                ignore_types = [
+                    "for_statement",
+                    "while_statement",
+                    "if_statement",
+                    "switch_statement",
+                ]
+                if node_type not in ignore_types and def_node_type not in ignore_types:
+                    add_edge(
+                        final_graph,
+                        killed_def.line,
+                        node,
+                        {"color": "orange", "dataflow_type": "lastDef"},
+                    )
 
     for edge in processed_edges:
-        add_edge(final_graph, edge[0], edge[1],
-               {'dataflow_type': 'parameter', 'edge_type': 'DFG_edge'})
+        add_edge(
+            final_graph,
+            edge[0],
+            edge[1],
+            {"dataflow_type": "parameter", "edge_type": "DFG_edge"},
+        )
 
     return final_graph
 
@@ -1388,7 +1665,7 @@ def rda_cfg_map(rda_solution, CFG_results):
 
         if intersection:
             edge_data = graph.get_edge_data(*edge)
-            edge_data['rda_info'] = ",".join([str(d) for d in intersection])
+            edge_data["rda_info"] = ",".join([str(d) for d in intersection])
         else:
             graph.remove_edge(*edge)
 
@@ -1457,20 +1734,30 @@ def collect_call_site_information(parser, function_metadata, cfg_graph):
                                     if has_ampersand and arg_node:
                                         if arg_node.type == "identifier":
                                             var_name = st(arg_node)
-                                            pass_by_ref_args.append((arg_idx, var_name, arg_node))
+                                            pass_by_ref_args.append(
+                                                (arg_idx, var_name, arg_node)
+                                            )
                                 elif arg.type == "identifier":
                                     var_name = st(arg)
                                     arg_index = get_index(arg, index)
-                                    if arg_index and arg_index in parser.symbol_table["scope_map"]:
-                                        pass_by_ref_args.append((arg_idx, var_name, arg))
+                                    if (
+                                        arg_index
+                                        and arg_index
+                                        in parser.symbol_table["scope_map"]
+                                    ):
+                                        pass_by_ref_args.append(
+                                            (arg_idx, var_name, arg)
+                                        )
 
             if pass_by_ref_args:
-                call_sites.append({
-                    "call_site_node": node,
-                    "call_site_id": call_site_id,
-                    "function_name": function_name,
-                    "pass_by_ref_args": pass_by_ref_args
-                })
+                call_sites.append(
+                    {
+                        "call_site_node": node,
+                        "call_site_id": call_site_id,
+                        "function_name": function_name,
+                        "pass_by_ref_args": pass_by_ref_args,
+                    }
+                )
 
     return call_sites
 
@@ -1554,15 +1841,24 @@ def find_modification_sites(parser, function_metadata, pointer_modifications):
                 if parent_statement:
                     statement_id = get_index(parent_statement, index)
                     if statement_id is not None:
-                        modifications.append((modification_param_idx, mod_node, statement_id))
+                        modifications.append(
+                            (modification_param_idx, mod_node, statement_id)
+                        )
 
         modification_sites[func_name] = modifications
 
     return modification_sites
 
 
-def add_interprocedural_edges(final_graph, parser, call_sites, modification_sites,
-                               function_metadata, cfg_graph, rda_table):
+def add_interprocedural_edges(
+    final_graph,
+    parser,
+    call_sites,
+    modification_sites,
+    function_metadata,
+    cfg_graph,
+    rda_table,
+):
     """
     Add interprocedural DFG edges for pass-by-reference.
 
@@ -1586,7 +1882,10 @@ def add_interprocedural_edges(final_graph, parser, call_sites, modification_site
         function_name = call_site_info["function_name"]
         pass_by_ref_args = call_site_info["pass_by_ref_args"]
 
-        if function_name not in function_metadata or function_name not in modification_sites:
+        if (
+            function_name not in function_metadata
+            or function_name not in modification_sites
+        ):
             continue
 
         func_meta = function_metadata[function_name]
@@ -1597,12 +1896,18 @@ def add_interprocedural_edges(final_graph, parser, call_sites, modification_site
             continue
 
         for arg_idx, var_name, var_node in pass_by_ref_args:
-            add_edge(final_graph, call_site_id, func_def_id,
-                   {'dataflow_type': 'comesFrom',
-                    'edge_type': 'DFG_edge',
-                    'color': '#00A3FF',
-                    'used_def': var_name,
-                    'interprocedural': 'call_to_function'})
+            add_edge(
+                final_graph,
+                call_site_id,
+                func_def_id,
+                {
+                    "dataflow_type": "comesFrom",
+                    "edge_type": "DFG_edge",
+                    "color": "#00A3FF",
+                    "used_def": var_name,
+                    "interprocedural": "call_to_function",
+                },
+            )
 
             mods = modification_sites.get(function_name, [])
             for mod_param_idx, mod_node, mod_statement_id in mods:
@@ -1631,18 +1936,28 @@ def add_interprocedural_edges(final_graph, parser, call_sites, modification_site
                                     defines_var = True
                                     break
 
-                        if current == call_site_id or not uses_var or (uses_var and defines_var):
+                        if (
+                            current == call_site_id
+                            or not uses_var
+                            or (uses_var and defines_var)
+                        ):
                             for edge in cfg_graph.out_edges(current):
                                 if edge[1] not in visited:
                                     queue.append(edge[1])
 
                     for use_site in successors:
-                        add_edge(final_graph, mod_statement_id, use_site,
-                               {'dataflow_type': 'comesFrom',
-                                'edge_type': 'DFG_edge',
-                                'color': '#00A3FF',
-                                'used_def': var_name,
-                                'interprocedural': 'modification_to_use'})
+                        add_edge(
+                            final_graph,
+                            mod_statement_id,
+                            use_site,
+                            {
+                                "dataflow_type": "comesFrom",
+                                "edge_type": "DFG_edge",
+                                "color": "#00A3FF",
+                                "used_def": var_name,
+                                "interprocedural": "modification_to_use",
+                            },
+                        )
 
 
 def dfg_c(properties, CFG_results):
@@ -1681,7 +1996,9 @@ def dfg_c(properties, CFG_results):
     pointer_modifications = analyze_pointer_modifications(parser, function_metadata)
 
     start_rda_init_time = time.time()
-    rda_table = build_rda_table(parser, CFG_results, function_metadata, pointer_modifications)
+    rda_table = build_rda_table(
+        parser, CFG_results, function_metadata, pointer_modifications
+    )
     end_rda_init_time = time.time()
 
     start_rda_time = time.time()
@@ -1689,19 +2006,35 @@ def dfg_c(properties, CFG_results):
     end_rda_time = time.time()
 
     final_graph = get_required_edges_from_def_to_use(
-        index, cfg_graph, rda_solution, rda_table,
-        cfg_graph.nodes, processed_edges, properties
+        index,
+        cfg_graph,
+        rda_solution,
+        rda_table,
+        cfg_graph.nodes,
+        processed_edges,
+        properties,
     )
 
     call_sites = collect_call_site_information(parser, function_metadata, cfg_graph)
-    modification_sites = find_modification_sites(parser, function_metadata, pointer_modifications)
-    add_interprocedural_edges(final_graph, parser, call_sites, modification_sites,
-                               function_metadata, cfg_graph, rda_table)
+    modification_sites = find_modification_sites(
+        parser, function_metadata, pointer_modifications
+    )
+    add_interprocedural_edges(
+        final_graph,
+        parser,
+        call_sites,
+        modification_sites,
+        function_metadata,
+        cfg_graph,
+        rda_table,
+    )
 
     if debug:
-        logger.info("RDA init: {:.3f}s, RDA: {:.3f}s",
-                   end_rda_init_time - start_rda_init_time,
-                   end_rda_time - start_rda_time)
+        logger.info(
+            "RDA init: {:.3f}s, RDA: {:.3f}s",
+            end_rda_init_time - start_rda_init_time,
+            end_rda_time - start_rda_time,
+        )
 
     debug_graph = rda_cfg_map(rda_solution, CFG_results)
 

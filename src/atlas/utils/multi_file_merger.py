@@ -40,8 +40,10 @@ class MultiFileMerger:
         self.folder_path = Path(folder_path)
         self.language = language.lower()
 
-        if self.language not in ['c', 'cpp']:
-            raise ValueError(f"Unsupported language: {language}. Use 'c' or 'cpp'.")
+        if self.language not in ["c", "cpp", "java"]:
+            raise ValueError(
+                f"Unsupported language: {language}. Use 'c', 'cpp', or 'java'."
+            )
 
         if not self.folder_path.exists():
             raise FileNotFoundError(f"Folder not found: {folder_path}")
@@ -50,8 +52,7 @@ class MultiFileMerger:
             raise ValueError(f"Path is not a directory: {folder_path}")
 
         self.language_map = get_language_map()
-        self.parser = Parser()
-        self.parser.set_language(self.language_map[self.language])
+        self.parser = Parser(self.language_map[self.language])
 
         self.system_includes: List[str] = []
         self.local_includes: List[str] = []
@@ -78,12 +79,15 @@ class MultiFileMerger:
         header_files = []
         source_files = []
 
-        if self.language == 'c':
-            source_extensions = ['.c']
-            header_extensions = ['.h']
+        if self.language == "c":
+            source_extensions = [".c"]
+            header_extensions = [".h"]
+        elif self.language == "java":
+            source_extensions = [".java"]
+            header_extensions = []
         else:
-            source_extensions = ['.cpp', '.cc', '.cxx', '.c++']
-            header_extensions = ['.h', '.hpp', '.hh', '.hxx', '.h++']
+            source_extensions = [".cpp", ".cc", ".cxx", ".c++"]
+            header_extensions = [".h", ".hpp", ".hh", ".hxx", ".h++"]
 
         for root, _, files in os.walk(self.folder_path):
             for file in sorted(files):
@@ -98,7 +102,9 @@ class MultiFileMerger:
         header_files.sort()
         source_files.sort()
 
-        logger.debug(f"Found {len(header_files)} header files and {len(source_files)} source files")
+        logger.debug(
+            f"Found {len(header_files)} header files and {len(source_files)} source files"
+        )
 
         return header_files, source_files
 
@@ -112,13 +118,13 @@ class MultiFileMerger:
         logger.debug(f"Parsing file: {file_path}")
 
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
         except Exception as e:
             logger.warning(f"Failed to read file {file_path}: {e}")
             return
 
-        tree = self.parser.parse(bytes(content, 'utf-8'))
+        tree = self.parser.parse(bytes(content, "utf-8"))
         root_node = tree.root_node
 
         for child in root_node.children:
@@ -132,54 +138,54 @@ class MultiFileMerger:
             node: Tree-sitter node
             content: Original source code
         """
-        node_text = content[node.start_byte:node.end_byte]
+        node_text = content[node.start_byte : node.end_byte]
 
-        if node.type == 'comment':
+        if node.type == "comment":
             return
 
-        if node.type == 'preproc_include':
+        if node.type == "preproc_include":
             self._handle_include(node_text)
-        elif node.type == 'preproc_def':
+        elif node.type == "preproc_def":
             self._handle_macro(node_text)
-        elif node.type == 'preproc_function_def':
+        elif node.type == "preproc_function_def":
             self._handle_macro(node_text)
-        elif node.type == 'preproc_ifdef':
+        elif node.type == "preproc_ifdef":
             self._handle_preprocessor_conditional(node, content)
-        elif node.type == 'preproc_ifndef':
+        elif node.type == "preproc_ifndef":
             self._handle_preprocessor_conditional(node, content)
-        elif node.type == 'preproc_if':
+        elif node.type == "preproc_if":
             self._handle_preprocessor_conditional(node, content)
 
-        elif node.type == 'struct_specifier':
+        elif node.type == "struct_specifier":
             self._handle_type_definition(node_text)
-        elif node.type == 'union_specifier':
+        elif node.type == "union_specifier":
             self._handle_type_definition(node_text)
-        elif node.type == 'enum_specifier':
+        elif node.type == "enum_specifier":
             self._handle_type_definition(node_text)
-        elif node.type == 'type_definition':
+        elif node.type == "type_definition":
             self._handle_type_definition(node_text)
 
-        elif node.type == 'declaration':
+        elif node.type == "declaration":
             self._handle_declaration(node, node_text)
 
-        elif node.type == 'function_definition':
+        elif node.type == "function_definition":
             self._handle_function_definition(node, node_text)
 
-        elif node.type == 'class_specifier':
+        elif node.type == "class_specifier":
             self._handle_type_definition(node_text)
-        elif node.type == 'namespace_definition':
+        elif node.type == "namespace_definition":
             self._handle_type_definition(node_text)
-        elif node.type == 'template_declaration':
+        elif node.type == "template_declaration":
             self._handle_template(node, content, node_text)
-        elif node.type == 'using_declaration':
+        elif node.type == "using_declaration":
             self._handle_type_definition(node_text)
-        elif node.type == 'alias_declaration':
+        elif node.type == "alias_declaration":
             self._handle_type_definition(node_text)
 
-        elif node.type == 'linkage_specification':
+        elif node.type == "linkage_specification":
             self._handle_linkage_spec(node, content)
 
-        elif node.type == 'declaration_list':
+        elif node.type == "declaration_list":
             for child in node.children:
                 self._process_node(child, content)
 
@@ -190,7 +196,7 @@ class MultiFileMerger:
             return
         self.seen_includes.add(text)
 
-        if '<' in text:
+        if "<" in text:
             self.system_includes.append(text)
         else:
             self.local_includes.append(text)
@@ -198,11 +204,11 @@ class MultiFileMerger:
     def _handle_macro(self, text: str) -> None:
         """Handle macro definitions."""
         text = text.strip()
-        lines = text.split('\n')
+        lines = text.split("\n")
         first_line = lines[0]
         parts = first_line.split()
         if len(parts) >= 2:
-            macro_name = parts[1].split('(')[0]
+            macro_name = parts[1].split("(")[0]
             if macro_name in self.seen_macros:
                 return
             self.seen_macros.add(macro_name)
@@ -212,13 +218,20 @@ class MultiFileMerger:
     def _handle_preprocessor_conditional(self, node, content: str) -> None:
         """Handle preprocessor conditionals (ifdef, ifndef, if) by processing their children."""
         for child in node.children:
-            if child.type not in ['#ifndef', '#ifdef', '#if', '#endif', '#else', 'identifier']:
+            if child.type not in [
+                "#ifndef",
+                "#ifdef",
+                "#if",
+                "#endif",
+                "#else",
+                "identifier",
+            ]:
                 self._process_node(child, content)
 
     def _handle_linkage_spec(self, node, content: str) -> None:
         """Handle linkage specification (extern "C" { ... })."""
         for child in node.children:
-            if child.type == 'declaration_list':
+            if child.type == "declaration_list":
                 for subchild in child.children:
                     self._process_node(subchild, content)
 
@@ -236,12 +249,12 @@ class MultiFileMerger:
 
         is_function_decl = False
         for child in node.children:
-            if child.type == 'function_declarator':
+            if child.type == "function_declarator":
                 is_function_decl = True
                 break
-            if child.type == 'pointer_declarator':
+            if child.type == "pointer_declarator":
                 for subchild in child.children:
-                    if subchild.type == 'function_declarator':
+                    if subchild.type == "function_declarator":
                         is_function_decl = True
                         break
 
@@ -273,7 +286,7 @@ class MultiFileMerger:
 
         has_function_def = False
         for child in node.children:
-            if child.type == 'function_definition':
+            if child.type == "function_definition":
                 has_function_def = True
                 break
 
@@ -290,17 +303,17 @@ class MultiFileMerger:
     def _extract_function_name(self, node) -> str:
         """Extract function name from a function definition node."""
         for child in node.children:
-            if child.type == 'function_declarator':
+            if child.type == "function_declarator":
                 for subchild in child.children:
-                    if subchild.type == 'identifier':
-                        return subchild.text.decode('utf-8')
-                    elif subchild.type == 'field_identifier':
-                        return subchild.text.decode('utf-8')
-                    elif subchild.type == 'destructor_name':
-                        return subchild.text.decode('utf-8')
-                    elif subchild.type == 'qualified_identifier':
-                        return subchild.text.decode('utf-8')
-            elif child.type == 'pointer_declarator':
+                    if subchild.type == "identifier":
+                        return subchild.text.decode("utf-8")
+                    elif subchild.type == "field_identifier":
+                        return subchild.text.decode("utf-8")
+                    elif subchild.type == "destructor_name":
+                        return subchild.text.decode("utf-8")
+                    elif subchild.type == "qualified_identifier":
+                        return subchild.text.decode("utf-8")
+            elif child.type == "pointer_declarator":
                 return self._extract_function_name_from_declarator(child)
 
         return f"unknown_func_{len(self.function_definitions)}"
@@ -308,11 +321,11 @@ class MultiFileMerger:
     def _extract_function_name_from_declarator(self, node) -> str:
         """Recursively extract function name from declarator."""
         for child in node.children:
-            if child.type == 'function_declarator':
+            if child.type == "function_declarator":
                 for subchild in child.children:
-                    if subchild.type == 'identifier':
-                        return subchild.text.decode('utf-8')
-            elif child.type == 'pointer_declarator':
+                    if subchild.type == "identifier":
+                        return subchild.text.decode("utf-8")
+            elif child.type == "pointer_declarator":
                 return self._extract_function_name_from_declarator(child)
         return "unknown_func"
 
@@ -377,7 +390,7 @@ class MultiFileMerger:
                 output_parts.append(func_code)
                 output_parts.append("")
 
-        return '\n'.join(output_parts)
+        return "\n".join(output_parts)
 
     def merge_to_file(self, output_path: Optional[str] = None) -> str:
         """
@@ -393,15 +406,15 @@ class MultiFileMerger:
         merged_code = self.merge()
 
         if output_path is None:
-            if self.language == 'c':
-                suffix = '.c'
+            if self.language == "c":
+                suffix = ".c"
             else:
-                suffix = '.cpp'
+                suffix = ".cpp"
 
-            temp_dir = tempfile.mkdtemp(prefix='atlas_merged_')
+            temp_dir = tempfile.mkdtemp(prefix="atlas_merged_")
             output_path = os.path.join(temp_dir, f"project{suffix}")
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(merged_code)
 
         logger.info(f"Merged source written to: {output_path}")
@@ -409,7 +422,9 @@ class MultiFileMerger:
         return output_path
 
 
-def merge_files(folder_path: str, language: str, output_path: Optional[str] = None) -> str:
+def merge_files(
+    folder_path: str, language: str, output_path: Optional[str] = None
+) -> str:
     """
     Convenience function to merge a folder of source files.
 

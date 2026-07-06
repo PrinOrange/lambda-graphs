@@ -28,8 +28,10 @@ class ASTDriver:
             self.json = postprocessor.write_networkx_to_json(self.graph, output_file)
             try:
                 postprocessor.write_to_dot(
-                    self.graph, output_file.split(".")[0] + ".dot",
-                    output_png=True, src_language=self.src_language
+                    self.graph,
+                    output_file.split(".")[0] + ".dot",
+                    output_png=True,
+                    src_language=self.src_language,
                 )
             except Exception:
                 pass
