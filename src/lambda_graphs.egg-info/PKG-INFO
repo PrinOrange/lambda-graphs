@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: lambda-graphs
-Version: 0.2.3
+Version: 0.2.5
 Summary: Generate combined multi-code view graphs
 Home-page: https://github.com/PrinOrange/lambda-graphs
 License: Apache-2.0
@@ -32,7 +32,7 @@ Requires-Dist: GitPython; extra == "dev"
 Requires-Dist: pandas; extra == "dev"
 Dynamic: license-file
 
-# lambda-graphs: Multi-View Code Representation Tool for C, C++ and Java Source Programs
+# lambda-graphs: Multi-View Code Representation Tool for C, C++, Java, and JavaScript
 
 lambda-graphs aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
 
@@ -40,7 +40,7 @@ Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbe
 
 ## Overview
 
-`lambda-graphs` is a CLI tool for generating customized source code representations from C and C++ programs. Currently, `lambda-graphs` generates codeviews for C and C++, supporting both method-level and file-level code snippets. `lambda-graphs` can be used to generate over 7 possible combinations of codeviews for both languages, including:
+`lambda-graphs` is a CLI tool and Python library for generating code representations (AST, CFG, DFG) from source code. It supports **C**, **C++**, **Java**, and **JavaScript**, at both method-level and file-level granularity.
 
 - **AST** (Abstract Syntax Tree)
 - **CFG** (Control Flow Graph)
@@ -280,8 +280,10 @@ result = generate("cpp", code_file="./test.cpp", graphs=["cfg", "dfg"])
 result = generate("c", code_folder="./project/src", graphs=["cfg", "dfg"])
 
 # Export to disk
-result.to_json("output.json")
-result.to_dot("output.dot", png=True, svg=True)
+result.to_json("output.json")   # JSON only
+result.to_dot("output.dot")     # DOT only
+result.to_png("output.png")     # PNG image
+result.to_svg("output.svg")     # SVG image
 ```
 
 The returned `GraphsResult` object has four attributes:
@@ -296,7 +298,7 @@ The returned `GraphsResult` object has four attributes:
 ---
 ## Limitations
 
-While `lambda-graphs` provides _method-level_ and _file-level_ support for both C and C++, it's important to note the following limitations and known issues:
+While `lambda-graphs` provides _method-level_ and _file-level_ support, it's important to note the following limitations and known issues:
 
 ### General Limitations
 - **Syntax Errors in Code**: To ensure accurate codeviews, the input code must be free of syntax errors. Code with syntax errors may not be correctly parsed and displayed in the generated codeviews. Note that the code does not need to be compilable, only syntactically valid.
@@ -409,17 +411,17 @@ The code is structured in the following way:
 
 1. **Preprocessing** (`src/lambda_graphs/utils/`): The `multi_file_merger.py` module combines multiple source files from a folder into a single file for analysis.
 
-2. **Parsing** (`src/lambda_graphs/tree_parser/`): For each code-view, first the source code is parsed using the tree-sitter parser. The Parser and ParserDriver are implemented with various functionalities commonly required by all code-views. Language-specific features are further developed in the language-specific parsers (`c_parser.py`, `cpp_parser.py`).
+2. **Parsing** (`src/lambda_graphs/tree_parser/`): For each code-view, first the source code is parsed using the tree-sitter parser. The Parser and ParserDriver are implemented with various functionalities commonly required by all code-views. Language-specific features are further developed in the language-specific parsers (`c_parser.py`, `cpp_parser.py`, `java_parser.py`, `js_parser.py`).
 
 3. **Codeview Generation** (`src/lambda_graphs/codeviews/`): This directory contains the core logic for the various codeviews:
    - `AST/` - Abstract Syntax Tree (language-agnostic)
-   - `CFG/` - Control Flow Graph (language-specific: `CFG_c.py`, `CFG_cpp.py`)
+   - `CFG/` - Control Flow Graph (language-specific: `CFG_c.py`, `CFG_cpp.py`, `CFG_java.py`, `CFG_js.py`)
    - `DFG/` - Data Flow Graph (language-agnostic)
    - `combined_graph/` - Combines multiple codeviews into a single graph
 
 4. **CLI & API Entry Points** (`src/lambda_graphs/cli.py`, `__init__.py`): The CLI is implemented with Typer. The `generate()` function in `__init__.py` exposes the same functionality as a Python API.
 
-5. **Node Definitions** (`src/lambda_graphs/utils/`): `c_nodes.py` and `cpp_nodes.py` define AST node type categorizations used throughout the codebase.
+5. **Node Definitions** (`src/lambda_graphs/utils/`): `c_nodes.py`, `cpp_nodes.py`, `java_nodes.py`, and `js_nodes.py` define AST node type categorizations used throughout the codebase.
 
 ---
 

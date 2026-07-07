@@ -74,7 +74,7 @@ def write_to_dot(
             if "label" in graph.nodes[node]:
                 label = graph.nodes[node]["label"]
 
-                if src_language in ["c", "cpp", "java"]:
+                if src_language in ["c", "cpp", "java", "javascript"]:
                     label = str(label)
                     label = label.replace("\\", "\\\\")
                     label = label.replace('"', '\\"')
@@ -84,12 +84,19 @@ def write_to_dot(
                     label = re.escape(label)
 
                 if (
-                    src_language in ["c", "cpp", "java"]
+                    src_language in ["c", "cpp", "java", "javascript"]
                     or label in dot_reserved_keywords
                 ):
                     label = f'"{label}"'
 
                 graph.nodes[node]["label"] = label
+
+            # Quote any string attribute that contains DOT-special characters
+            for attr in ("statement", "token", "node_type", "statement_type"):
+                val = graph.nodes[node].get(attr)
+                if isinstance(val, str) and any(c in val for c in ':\\"<>{}|&#'):
+                    escaped = val.replace("\\", "\\\\").replace('"', '\\"')
+                    graph.nodes[node][attr] = f'"{escaped}"'
 
         for u, v, key, data in graph.edges(keys=True, data=True):
             for attr_name in ["used_def", "used_var", "returned_value"]:
