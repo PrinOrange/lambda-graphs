@@ -1,6 +1,7 @@
 from ..tree_parser.c_parser import CParser
 from ..tree_parser.cpp_parser import CppParser
 from ..tree_parser.java_parser import JavaParser
+from ..tree_parser.js_parser import JavaScriptParser
 from ..utils import preprocessor
 
 
@@ -16,6 +17,7 @@ class ParserDriver:
             "c": CParser,
             "cpp": CppParser,
             "java": JavaParser,
+            "javascript": JavaScriptParser,
         }
         self.parser = self.parser_map[self.src_language](
             self.src_language, self.src_code

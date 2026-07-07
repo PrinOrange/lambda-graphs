@@ -20,6 +20,7 @@ src/lambda_graphs/codeviews/CFG/CFG_c.py
 src/lambda_graphs/codeviews/CFG/CFG_cpp.py
 src/lambda_graphs/codeviews/CFG/CFG_driver.py
 src/lambda_graphs/codeviews/CFG/CFG_java.py
+src/lambda_graphs/codeviews/CFG/CFG_js.py
 src/lambda_graphs/codeviews/CFG/__init__.py
 src/lambda_graphs/codeviews/CST/CST_driver.py
 src/lambda_graphs/codeviews/CST/__init__.py
@@ -29,6 +30,7 @@ src/lambda_graphs/codeviews/SDFG/SDFG.py
 src/lambda_graphs/codeviews/SDFG/SDFG_c.py
 src/lambda_graphs/codeviews/SDFG/SDFG_cpp.py
 src/lambda_graphs/codeviews/SDFG/SDFG_java.py
+src/lambda_graphs/codeviews/SDFG/SDFG_js.py
 src/lambda_graphs/codeviews/SDFG/__init__.py
 src/lambda_graphs/codeviews/combined_graph/__init__.py
 src/lambda_graphs/codeviews/combined_graph/combined_driver.py
@@ -37,12 +39,14 @@ src/lambda_graphs/tree_parser/c_parser.py
 src/lambda_graphs/tree_parser/cpp_parser.py
 src/lambda_graphs/tree_parser/custom_parser.py
 src/lambda_graphs/tree_parser/java_parser.py
+src/lambda_graphs/tree_parser/js_parser.py
 src/lambda_graphs/tree_parser/parser_driver.py
 src/lambda_graphs/utils/DFG_utils.py
 src/lambda_graphs/utils/__init__.py
 src/lambda_graphs/utils/c_nodes.py
 src/lambda_graphs/utils/cpp_nodes.py
 src/lambda_graphs/utils/java_nodes.py
+src/lambda_graphs/utils/js_nodes.py
 src/lambda_graphs/utils/language.py
 src/lambda_graphs/utils/multi_file_merger.py
 src/lambda_graphs/utils/postprocessor.py

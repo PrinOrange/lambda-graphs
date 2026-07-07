@@ -7,7 +7,6 @@ from ..CFG.CFG_driver import CFGDriver
 from ..DFG.DFG_driver import DFGDriver
 from ...utils import postprocessor
 
-
 # Visual scheme per graph type — used when a node belongs to exactly one source.
 # When a node belongs to multiple sources we pick a blend colour.
 _SOURCE_STYLES = {
@@ -17,7 +16,7 @@ _SOURCE_STYLES = {
 }
 
 # Blend used when a node belongs to CFG *and* DFG (they share ids).
-_MULTI_SOURCE_STYLE = {"fillcolor": "#D9D0E5", "color": "#7A6A9A"}   # light purple
+_MULTI_SOURCE_STYLE = {"fillcolor": "#D9D0E5", "color": "#7A6A9A"}  # light purple
 
 
 def _merge_nodes_into(target, incoming, source_label):
@@ -28,7 +27,7 @@ def _merge_nodes_into(target, incoming, source_label):
     the multi-source blend.  Edges are simply unioned.
     """
     for nid, attrs in incoming.nodes(data=True):
-        attrs = dict(attrs)                     # shallow copy — don't mutate caller
+        attrs = dict(attrs)  # shallow copy — don't mutate caller
         attrs.setdefault("source", source_label)
 
         if nid in target:

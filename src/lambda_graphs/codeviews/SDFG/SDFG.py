@@ -8,6 +8,7 @@ from lambda_graphs.codeviews.CFG.CFG_driver import CFGDriver
 from lambda_graphs.codeviews.SDFG.SDFG_c import dfg_c
 from lambda_graphs.codeviews.SDFG.SDFG_cpp import dfg_cpp
 from lambda_graphs.codeviews.SDFG.SDFG_java import dfg_java
+from lambda_graphs.codeviews.SDFG.SDFG_js import dfg_javascript
 from lambda_graphs.utils import postprocessor, DFG_utils
 
 debug = False
@@ -113,6 +114,7 @@ class DfgRda:
             "c": dfg_c,
             "cpp": dfg_cpp,
             "java": dfg_java,
+            "javascript": dfg_javascript,
         }
         driver = lang_map[self.src_language]
         return driver(properties, self.CFG_Results)

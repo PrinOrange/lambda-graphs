@@ -1,6 +1,7 @@
 from .CFG_c import CFGGraph_c
 from .CFG_cpp import CFGGraph_cpp
 from .CFG_java import CFGGraph_java
+from .CFG_js import CFGGraph_js
 from ...tree_parser.parser_driver import ParserDriver
 from ...utils import postprocessor
 
@@ -24,6 +25,7 @@ class CFGDriver:
             "c": CFGGraph_c,
             "cpp": CFGGraph_cpp,
             "java": CFGGraph_java,
+            "javascript": CFGGraph_js,
         }
 
         self.CFG = self.CFG_map[self.src_language](
