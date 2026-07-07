@@ -213,7 +213,7 @@ def dfg_javascript(properties, CFG_results):
     cfg_graph = copy.deepcopy(CFG_results.graph)
     # Mark DFG nodes
     for nid in cfg_graph.nodes():
-        cfg_graph.nodes[nid]["source"] = "DFG"
+        cfg_graph.nodes[nid]["node_source"] = "DFG"
         cfg_graph.nodes[nid]["fillcolor"] = "#F5E0C6"
         cfg_graph.nodes[nid]["color"] = "#C98A5A"
 

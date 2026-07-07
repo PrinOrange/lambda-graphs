@@ -7,20 +7,43 @@ from subprocess import check_call
 import networkx as nx
 from networkx.readwrite import json_graph
 
+# Visual attributes that only make sense in DOT / PNG / SVG output.
+# They are stripped from JSON to keep it data-only.
+_JSON_STRIP_NODE_ATTRS = ("shape", "style", "fillcolor", "color")
+_JSON_STRIP_EDGE_ATTRS = ("color", "shape", "style", "fillcolor")
+
 
 def networkx_to_json(graph):
-    """Convert a networkx graph to a json object"""
+    """Convert a networkx graph to a json object (visual attrs stripped)."""
     graph_json = json_graph.node_link_data(graph)
+    _strip_visual_attrs(graph_json)
     return graph_json
 
 
 def write_networkx_to_json(graph, filename):
-    """Convert a networkx graph to a json object"""
+    """Convert a networkx graph to a json object and write to *filename*."""
     graph_json = json_graph.node_link_data(graph)
+    _strip_visual_attrs(graph_json)
     if not os.getenv("GITHUB_ACTIONS"):
         with open(filename, "w") as f:
             json.dump(graph_json, f)
     return graph_json
+
+
+def _strip_visual_attrs(graph_json):
+    """Remove visual-only attributes from nodes and edges *in place*.
+
+    Also drops ``label`` from CFG / DFG nodes that already expose the same
+    information via ``statement`` + ``line_no`` (AST nodes keep ``label``).
+    """
+    for node in graph_json.get("nodes", []):
+        for attr in _JSON_STRIP_NODE_ATTRS:
+            node.pop(attr, None)
+        if "statement" in node:
+            node.pop("label", None)
+    for link in graph_json.get("links", []):
+        for attr in _JSON_STRIP_EDGE_ATTRS:
+            link.pop(attr, None)
 
 
 def to_dot(graph):

@@ -96,30 +96,67 @@ class GraphsResult:
     # internal bookkeeping
     _source_path: Optional[Path] = field(default=None, repr=False)
 
+    # -- output helpers --------------------------------------------------
+
     def to_json(self, path: Union[str, Path]) -> Path:
         """Write the **combined** graph to *path* as JSON (node-link format)."""
         path = Path(path)
         postprocessor.write_networkx_to_json(self.combined, str(path))
         return path
 
-    def to_dot(
-        self,
-        path: Union[str, Path],
-        png: bool = False,
-        svg: bool = False,
-    ) -> Path:
-        """Write the **combined** graph to *path* in Graphviz DOT format.
-
-        Set *png* and/or *svg* to ``True`` to also render those formats.
-        """
+    def to_dot(self, path: Union[str, Path]) -> Path:
+        """Write the **combined** graph to *path* in Graphviz DOT format."""
         path = Path(path)
         postprocessor.write_to_dot(
             self.combined,
             str(path),
-            output_png=png,
-            output_svg=svg,
+            output_png=False,
+            output_svg=False,
             src_language=self.language,
         )
+        return path
+
+    def to_png(self, path: Union[str, Path]) -> Path:
+        """Render the **combined** graph to a PNG image at *path*."""
+        import tempfile, shutil
+
+        path = Path(path)
+        with tempfile.NamedTemporaryFile(suffix=".dot", delete=False) as tmp:
+            tmp_dot = tmp.name
+        try:
+            postprocessor.write_to_dot(
+                self.combined,
+                tmp_dot,
+                output_png=True,
+                output_svg=False,
+                src_language=self.language,
+            )
+            # write_to_dot produces <tmp>.png alongside the dot file
+            rendered = Path(tmp_dot).with_suffix(".png")
+            shutil.move(str(rendered), str(path))
+        finally:
+            Path(tmp_dot).unlink(missing_ok=True)
+        return path
+
+    def to_svg(self, path: Union[str, Path]) -> Path:
+        """Render the **combined** graph to an SVG image at *path*."""
+        import tempfile, shutil
+
+        path = Path(path)
+        with tempfile.NamedTemporaryFile(suffix=".dot", delete=False) as tmp:
+            tmp_dot = tmp.name
+        try:
+            postprocessor.write_to_dot(
+                self.combined,
+                tmp_dot,
+                output_png=False,
+                output_svg=True,
+                src_language=self.language,
+            )
+            rendered = Path(tmp_dot).with_suffix(".svg")
+            shutil.move(str(rendered), str(path))
+        finally:
+            Path(tmp_dot).unlink(missing_ok=True)
         return path
 
 

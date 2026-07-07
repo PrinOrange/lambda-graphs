@@ -33,12 +33,12 @@ class ASTGraph:
             AST.add_node(
                 current_node_id,
                 node_type=root_node.type,
-                label=label,
+                token=label,
                 shape="box",
                 style="rounded, filled",
                 fillcolor="#BFE6D3",
                 color="white",
-                source="AST",
+                node_source="AST",
             )
             for child in root_node.children:
                 if child.is_named:
@@ -75,7 +75,7 @@ class ASTGraph:
                 name_to_index_map[self.label[variable]] = set()
 
         for node, properties in G.nodes(data=True):
-            name = properties["label"]
+            name = properties["token"]
             if name in name_to_index_map.keys():
                 name_to_index_map[name].add(node)
 

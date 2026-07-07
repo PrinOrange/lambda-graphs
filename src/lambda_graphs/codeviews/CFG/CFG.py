@@ -14,16 +14,20 @@ class CFGGraph:
     def to_networkx(self, CFG_node_list, CFG_edge_list):
         G = nx.MultiDiGraph()
         for node in CFG_node_list:
-            label = str(node[1] + 1) + "_ " + node[2]
+            line_no = node[1] + 1
+            statement = node[2]
+            label = f"{line_no}_ {statement}"  # visual label for DOT/PNG/SVG
             G.add_node(
                 node[0],
                 label=label,
-                type_label=node[3],
+                statement=statement,
+                line_no=line_no,
+                statement_type=node[3],
                 shape="box",
                 style="rounded, filled",
                 fillcolor="#D6E5F5",
                 color="#5A8EC9",
-                source="CFG",
+                node_source="CFG",
             )
         for edge in CFG_edge_list:
             additional_data = None
