@@ -71,6 +71,10 @@ def write_to_dot(
         }
 
         for node in graph.nodes:
+            # AST nodes use "token" as their display label (v0.2.3+).
+            if "label" not in graph.nodes[node] and "token" in graph.nodes[node]:
+                graph.nodes[node]["label"] = graph.nodes[node]["token"]
+
             if "label" in graph.nodes[node]:
                 label = graph.nodes[node]["label"]
 
