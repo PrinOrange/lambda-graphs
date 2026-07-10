@@ -1,8 +1,6 @@
-# lambda-graphs: Multi-View Code Representation Tool for C, C++, Java, and JavaScript
+# lambda-graphs: Multi-View Code Representation Tools
 
 lambda-graphs aims to generate combined multi-code view graphs that can be used with various types of machine learning models (sequence models, graph neural networks, etc).
-
-Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbenp14)
 
 ## Overview
 
@@ -143,69 +141,69 @@ You can also use `lambda-graphs` as a library to get graph objects directly (no 
 ```python
 from lambda_graphs import generate
 
-# -- 从代码字符串生成 ------------------------------------------------------
+# -- Generate from a code string -------------------------------------------
 result = generate(
     "cpp",
     code="int main() { int x = 5; return x; }",
     graphs=["ast", "cfg", "dfg"],
 )
 
-# 每个图都是 networkx.MultiDiGraph
+# Each graph is a networkx.MultiDiGraph
 print(result.ast.nodes(data=True))
 print(result.cfg.nodes(data=True))
 print(result.dfg.nodes(data=True))
 print(result.combined.nodes(data=True))
 
-# 图级元数据（这里的 graph 对应 JSON 中的 "graph" 键）
+# Graph-level metadata (the "graph" key in JSON output)
 print(result.combined.graph)  # {"language": "cpp", "views": ["ast", "cfg", "dfg"]}
 
-# -- 从文件或文件夹生成 ----------------------------------------------------
+# -- Generate from a file or folder ------------------------------------------
 result = generate("cpp", code_file="./test.cpp", graphs=["cfg", "dfg"])
 result = generate("c", code_folder="./project/src", graphs=["cfg", "dfg"])
 
-# -- 带额外选项 -----------------------------------------------------------
+# -- With extra options ------------------------------------------------------
 result = generate(
     "cpp",
     code="...",
     graphs=["ast", "dfg"],
-    collapsed=True,                              # 合并重复变量节点
-    last_def=True,                               # DFG 边附加 last-def 信息
-    blacklisted=["comment", "number_literal"],   # 排除 AST 节点类型
+    collapsed=True,                              # collapse duplicate variable nodes
+    last_def=True,                               # add last-def info to DFG edges
+    blacklisted=["comment", "number_literal"],   # exclude AST node types
 )
 
-# -- 导出到磁盘 -----------------------------------------------------------
+# -- Export to disk ----------------------------------------------------------
 result.to_json("output.json")   # JSON
 result.to_dot("output.dot")     # DOT
-result.to_png("output.png")     # PNG 图片
-result.to_svg("output.svg")     # SVG 图片
+result.to_png("output.png")     # PNG image
+result.to_svg("output.svg")     # SVG image
 ```
 
-`generate()` 返回的 `GraphsResult` 对象包含以下属性：
+`generate()` returns a `GraphsResult` object with the following attributes:
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `.ast` | `nx.MultiDiGraph` \| `None` | AST 图 |
-| `.cfg` | `nx.MultiDiGraph` \| `None` | CFG 图 |
-| `.dfg` | `nx.MultiDiGraph` \| `None` | DFG 图 |
-| `.combined` | `nx.MultiDiGraph` | 组合多视图图（始终存在） |
-| `.language` | `str` | 源语言 |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `.ast` | `nx.MultiDiGraph` \| `None` | AST graph |
+| `.cfg` | `nx.MultiDiGraph` \| `None` | CFG graph |
+| `.dfg` | `nx.MultiDiGraph` \| `None` | DFG graph |
+| `.combined` | `nx.MultiDiGraph` | Combined multi-view graph (always present) |
+| `.language` | `str` | Source language |
 
-`generate()` 参数说明：
+`generate()` parameters:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|:---:|------|
-| `language` | `str` | ✓ | 源语言，支持 `"c"` / `"cpp"` / `"java"` / `"javascript"` |
-| `code` | `str` | 三选一 | 源代码字符串 |
-| `code_file` | `str\|Path` | 三选一 | 源代码文件路径 |
-| `code_folder` | `str\|Path` | 三选一 | 源码文件夹路径（自动合并多文件） |
-| `graphs` | `list[str]` | | 要生成的图类型，默认 `["ast", "cfg", "dfg"]` |
-| `collapsed` | `bool` | | 合并重复变量节点，默认 `False` |
-| `last_def` | `bool` | | DFG 边附加 last-def 信息，默认 `False` |
-| `last_use` | `bool` | | DFG 边附加 last-use 信息，默认 `False` |
-| `blacklisted` | `list[str]` | | 要排除的 AST 节点类型 |
-| `combined_name` | `str` | | 多文件合并时的自定义名称（仅 `code_folder` 模式） |
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `language` | `str` | ✓ | Source language: `"c"` / `"cpp"` / `"java"` / `"javascript"` |
+| `code` | `str` | pick one | Source code as a string |
+| `code_file` | `str\|Path` | pick one | Path to a source file |
+| `code_folder` | `str\|Path` | pick one | Path to a source folder (auto-merges multi-file projects) |
+| `graphs` | `list[str]` | | Which graphs to generate, default `["ast", "cfg", "dfg"]` |
+| `collapsed` | `bool` | | Collapse duplicate variable nodes, default `False` |
+| `last_def` | `bool` | | Add last-def annotation to DFG edges, default `False` |
+| `last_use` | `bool` | | Add last-use annotation to DFG edges, default `False` |
+| `blacklisted` | `list[str]` | | AST node types to exclude |
+| `combined_name` | `str` | | Custom name for merged file (`code_folder` mode only) |
 
-> 更多 JSON 输出格式细节请参考 [docs/json-output-format.md](docs/json-output-format.md)。
+> See [docs/json-output-format.md](docs/json-output-format.md) for details on the JSON output format.
 
 ---
 ## Limitations
@@ -230,112 +228,6 @@ In addition to the general limitations, the tool has the following limitations s
   - Concepts (C++20)
 
   may not be fully represented in the generated codeviews.
-
----
-
-## Output Examples
-
-### Example 1: C++ Function Pointers and Control Flow
-
-**CLI Command**:
-
-```bash
-lambda-graphs --lang "cpp" --code-file paper_assets/function_pointers.cpp --graphs "cfg,dfg"
-```
----
-
-**C++ Code Snippet** ([function_pointers.cpp](paper_assets/function_pointers.cpp)):
-
-```cpp
-#include <iostream>
-void f1(int times) {
-    if(!times)
-        return;
-    std::cout << "In f1()\n";
-    f1(times-1);
-}
-void f2() {
-    std::cout << "In f2()\n";
-}
-int main() {
-    void (*fptr_1)(int);
-    void (*fptr_2)(void);
-    fptr_1 = &f1;
-    fptr_2 = &f2;
-
-    int var = 0;
-    std::cin >> var;
-    (var > 0) ? fptr_1(3) : fptr_2();
-}
-```
----
-
-**Generated Codeview**:
-
-![C++ Function Pointers Example](paper_assets/function_pointers_cfg_dfg.png)
-
----
-
-### Example 2: C++ Class with Pass-by-Reference
-
-**CLI Command**:
-
-```bash
-lambda-graphs --lang "cpp" --code-file paper_assets/pass_by_reference.cpp --graphs "cfg,dfg"
-```
----
-
-**C++ Code Snippet** ([pass_by_reference.cpp](paper_assets/pass_by_reference.cpp)):
-
-```cpp
-#include <iostream>
-
-class TestClass {
-public:
-    int x;
-    TestClass(int _x) {
-        x = _x + 20;
-    }
-    void f1(int& a) {
-        a += 100;
-        a -= x;
-    }
-};
-int main() {
-    TestClass obj(30);
-    int k = 0;
-    obj.f1(k);
-    std::cout << k; // prints 50
-    return 0;
-}
-```
----
-
-**Generated Codeview**:
-
-![C++ Class Example](paper_assets/pass_by_reference_cfg_dfg.png)
-
----
-
-## Code Organization
-
-The code is structured in the following way:
-
-1. **Preprocessing** (`src/lambda_graphs/utils/`): The `multi_file_merger.py` module combines multiple source files from a folder into a single file for analysis.
-
-2. **Parsing** (`src/lambda_graphs/tree_parser/`): For each code-view, first the source code is parsed using the tree-sitter parser. The Parser and ParserDriver are implemented with various functionalities commonly required by all code-views. Language-specific features are further developed in the language-specific parsers (`c_parser.py`, `cpp_parser.py`, `java_parser.py`, `js_parser.py`).
-
-3. **Codeview Generation** (`src/lambda_graphs/codeviews/`): This directory contains the core logic for the various codeviews:
-   - `AST/` - Abstract Syntax Tree (language-agnostic)
-   - `CFG/` - Control Flow Graph (language-specific: `CFG_c.py`, `CFG_cpp.py`, `CFG_java.py`, `CFG_js.py`)
-   - `DFG/` - Data Flow Graph (language-agnostic)
-   - `combined_graph/` - Combines multiple codeviews into a single graph
-
-4. **CLI & API Entry Points** (`src/lambda_graphs/cli.py`, `__init__.py`): The CLI is implemented with Typer. The `generate()` function in `__init__.py` exposes the same functionality as a Python API.
-
-5. **Node Definitions** (`src/lambda_graphs/utils/`): `c_nodes.py`, `cpp_nodes.py`, `java_nodes.py`, and `js_nodes.py` define AST node type categorizations used throughout the codebase.
-
----
 
 ## Acknowledgments
 
