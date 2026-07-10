@@ -1,8 +1,8 @@
-from ..tree_parser.c_parser import CParser
-from ..tree_parser.cpp_parser import CppParser
-from ..tree_parser.java_parser import JavaParser
-from ..tree_parser.js_parser import JavaScriptParser
-from ..utils import preprocessor
+from .c_parser import CParser
+from .cpp_parser import CppParser
+from .java_parser import JavaParser
+from .js_parser import JavaScriptParser
+from utils import preprocessor
 
 
 class ParserDriver:

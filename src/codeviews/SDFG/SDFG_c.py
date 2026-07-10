@@ -6,8 +6,8 @@ import networkx as nx
 from deepdiff import DeepDiff
 from loguru import logger
 
-from ...utils.c_nodes import statement_types
-from ...utils.src_parser import traverse_tree
+from utils.c_nodes import statement_types
+from utils.src_parser import traverse_tree
 
 assignment = ["assignment_expression"]
 def_statement = ["init_declarator"]

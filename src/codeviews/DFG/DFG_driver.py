@@ -1,7 +1,7 @@
 import networkx as nx
-from ...tree_parser.parser_driver import ParserDriver
-from ...utils import postprocessor
-from ..SDFG.SDFG import DfgRda
+from tree_parser.parser_driver import ParserDriver
+from utils import postprocessor
+from codeviews.SDFG.SDFG import DfgRda
 
 
 class DFGDriver:

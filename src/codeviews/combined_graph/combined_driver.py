@@ -2,10 +2,10 @@ import os
 
 import networkx as nx
 
-from ..AST.AST_driver import ASTDriver
-from ..CFG.CFG_driver import CFGDriver
-from ..DFG.DFG_driver import DFGDriver
-from ...utils import postprocessor
+from codeviews.AST.AST_driver import ASTDriver
+from codeviews.CFG.CFG_driver import CFGDriver
+from codeviews.DFG.DFG_driver import DFGDriver
+from utils import postprocessor
 
 # Visual scheme per graph type — used when a node belongs to exactly one source.
 # When a node belongs to multiple sources we pick a blend colour.

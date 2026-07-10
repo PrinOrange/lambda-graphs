@@ -3,7 +3,7 @@ import traceback
 import networkx as nx
 from loguru import logger
 
-from ...utils import c_nodes
+from utils import c_nodes
 from .CFG import CFGGraph
 
 

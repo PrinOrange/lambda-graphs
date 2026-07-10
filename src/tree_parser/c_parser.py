@@ -1,4 +1,4 @@
-from ..tree_parser.custom_parser import CustomParser
+from .custom_parser import CustomParser
 
 
 class CParser(CustomParser):

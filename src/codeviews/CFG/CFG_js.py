@@ -4,7 +4,7 @@ import networkx as nx
 from loguru import logger
 
 from .CFG import CFGGraph
-from ...utils import js_nodes
+from utils import js_nodes
 
 
 class CFGGraph_js(CFGGraph):

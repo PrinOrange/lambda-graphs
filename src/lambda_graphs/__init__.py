@@ -17,9 +17,9 @@ from typing import Dict, List, Optional, Union
 
 import networkx as nx
 
-from .codeviews.combined_graph.combined_driver import CombinedDriver
-from .utils import postprocessor
-from .utils.language import get_language_map, SUPPORTED_LANGUAGES
+from codeviews.combined_graph.combined_driver import CombinedDriver
+from utils import postprocessor
+from utils.language import get_language_map, SUPPORTED_LANGUAGES
 
 _DEFAULT_GRAPHS = ("ast", "cfg", "dfg")
 
@@ -236,7 +236,7 @@ def generate(
         src_code = path.read_text()
         source_path = path
     elif code_folder is not None:
-        from .utils.multi_file_merger import merge_files
+        from utils.multi_file_merger import merge_files
         import tempfile
         import os
 

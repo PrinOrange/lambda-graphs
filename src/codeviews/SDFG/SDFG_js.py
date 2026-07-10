@@ -5,8 +5,8 @@ from collections import defaultdict
 
 import networkx as nx
 
-from ...utils import DFG_utils
-from ...utils.js_nodes import statement_types
+from utils import DFG_utils
+from utils.js_nodes import statement_types
 
 # ---- JS-specific AST type lists --------------------------------------------
 

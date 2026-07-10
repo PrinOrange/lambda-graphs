@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Optional
 from tree_sitter import Parser
 from loguru import logger
 
-from lambda_graphs.utils.language import get_language_map
+from utils.language import get_language_map
 
 
 class MultiFileMerger:

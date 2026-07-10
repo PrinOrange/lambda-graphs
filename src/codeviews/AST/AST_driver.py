@@ -1,6 +1,6 @@
 from .AST import ASTGraph
-from ...tree_parser.parser_driver import ParserDriver
-from ...utils import postprocessor
+from tree_parser.parser_driver import ParserDriver
+from utils import postprocessor
 
 
 class ASTDriver:

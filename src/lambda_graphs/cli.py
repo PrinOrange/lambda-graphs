@@ -9,8 +9,8 @@ from typing import Optional
 import typer
 from loguru import logger
 
-from .codeviews.combined_graph.combined_driver import CombinedDriver
-from .utils.multi_file_merger import merge_files
+from codeviews.combined_graph.combined_driver import CombinedDriver
+from utils.multi_file_merger import merge_files
 from . import get_language_map
 
 get_language_map()

@@ -8,8 +8,8 @@ import networkx as nx
 from deepdiff import DeepDiff
 from loguru import logger
 
-from ...utils.java_nodes import statement_types
-from ...utils.src_parser import traverse_tree
+from utils.java_nodes import statement_types
+from utils.src_parser import traverse_tree
 
 assignment = ["assignment_expression"]
 def_statement = ["variable_declarator"]

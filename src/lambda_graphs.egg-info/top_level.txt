@@ -1,1 +1,4 @@
+codeviews
 lambda_graphs
+tree_parser
+utils

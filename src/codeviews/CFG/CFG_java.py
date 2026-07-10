@@ -1,7 +1,7 @@
 import traceback
 import networkx as nx
 from .CFG import CFGGraph
-from ...utils import java_nodes
+from utils import java_nodes
 from loguru import logger
 
 

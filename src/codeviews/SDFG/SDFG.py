@@ -4,12 +4,12 @@ import time
 import networkx as nx
 from loguru import logger
 
-from lambda_graphs.codeviews.CFG.CFG_driver import CFGDriver
-from lambda_graphs.codeviews.SDFG.SDFG_c import dfg_c
-from lambda_graphs.codeviews.SDFG.SDFG_cpp import dfg_cpp
-from lambda_graphs.codeviews.SDFG.SDFG_java import dfg_java
-from lambda_graphs.codeviews.SDFG.SDFG_js import dfg_javascript
-from lambda_graphs.utils import postprocessor, DFG_utils
+from codeviews.CFG.CFG_driver import CFGDriver
+from codeviews.SDFG.SDFG_c import dfg_c
+from codeviews.SDFG.SDFG_cpp import dfg_cpp
+from codeviews.SDFG.SDFG_java import dfg_java
+from codeviews.SDFG.SDFG_js import dfg_javascript
+from utils import postprocessor, DFG_utils
 
 debug = False
 
