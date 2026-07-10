@@ -336,11 +336,11 @@ result.to_json("output.json")
 
 ```
 start_node (id:1) ───CFG: next──▶  function_definition (id:6)
-                                       │
-               ┌── DFG: comesFrom(a) ──┤
-               ├── DFG: comesFrom(b) ──┤
+                                        │
+               ┌── DFG: comesFrom(a) ───┤
+               ├── DFG: comesFrom(b) ───┤
                └── CFG: first_next_line─┤
-                                       ▼
+                                        ▼
                                    declaration (id:18)
                                        │
                ┌── DFG: comesFrom(c) ──┤
@@ -348,20 +348,6 @@ start_node (id:1) ───CFG: next──▶  function_definition (id:6)
                                        ▼
                                    return_statement (id:25)
 ```
-
----
-
-## 从 JSON 中移除的字段
-
-以下字段仅用于 DOT/PNG/SVG 可视化输出，在 JSON 中会被**自动删除**以保持数据纯净：
-
-| 移除的字段 | 所在位置 | 用途 |
-|-----------|----------|------|
-| `shape`、`style`、`fillcolor`、`color` | 节点 | Graphviz 可视化样式 |
-| `color`、`shape`、`style`、`fillcolor` | 边 | Graphviz 可视化样式 |
-| `label` | CFG/DFG 节点 | 可视化标签（JSON 中 `statement` + `line_no` 已提供同等信息） |
-
-> AST 节点的 `label` 不会被删除（AST 叶子节点无 `statement` 字段）。
 
 ---
 
