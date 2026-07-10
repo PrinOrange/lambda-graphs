@@ -18,21 +18,6 @@ Tool Demonstration link: [https://youtu.be/50DvEbenp14](https://youtu.be/50DvEbe
 ---
 ## Setup
 
-There are two ways to set up lambda-graphs: using Docker (recommended for quick usage) or using a Python virtual environment (recommended for development).
-
-### Option 1: Docker Setup (Recommended for Quick Usage)
-
-Docker provides an isolated environment with all dependencies pre-installed.
-
-**1. Build the Docker image:**
-```console
-docker build -t lambda-graphs .
-```
-
-That's it! You're ready to generate graphs using Docker.
-
-### Option 2: Virtual Environment Setup (Recommended for Development)
-
 **1. Create a new virtual environment:**
 ```console
 python -m venv .venv
@@ -52,7 +37,7 @@ pip install -e .
 
 **4. Install GraphViz (Optional - for visualization):**
 
-GraphViz is only required if you want to generate DOT or PNG output files.
+GraphViz is only required if you want to generate DOT, PNG, or SVG output files.
 
 **Ubuntu/Debian:**
 ```console
@@ -70,70 +55,9 @@ Download from [graphviz.org](https://graphviz.org/download/)
 ---
 ## Generating Graphs
 
-There are two ways to generate graphs: using Docker or using the CLI directly (after virtual environment setup).
+### Using CLI
 
-### Option 1: Using Docker
-
-Docker commands mount your current directory to `/work` inside the container, so output files appear in your working directory.
-
-**Single File Analysis:**
-```console
-docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
-    --lang cpp \
-    --code-file ./examples/single/test_single.cpp \
-    --graphs "ast,cfg,dfg" \
-    --output all
-```
-
-**Folder Analysis (Multi-file Projects):**
-```console
-docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
-    --lang c \
-    --code-folder ./examples/multi \
-    --combined-name "multi_file_example" \
-    --graphs "cfg,dfg" \
-    --output all
-```
-
-**With Additional Options:**
-```console
-# Generate only JSON output
-docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
-    --lang c \
-    --code-file ./examples/single/test_single.c \
-    --graphs cfg \
-    --output json
-
-# With collapsed nodes and last-def tracking
-docker run --rm -v "$(pwd):/work" -w /work lambda-graphs \
-    --lang c \
-    --code-file ./examples/single/test_single.c \
-    --graphs "ast,dfg" \
-    --collapsed \
-    --last-def \
-    --output all
-```
-
-### Option 2: Using Example Scripts
-
-The `examples/scripts/` folder contains ready-to-use bash scripts that automatically build the Docker image and run lambda-graphs on a target file or folder, generating CFG, DFG, and AST outputs. Each script handles the build, graph generation, and output file renaming in one step.
-
-To run a script, make it executable and execute it from the repository root:
-
-```console
-chmod +x examples/scripts/single_test_single.sh
-./examples/scripts/single_test_single.sh
-```
-
-Output files will appear in the `output/` directory, named after the source file and view (e.g. `test_single_cfg.png`, `test_single_dfg.json`).
-
----
-
-### Option 3: Using CLI Directly
-
-After setting up via virtual environment, use the `lambda-graphs` command directly.
-
-**Output Location:** All generated files (JSON, DOT, PNG) are saved to the `output/` directory in your current working directory. The directory is created automatically if it doesn't exist.
+After setup, use the `lambda-graphs` command directly.
 
 The attributes and options supported by the CLI are well documented and can be viewed by running:
 ```console
@@ -212,54 +136,76 @@ lambda-graphs --lang "c" --code-file test.c --graphs "dfg" --last-def
 lambda-graphs --lang "c" --code-file test.c --graphs "ast,cfg" --blacklisted "comment,string_literal"
 ```
 
-### Option 4: Using the Python API
+### Using the Python API
 
 You can also use `lambda-graphs` as a library to get graph objects directly (no file I/O):
 
 ```python
 from lambda_graphs import generate
 
-# Generate graphs from a code string
-result = generate("cpp", code="int main() { int x = 5; return x; }",
-                  graphs=["ast", "cfg", "dfg"])
+# -- 从代码字符串生成 ------------------------------------------------------
+result = generate(
+    "cpp",
+    code="int main() { int x = 5; return x; }",
+    graphs=["ast", "cfg", "dfg"],
+)
 
-# Each graph is a networkx.MultiDiGraph
+# 每个图都是 networkx.MultiDiGraph
 print(result.ast.nodes(data=True))
 print(result.cfg.nodes(data=True))
 print(result.dfg.nodes(data=True))
 print(result.combined.nodes(data=True))
 
-# With options
+# 图级元数据（这里的 graph 对应 JSON 中的 "graph" 键）
+print(result.combined.graph)  # {"language": "cpp", "views": ["ast", "cfg", "dfg"]}
+
+# -- 从文件或文件夹生成 ----------------------------------------------------
+result = generate("cpp", code_file="./test.cpp", graphs=["cfg", "dfg"])
+result = generate("c", code_folder="./project/src", graphs=["cfg", "dfg"])
+
+# -- 带额外选项 -----------------------------------------------------------
 result = generate(
     "cpp",
     code="...",
     graphs=["ast", "dfg"],
-    collapsed=True,                     # collapse duplicate variable nodes
-    last_def=True,                      # add last-def info to DFG edges
-    blacklisted=["comment", "number_literal"],  # exclude AST node types
+    collapsed=True,                              # 合并重复变量节点
+    last_def=True,                               # DFG 边附加 last-def 信息
+    blacklisted=["comment", "number_literal"],   # 排除 AST 节点类型
 )
 
-# From a file
-result = generate("cpp", code_file="./test.cpp", graphs=["cfg", "dfg"])
-
-# From a folder (auto-merges multi-file projects)
-result = generate("c", code_folder="./project/src", graphs=["cfg", "dfg"])
-
-# Export to disk
-result.to_json("output.json")   # JSON only
-result.to_dot("output.dot")     # DOT only
-result.to_png("output.png")     # PNG image
-result.to_svg("output.svg")     # SVG image
+# -- 导出到磁盘 -----------------------------------------------------------
+result.to_json("output.json")   # JSON
+result.to_dot("output.dot")     # DOT
+result.to_png("output.png")     # PNG 图片
+result.to_svg("output.svg")     # SVG 图片
 ```
 
-The returned `GraphsResult` object has four attributes:
+`generate()` 返回的 `GraphsResult` 对象包含以下属性：
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `.ast` | `nx.MultiDiGraph` or `None` | AST graph |
-| `.cfg` | `nx.MultiDiGraph` or `None` | CFG graph |
-| `.dfg` | `nx.MultiDiGraph` or `None` | DFG graph |
-| `.combined` | `nx.MultiDiGraph` | Combined multi-view graph |
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `.ast` | `nx.MultiDiGraph` \| `None` | AST 图 |
+| `.cfg` | `nx.MultiDiGraph` \| `None` | CFG 图 |
+| `.dfg` | `nx.MultiDiGraph` \| `None` | DFG 图 |
+| `.combined` | `nx.MultiDiGraph` | 组合多视图图（始终存在） |
+| `.language` | `str` | 源语言 |
+
+`generate()` 参数说明：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|:---:|------|
+| `language` | `str` | ✓ | 源语言，支持 `"c"` / `"cpp"` / `"java"` / `"javascript"` |
+| `code` | `str` | 三选一 | 源代码字符串 |
+| `code_file` | `str\|Path` | 三选一 | 源代码文件路径 |
+| `code_folder` | `str\|Path` | 三选一 | 源码文件夹路径（自动合并多文件） |
+| `graphs` | `list[str]` | | 要生成的图类型，默认 `["ast", "cfg", "dfg"]` |
+| `collapsed` | `bool` | | 合并重复变量节点，默认 `False` |
+| `last_def` | `bool` | | DFG 边附加 last-def 信息，默认 `False` |
+| `last_use` | `bool` | | DFG 边附加 last-use 信息，默认 `False` |
+| `blacklisted` | `list[str]` | | 要排除的 AST 节点类型 |
+| `combined_name` | `str` | | 多文件合并时的自定义名称（仅 `code_folder` 模式） |
+
+> 更多 JSON 输出格式细节请参考 [docs/json-output-format.md](docs/json-output-format.md)。
 
 ---
 ## Limitations
