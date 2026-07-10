@@ -82,6 +82,7 @@ class CombinedDriver:
             self.CFG = self.results["CFG"].graph
 
         self.combine()
+        self._set_graph_attrs()
         if output_file:
             if graph_format == "all" or graph_format == "json":
                 self.json = postprocessor.write_networkx_to_json(
@@ -102,6 +103,12 @@ class CombinedDriver:
                     output_svg=True,
                     src_language=self.src_language,
                 )
+
+    def _set_graph_attrs(self):
+        """Populate graph-level metadata so the JSON ``graph`` key is informative."""
+        views = [k.lower() for k, v in self.codeviews.items() if v.get("exists")]
+        self.graph.graph["language"] = self.src_language
+        self.graph.graph["views"] = views
 
     def get_graph(self):
         return self.graph
