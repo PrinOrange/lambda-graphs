@@ -16,16 +16,14 @@ lambda-graphs aims to generate combined multi-code view graphs that can be used 
 ---
 ## Setup
 
-**1. Create a new virtual environment:**
+**1. Create a conda environment:**
 ```console
-python -m venv .venv
+conda create -n lambda-graphs python=3.11
 ```
 
 **2. Activate the environment:**
 ```console
-source .venv/bin/activate  # On Linux/Mac
-# or
-.venv\Scripts\activate  # On Windows
+conda activate lambda-graphs
 ```
 
 **3. Install the package in development mode:**
