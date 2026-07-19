@@ -1,6 +1,6 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: lambda-graphs
-Version: 0.2.8
+Version: 0.3.8
 Summary: Generate combined multi-code view graphs
 Home-page: https://github.com/PrinOrange/lambda-graphs
 License: Apache-2.0
@@ -30,7 +30,6 @@ Requires-Dist: pqdm; extra == "dev"
 Requires-Dist: loguru; extra == "dev"
 Requires-Dist: GitPython; extra == "dev"
 Requires-Dist: pandas; extra == "dev"
-Dynamic: license-file
 
 # lambda-graphs: Multi-View Code Representation Tools
 

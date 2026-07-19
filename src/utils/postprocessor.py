@@ -5,24 +5,49 @@ import re
 from subprocess import check_call
 
 import networkx as nx
-from networkx.readwrite import json_graph
 
 # Visual attributes that only make sense in DOT / PNG / SVG output.
 # They are stripped from JSON to keep it data-only.
 _JSON_STRIP_NODE_ATTRS = ("shape", "style", "fillcolor", "color")
-_JSON_STRIP_EDGE_ATTRS = ("color", "shape", "style", "fillcolor")
+_JSON_STRIP_EDGE_ATTRS = ("color", "shape", "style", "fillcolor", "label")
+
+
+def _graph_to_json(graph):
+    """Convert a networkx graph to a JSON-serialisable dict (node-link format).
+
+    Differs from ``networkx.json_graph.node_link_data`` in that link keys use
+    ``from_node`` / ``to_node`` instead of ``source`` / ``target``.
+    """
+    nodes = [{"id": n, **attrs} for n, attrs in graph.nodes(data=True)]
+    if graph.is_multigraph():
+        links = [
+            {"from_node": u, "to_node": v, "key": k, **d}
+            for u, v, k, d in graph.edges(keys=True, data=True)
+        ]
+    else:
+        links = [
+            {"from_node": u, "to_node": v, **d}
+            for u, v, d in graph.edges(data=True)
+        ]
+    return {
+        "directed": graph.is_directed(),
+        "multigraph": graph.is_multigraph(),
+        "graph": dict(graph.graph),
+        "nodes": nodes,
+        "links": links,
+    }
 
 
 def networkx_to_json(graph):
     """Convert a networkx graph to a json object (visual attrs stripped)."""
-    graph_json = json_graph.node_link_data(graph)
+    graph_json = _graph_to_json(graph)
     _strip_visual_attrs(graph_json)
     return graph_json
 
 
 def write_networkx_to_json(graph, filename):
     """Convert a networkx graph to a json object and write to *filename*."""
-    graph_json = json_graph.node_link_data(graph)
+    graph_json = _graph_to_json(graph)
     _strip_visual_attrs(graph_json)
     if not os.getenv("GITHUB_ACTIONS"):
         with open(filename, "w") as f:
@@ -54,6 +79,8 @@ def write_to_dot(
     og_graph, filename, output_png=False, output_svg=False, src_language=None
 ):
     graph = copy.deepcopy(og_graph)
+    # Ensure Graphviz renders the DOT file as UTF-8, not Latin-1.
+    graph.graph["charset"] = "UTF-8"
     if not os.getenv("GITHUB_ACTIONS"):
         dot_reserved_keywords = {
             "node",
@@ -96,7 +123,7 @@ def write_to_dot(
                 graph.nodes[node]["label"] = label
 
             # Quote any string attribute that contains DOT-special characters
-            for attr in ("statement", "token", "node_type", "statement_type"):
+            for attr in ("statement", "token", "syntax_element", "node_type", "statement_type"):
                 val = graph.nodes[node].get(attr)
                 if isinstance(val, str) and any(c in val for c in ':\\"<>{}|&#'):
                     escaped = val.replace("\\", "\\\\").replace('"', '\\"')
@@ -112,12 +139,17 @@ def write_to_dot(
                     if needs_quoting:
                         graph.edges[u, v, key][attr_name] = f'"{attr_value}"'
 
-        nx.nx_pydot.write_dot(graph, filename)
+        # Write DOT file explicitly as UTF-8 (pydot defaults to system encoding
+        # which is GBK on Chinese Windows — Graphviz chokes on that).
+        import io as _io
+        dot_string = nx.nx_pydot.to_pydot(graph).to_string()
+        with _io.open(filename, mode="wt", encoding="utf-8") as _f:
+            _f.write(dot_string)
         if output_png:
             check_call(
-                ["dot", "-Tpng", filename, "-o", filename.rsplit(".", 1)[0] + ".png"]
+                ["dot", "-Gcharset=UTF-8", "-Tpng", filename, "-o", filename.rsplit(".", 1)[0] + ".png"]
             )
         if output_svg:
             check_call(
-                ["dot", "-Tsvg", filename, "-o", filename.rsplit(".", 1)[0] + ".svg"]
+                ["dot", "-Gcharset=UTF-8", "-Tsvg", filename, "-o", filename.rsplit(".", 1)[0] + ".svg"]
             )

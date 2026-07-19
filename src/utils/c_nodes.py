@@ -336,7 +336,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "if" + condition.text.decode("UTF-8")
                 else:
                     label = "if(...)"
-                type_label = "if"
+                type_label = root_node.type
 
             elif root_node.type == "for_statement":
                 init = root_node.child_by_field_name("initializer")
@@ -349,7 +349,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 update_str = update.text.decode("UTF-8") if update else ""
 
                 label = "for(" + init_str + " " + cond_str + "; " + update_str + ")"
-                type_label = "for"
+                type_label = root_node.type
 
             elif root_node.type == "while_statement":
                 condition = root_node.child_by_field_name("condition")
@@ -357,11 +357,11 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "while" + condition.text.decode("UTF-8")
                 else:
                     label = "while(...)"
-                type_label = "while"
+                type_label = root_node.type
 
             elif root_node.type == "do_statement":
                 label = "do"
-                type_label = "do"
+                type_label = root_node.type
 
             elif root_node.type == "switch_statement":
                 condition = root_node.child_by_field_name("condition")
@@ -369,7 +369,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "switch" + condition.text.decode("UTF-8")
                 else:
                     label = "switch(...)"
-                type_label = "switch"
+                type_label = root_node.type
 
             elif root_node.type == "case_statement":
                 value_node = root_node.child_by_field_name("value")
@@ -380,7 +380,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                         label = "default:"
                     else:
                         label = "case:"
-                type_label = "case"
+                type_label = root_node.type
 
             elif root_node.type == "labeled_statement":
                 label_node = root_node.child_by_field_name("label")
@@ -395,19 +395,19 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                         root_node.end_point,
                         root_node.type,
                     )
-                type_label = "label"
+                type_label = root_node.type
 
             elif root_node.type == "return_statement":
                 label = root_node.text.decode("UTF-8")
-                type_label = "return"
+                type_label = root_node.type
 
             elif root_node.type == "break_statement":
                 label = "break;"
-                type_label = "break"
+                type_label = root_node.type
 
             elif root_node.type == "continue_statement":
                 label = "continue;"
-                type_label = "continue"
+                type_label = root_node.type
 
             elif root_node.type == "goto_statement":
                 label_node = root_node.child_by_field_name("label")
@@ -415,7 +415,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     label = "goto " + label_node.text.decode("UTF-8") + ";"
                 else:
                     label = "goto;"
-                type_label = "goto"
+                type_label = root_node.type
 
             if root_node.type not in ["function_definition"]:
                 node_index = index[

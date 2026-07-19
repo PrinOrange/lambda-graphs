@@ -27,7 +27,7 @@ class CFGGraph:
                 style="rounded, filled",
                 fillcolor="#D6E5F5",
                 color="#5A8EC9",
-                node_source="CFG",
+                node_type="CFG",
             )
         for edge in CFG_edge_list:
             additional_data = None

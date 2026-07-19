@@ -778,12 +778,12 @@ class CFGGraph_c(CFGGraph):
                                 self.add_edge(
                                     current_index,
                                     self.get_index(first_stmt),
-                                    "pos_next",
+                                    "true_branch",
                                 )
                         else:
                             next_index, _ = self.get_next_index(node, node_list)
                             if next_index != 2:
-                                self.add_edge(current_index, next_index, "pos_next")
+                                self.add_edge(current_index, next_index, "true_branch")
                     else:
                         if (
                             consequence.start_point,
@@ -791,7 +791,7 @@ class CFGGraph_c(CFGGraph):
                             consequence.type,
                         ) in node_list:
                             self.add_edge(
-                                current_index, self.get_index(consequence), "pos_next"
+                                current_index, self.get_index(consequence), "true_branch"
                             )
 
                     last_node, _ = self.get_block_last_line(node, "consequence")
@@ -832,10 +832,10 @@ class CFGGraph_c(CFGGraph):
                     if alt_content is None:
                         next_index, _ = self.get_next_index(node, node_list)
                         if next_index != 2:
-                            self.add_edge(current_index, next_index, "neg_next")
+                            self.add_edge(current_index, next_index, "false_branch")
                     elif alt_content.type == "if_statement":
                         self.add_edge(
-                            current_index, self.get_index(alt_content), "neg_next"
+                            current_index, self.get_index(alt_content), "false_branch"
                         )
                     elif alt_content.type == "compound_statement":
                         children_list = list(alt_content.named_children)
@@ -849,12 +849,12 @@ class CFGGraph_c(CFGGraph):
                                 self.add_edge(
                                     current_index,
                                     self.get_index(first_stmt),
-                                    "neg_next",
+                                    "false_branch",
                                 )
                         else:
                             next_index, _ = self.get_next_index(node, node_list)
                             if next_index != 2:
-                                self.add_edge(current_index, next_index, "neg_next")
+                                self.add_edge(current_index, next_index, "false_branch")
 
                         last_node = None
                         if children_list:
@@ -916,7 +916,7 @@ class CFGGraph_c(CFGGraph):
                             alt_content.type,
                         ) in node_list:
                             self.add_edge(
-                                current_index, self.get_index(alt_content), "neg_next"
+                                current_index, self.get_index(alt_content), "false_branch"
                             )
 
                             if alt_content.type not in [
@@ -956,7 +956,7 @@ class CFGGraph_c(CFGGraph):
                 else:
                     next_index, _ = self.get_next_index(node, node_list)
                     if next_index != 2:
-                        self.add_edge(current_index, next_index, "neg_next")
+                        self.add_edge(current_index, next_index, "false_branch")
 
             elif node.type == "while_statement":
                 body = node.child_by_field_name("body")
@@ -973,12 +973,12 @@ class CFGGraph_c(CFGGraph):
                                 self.add_edge(
                                     current_index,
                                     self.get_index(first_stmt),
-                                    "pos_next",
+                                    "true_branch",
                                 )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
                             self.add_edge(
-                                current_index, self.get_index(body), "pos_next"
+                                current_index, self.get_index(body), "true_branch"
                             )
 
                     last_node, _ = self.get_block_last_line(node, "body")
@@ -998,7 +998,7 @@ class CFGGraph_c(CFGGraph):
 
                 next_index, _ = self.get_next_index(node, node_list)
                 if next_index != 2:
-                    self.add_edge(current_index, next_index, "neg_next")
+                    self.add_edge(current_index, next_index, "false_branch")
 
                 self.add_edge(current_index, current_index, "loop_update")
 
@@ -1017,12 +1017,12 @@ class CFGGraph_c(CFGGraph):
                                 self.add_edge(
                                     current_index,
                                     self.get_index(first_stmt),
-                                    "pos_next",
+                                    "true_branch",
                                 )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
                             self.add_edge(
-                                current_index, self.get_index(body), "pos_next"
+                                current_index, self.get_index(body), "true_branch"
                             )
 
                     last_node, _ = self.get_block_last_line(node, "body")
@@ -1042,7 +1042,7 @@ class CFGGraph_c(CFGGraph):
 
                 next_index, _ = self.get_next_index(node, node_list)
                 if next_index != 2:
-                    self.add_edge(current_index, next_index, "neg_next")
+                    self.add_edge(current_index, next_index, "false_branch")
 
                 self.add_edge(current_index, current_index, "loop_update")
 
@@ -1061,12 +1061,12 @@ class CFGGraph_c(CFGGraph):
                                 self.add_edge(
                                     current_index,
                                     self.get_index(first_stmt),
-                                    "pos_next",
+                                    "true_branch",
                                 )
                     else:
                         if (body.start_point, body.end_point, body.type) in node_list:
                             self.add_edge(
-                                current_index, self.get_index(body), "pos_next"
+                                current_index, self.get_index(body), "true_branch"
                             )
 
                     last_node, _ = self.get_block_last_line(node, "body")
@@ -1100,7 +1100,7 @@ class CFGGraph_c(CFGGraph):
                         self.add_edge(cond_index, current_index, "loop_control")
                         next_index, _ = self.get_next_index(node, node_list)
                         if next_index != 2:
-                            self.add_edge(cond_index, next_index, "neg_next")
+                            self.add_edge(cond_index, next_index, "false_branch")
 
             elif node.type == "switch_statement":
                 body = node.child_by_field_name("body")

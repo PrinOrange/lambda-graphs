@@ -1164,7 +1164,7 @@ class CFGGraph_java(CFGGraph):
                 # Find the line just after the entire if_statement
                 next_dest_index, next_node = self.get_next_index(node_value)
                 # consequence
-                self.edge_to_body(node_key, node_value, "consequence", "pos_next")
+                self.edge_to_body(node_key, node_value, "consequence", "true_branch")
                 # Find the last line in the consequence block and add an edge to the next statement
                 last_line, line_type = self.get_block_last_line(
                     node_value, "consequence"
@@ -1180,7 +1180,7 @@ class CFGGraph_java(CFGGraph):
                     self.handle_next(node_value, next_node, "next_line 3")
                 if node_value.child_by_field_name("alternative") is not None:
                     # alternative
-                    self.edge_to_body(node_key, node_value, "alternative", "neg_next")
+                    self.edge_to_body(node_key, node_value, "alternative", "false_branch")
                     # Find the last line in the alternative block
                     last_line, line_type = self.get_block_last_line(
                         node_value, "alternative"
@@ -1201,13 +1201,13 @@ class CFGGraph_java(CFGGraph):
                 next_dest_index, next_node = self.get_next_index(node_value)
 
                 # Add an edge from this node to the first line in the body
-                self.edge_to_body(node_key, node_value, "body", "pos_next")
+                self.edge_to_body(node_key, node_value, "body", "true_branch")
 
                 # Find the last line in the body block
                 last_line, line_type = self.get_block_last_line(node_value, "body")
                 last_line_index = self.get_index(last_line)
                 # Add an edge from this node to the next line after the loop statement
-                self.handle_next(node_value, next_node, "neg_next")
+                self.handle_next(node_value, next_node, "false_branch")
                 # Add an edge from the last statement in the body to this node
                 if line_type in self.statement_types["non_control_statement"]:
                     self.add_edge(last_line_index, current_index, "loop_control")
@@ -1229,7 +1229,7 @@ class CFGGraph_java(CFGGraph):
 
                 # Add an edge from this node to the first line in the body
                 # if next_node is not None:
-                self.edge_to_body(node_key, node_value, "body", "pos_next")
+                self.edge_to_body(node_key, node_value, "body", "true_branch")
 
                 # Find the last line in the body block
                 last_line, line_type = self.get_block_last_line(node_value, "body")
@@ -1254,7 +1254,7 @@ class CFGGraph_java(CFGGraph):
                 self.add_edge(while_index, current_index, "loop_control")  # do node
 
                 # Add an edge from the while node to the next statement after the do_statement
-                self.handle_next(while_node, next_node, "neg_next")
+                self.handle_next(while_node, next_node, "false_branch")
 
             # ------------------------------------------------------------------------------------------------
             elif current_node_type == "continue_statement":

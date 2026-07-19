@@ -233,7 +233,7 @@ def generate(
         src_code = code
     elif code_file is not None:
         path = Path(code_file)
-        src_code = path.read_text()
+        src_code = path.read_text(encoding="utf-8")
         source_path = path
     elif code_folder is not None:
         from utils.multi_file_merger import merge_files
@@ -247,7 +247,7 @@ def generate(
         tmp_dir = tempfile.mkdtemp(prefix="lambda_graphs_")
         merged_path = os.path.join(tmp_dir, f"{combined}{suffix}")
         merge_files(str(folder), language, merged_path)
-        src_code = Path(merged_path).read_text()
+        src_code = Path(merged_path).read_text(encoding="utf-8")
         source_path = Path(merged_path)
     else:
         raise AssertionError("unreachable")

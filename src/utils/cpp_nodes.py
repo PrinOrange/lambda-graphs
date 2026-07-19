@@ -595,7 +595,7 @@ def get_nodes(
                 label = "catch (" + param_text + ")"
         else:
             label = "catch (...)"
-        type_label = "catch"
+        type_label = root_node.type
         graph_node_list.append(
             (
                 index[(root_node.start_point, root_node.end_point, root_node.type)],
@@ -989,7 +989,7 @@ def get_nodes(
                     label = "if(" + condition.text.decode("UTF-8") + ")"
                 else:
                     label = "if"
-                type_label = "if"
+                type_label = root_node.type
 
             elif root_node.type == "for_statement":
                 try:
@@ -1010,7 +1010,7 @@ def get_nodes(
                 except:
                     update_text = ""
                 label = "for(" + init_text + condition_text + ";" + update_text + ")"
-                type_label = "for"
+                type_label = root_node.type
 
             elif root_node.type == "for_range_loop":
                 try:
@@ -1023,7 +1023,7 @@ def get_nodes(
                     label = f"for({declarator_text} : {range_text})"
                 except:
                     label = "for(range)"
-                type_label = "for"
+                type_label = root_node.type
 
             elif root_node.type == "while_statement":
                 condition = root_node.child_by_field_name("condition")
@@ -1031,11 +1031,11 @@ def get_nodes(
                     label = "while(" + condition.text.decode("UTF-8") + ")"
                 else:
                     label = "while"
-                type_label = "while"
+                type_label = root_node.type
 
             elif root_node.type == "do_statement":
                 label = "do"
-                type_label = "do"
+                type_label = root_node.type
 
             elif root_node.type == "switch_statement":
                 condition = root_node.child_by_field_name("condition")
@@ -1043,7 +1043,7 @@ def get_nodes(
                     label = "switch(" + condition.text.decode("UTF-8") + ")"
                 else:
                     label = "switch"
-                type_label = "switch"
+                type_label = root_node.type
 
             elif root_node.type == "case_statement":
                 value = root_node.child_by_field_name("value")
@@ -1051,11 +1051,11 @@ def get_nodes(
                     label = "case " + value.text.decode("UTF-8") + ":"
                 else:
                     label = "default:"
-                type_label = "case"
+                type_label = root_node.type
 
             elif root_node.type == "try_statement":
                 label = "try"
-                type_label = "try"
+                type_label = root_node.type
 
             elif root_node.type == "labeled_statement":
                 label_node = root_node.child_by_field_name("label")
@@ -1068,14 +1068,14 @@ def get_nodes(
                     )
                 else:
                     label = "label:"
-                type_label = "label"
+                type_label = root_node.type
 
             elif root_node.type == "return_statement":
                 if has_inner_definition(root_node):
                     label = "return"
                 else:
                     label = root_node.text.decode("UTF-8")
-                type_label = "return"
+                type_label = root_node.type
 
             elif root_node.type == "enum_specifier":
                 enum_name_node = get_child_of_type(root_node, ["type_identifier"])
@@ -1088,7 +1088,7 @@ def get_nodes(
                         label = f"enum {enum_name}"
                 else:
                     label = "enum (anonymous)"
-                type_label = "enum"
+                type_label = root_node.type
 
                 enum_index = index[
                     (root_node.start_point, root_node.end_point, root_node.type)
@@ -1103,7 +1103,7 @@ def get_nodes(
                     label = f"union {union_name}"
                 else:
                     label = "union (anonymous)"
-                type_label = "union"
+                type_label = root_node.type
 
                 union_index = index[
                     (root_node.start_point, root_node.end_point, root_node.type)
@@ -1118,7 +1118,7 @@ def get_nodes(
                     label = f"typedef {typedef_name}"
                 else:
                     label = "typedef"
-                type_label = "typedef"
+                type_label = root_node.type
 
                 typedef_index = index[
                     (root_node.start_point, root_node.end_point, root_node.type)
@@ -1133,25 +1133,25 @@ def get_nodes(
                 )
                 if len(label) > 80:
                     label = label[:77] + "..."
-                type_label = "friend"
+                type_label = root_node.type
 
             elif root_node.type == "static_assert_declaration":
                 label = root_node.text.decode("UTF-8")
                 if len(label) > 80:
                     label = label[:77] + "..."
-                type_label = "static_assert"
+                type_label = root_node.type
 
             elif root_node.type == "namespace_alias_definition":
                 label = root_node.text.decode("UTF-8")
                 if len(label) > 80:
                     label = label[:77] + "..."
-                type_label = "namespace_alias"
+                type_label = root_node.type
 
             elif root_node.type == "using_declaration":
                 label = root_node.text.decode("UTF-8")
                 if len(label) > 80:
                     label = label[:77] + "..."
-                type_label = "using"
+                type_label = root_node.type
 
             elif root_node.type == "attributed_statement":
                 attributes = []
@@ -1172,7 +1172,7 @@ def get_nodes(
                 label = root_node.text.decode("UTF-8")
                 if len(label) > 80:
                     label = label[:77] + "..."
-                type_label = "new"
+                type_label = root_node.type
 
             excluded_from_graph = {
                 "function_definition",

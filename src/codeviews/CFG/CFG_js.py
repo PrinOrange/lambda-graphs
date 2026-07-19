@@ -216,16 +216,16 @@ class CFGGraph_js(CFGGraph):
                 if consequence is not None:
                     first = self._edge_first_line(node, node_list)
                     if first:
-                        self.CFG_edge_list.append((idx, first[0], "pos_next"))
+                        self.CFG_edge_list.append((idx, first[0], "true_branch"))
 
                 if alternative is not None:
                     alt_first = self._edge_first_line(alternative, node_list)
                     if alt_first:
-                        self.CFG_edge_list.append((idx, alt_first[0], "neg_next"))
+                        self.CFG_edge_list.append((idx, alt_first[0], "false_branch"))
                 else:
                     next_idx, _ = self._get_next_index(node, node_list)
                     if next_idx and next_idx != 2:
-                        self.CFG_edge_list.append((idx, next_idx, "neg_next"))
+                        self.CFG_edge_list.append((idx, next_idx, "false_branch"))
 
                 last_consequence = None
                 if consequence is not None:

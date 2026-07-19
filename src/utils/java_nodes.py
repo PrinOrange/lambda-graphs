@@ -387,7 +387,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             )
         )
         label = "catch (" + catch_parameter[0].text.decode("UTF-8") + ")"
-        type_label = "catch"
+        type_label = root_node.type
         graph_node_list.append(
             (
                 index[(root_node.start_point, root_node.end_point, root_node.type)],
@@ -402,7 +402,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
             root_node
         )
         label = "finally"
-        type_label = "finally"
+        type_label = root_node.type
         graph_node_list.append(
             (
                 index[(root_node.start_point, root_node.end_point, root_node.type)],
@@ -593,7 +593,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     )
                 )
                 label = "if" + condition[0].text.decode("UTF-8")
-                type_label = "if"
+                type_label = root_node.type
 
             elif root_node.type == "for_statement":
                 try:
@@ -615,7 +615,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 except:
                     update = ""
                 label = "for(" + init + condition + ";" + update + ")"
-                type_label = "for"
+                type_label = root_node.type
 
             elif root_node.type == "enhanced_for_statement":
                 try:
@@ -651,7 +651,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                 label = (
                     "for(" + modifier + " " + types + " " + variable + ":" + value + ")"
                 )
-                type_label = "for"
+                type_label = root_node.type
 
             elif root_node.type == "while_statement":
                 condition = list(
@@ -661,11 +661,11 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     )
                 )
                 label = "while" + condition[0].text.decode("UTF-8")
-                type_label = "while"
+                type_label = root_node.type
 
             elif root_node.type == "do_statement":
                 label = "do"
-                type_label = "do"
+                type_label = root_node.type
 
             elif root_node.type == "switch_expression":
                 parent_statement = return_switch_parent(
@@ -681,7 +681,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                         )
                     )
                     label = "switch" + condition[0].text.decode("UTF-8")
-                type_label = "switch"
+                type_label = root_node.type
 
             elif (
                 root_node.type == "switch_block_statement_group"
@@ -693,14 +693,14 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     )
                 )
                 label = case_label[0].text.decode("UTF-8") + ":"
-                type_label = "case"
+                type_label = root_node.type
 
             elif (
                 root_node.type == "try_statement"
                 or root_node.type == "try_with_resources_statement"
             ):
                 label = "try"
-                type_label = "try"
+                type_label = root_node.type
 
             elif root_node.type == "synchronized_statement":
                 condition = list(
@@ -710,7 +710,7 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     )
                 )
                 label = "synchronized " + condition[0].text.decode("UTF-8")
-                type_label = "synchronized"
+                type_label = root_node.type
             elif root_node.type == "labeled_statement":
                 name = list(
                     filter(lambda child: child.type == "identifier", root_node.children)
@@ -721,13 +721,13 @@ def get_nodes(root_node=None, node_list={}, graph_node_list=[], index={}, record
                     root_node.end_point,
                     root_node.type,
                 )
-                type_label = "label"
+                type_label = root_node.type
             elif root_node.type == "return_statement":
                 if has_inner_definition(root_node):
                     label = "return"
                 else:
                     label = root_node.text.decode("UTF-8")
-                type_label = "return"
+                type_label = root_node.type
 
             if (
                 root_node.type != "method_declaration"

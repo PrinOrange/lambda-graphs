@@ -28,12 +28,12 @@ def _merge_nodes_into(target, incoming, source_label):
     """
     for nid, attrs in incoming.nodes(data=True):
         attrs = dict(attrs)  # shallow copy — don't mutate caller
-        attrs.setdefault("node_source", source_label)
+        attrs.setdefault("node_type", source_label)
 
         if nid in target:
-            old_source = target.nodes[nid].get("node_source", "")
+            old_source = target.nodes[nid].get("node_type", "")
             merged = old_source + "|" + source_label if old_source else source_label
-            attrs["node_source"] = merged
+            attrs["node_type"] = merged
 
             # pick visual style
             parts = set(merged.split("|"))

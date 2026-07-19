@@ -32,13 +32,13 @@ class ASTGraph:
                 label = root_node.type
             AST.add_node(
                 current_node_id,
-                node_type=root_node.type,
+                syntax_element=root_node.type,
                 token=label,
                 shape="box",
                 style="rounded, filled",
                 fillcolor="#BFE6D3",
                 color="white",
-                node_source="AST",
+                node_type="AST",
             )
             for child in root_node.children:
                 if child.is_named:
