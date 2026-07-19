@@ -86,7 +86,7 @@ CFG 节点以**语句**为粒度，每个节点代表一条可执行语句。
 
 #### `statement_type` 取值
 
-**C 语言：**
+**C 语言**（使用 tree-sitter 原始类型名）：
 
 | 值 | 含义 |
 |------|------|
@@ -94,36 +94,36 @@ CFG 节点以**语句**为粒度，每个节点代表一条可执行语句。
 | `"function_definition"` | 函数定义 |
 | `"declaration"` | 变量声明 |
 | `"expression_statement"` | 表达式语句（赋值、函数调用等） |
-| `"if"` | if 条件判断 |
-| `"while"` | while 循环 |
-| `"for"` | for 循环 |
-| `"do"` | do-while 循环 |
-| `"switch"` | switch 语句 |
-| `"case"` | case 分支 |
-| `"return"` | return 返回语句 |
-| `"break"` | break 语句 |
-| `"continue"` | continue 语句 |
-| `"goto"` | goto 跳转 |
-| `"label"` | 标签语句 |
+| `"if_statement"` | if 条件判断 |
+| `"while_statement"` | while 循环 |
+| `"for_statement"` | for 循环 |
+| `"do_statement"` | do-while 循环 |
+| `"switch_statement"` | switch 语句 |
+| `"case_statement"` | case 分支 |
+| `"return_statement"` | return 返回语句 |
+| `"break_statement"` | break 语句 |
+| `"continue_statement"` | continue 语句 |
+| `"goto_statement"` | goto 跳转 |
+| `"labeled_statement"` | 标签语句 |
 
-**C++ 语言**（包含上述 C 全部，外加）：
+**C++ 语言**（包含上述 C 全部，外加使用 tree-sitter 原始类型名）：
 
 | 值 | 含义 |
 |------|------|
-| `"try"` | try 块 |
-| `"catch"` | catch 异常捕获 |
-| `"enum"` | 枚举定义 |
-| `"union"` | 联合体定义 |
-| `"typedef"` | 类型别名 |
-| `"friend"` | 友元声明 |
-| `"static_assert"` | 静态断言 |
-| `"namespace_alias"` | 命名空间别名 |
-| `"using"` | using 声明 |
-| `"new"` | new 表达式 |
+| `"try_statement"` | try 块 |
+| `"catch_clause"` | catch 异常捕获 |
+| `"enum_specifier"` | 枚举定义 |
+| `"union_specifier"` | 联合体定义 |
+| `"type_definition"` | 类型别名 |
+| `"friend_declaration"` | 友元声明 |
+| `"static_assert_declaration"` | 静态断言 |
+| `"namespace_alias_definition"` | 命名空间别名 |
+| `"using_declaration"` | using 声明 |
+| `"new_expression"` | new 表达式 |
 | `"implicit_return"` | 隐式返回（合成节点） |
 | `"synthetic_constructor"` | 隐式默认构造函数（合成节点） |
 
-**Java 语言：**
+**Java 语言**（使用 tree-sitter 原始类型名）：
 
 | 值 | 含义 |
 |------|------|
@@ -134,20 +134,21 @@ CFG 节点以**语句**为粒度，每个节点代表一条可执行语句。
 | `"interface_declaration"` | 接口声明 |
 | `"declaration"` | 变量声明 |
 | `"expression_statement"` | 表达式语句 |
-| `"if"` | if 条件判断 |
-| `"while"` | while 循环 |
-| `"for"` | for / enhanced-for 循环 |
-| `"do"` | do-while 循环 |
-| `"switch"` | switch 语句/表达式 |
-| `"case"` | case 分支 |
-| `"return"` | return 返回语句 |
-| `"break"` | break 语句 |
-| `"continue"` | continue 语句 |
-| `"try"` | try / try-with-resources 块 |
-| `"catch"` | catch 异常捕获 |
-| `"finally"` | finally 块 |
-| `"synchronized"` | synchronized 同步块 |
-| `"label"` | 标签语句 |
+| `"if_statement"` | if 条件判断 |
+| `"while_statement"` | while 循环 |
+| `"for_statement"` | for 循环 |
+| `"enhanced_for_statement"` | enhanced-for 循环 |
+| `"do_statement"` | do-while 循环 |
+| `"switch_expression"` | switch 语句/表达式 |
+| `"switch_block_statement_group"` / `"switch_rule"` | case 分支 |
+| `"return_statement"` | return 返回语句 |
+| `"break_statement"` | break 语句 |
+| `"continue_statement"` | continue 语句 |
+| `"try_statement"` / `"try_with_resources_statement"` | try 块 |
+| `"catch_clause"` | catch 异常捕获 |
+| `"finally_clause"` | finally 块 |
+| `"synchronized_statement"` | synchronized 同步块 |
+| `"labeled_statement"` | 标签语句 |
 
 **JavaScript 语言：**
 
@@ -218,9 +219,8 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 | 值 | 含义 | 适用语言 |
 |------|------|----------|
 | `"first_next_line"` | 函数入口 → 第一条语句 | C, C++, Java, JS |
-| `"next_line"` | 顺序执行：上一条 → 下一条 | C, C++ |
+| `"next_line"` | 顺序执行：上一条 → 下一条 | C, C++, Java |
 | `"next"` | 通用跳转到下一条 | C, C++, Java, JS |
-| `"next_line 1~9, $"` | Java 中的顺序执行变体 | Java |
 
 **条件分支：**
 
@@ -234,9 +234,8 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 
 | 值 | 含义 | 适用语言 |
 |------|------|----------|
-| `"loop_control"` | 循环控制（条件判断到体） | C, C++, Java |
+| `"loop_next"` | 循环体入口（从条件判断进入循环体） | C, C++, Java, JS |
 | `"loop_update"` | 循环自更新（末尾 → 头部条件） | C, C++, Java |
-| `"loop_next"` | 循环进入下一次 | JS |
 | `"loop_exit"` | 循环退出 | JS |
 
 **switch/case：**
@@ -268,12 +267,12 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 | `"static_call"` | 静态方法调用 | C++ |
 | `"static_return"` | 静态方法返回 | C++ |
 | `"constructor_call"` | 构造函数调用 | C++, Java |
-| `"constructor_return"` | 构造函数返回 | C++ |
+| `"constructor_return"` | 构造函数返回 | C++, Java |
 | `"destructor_call"` | 析构函数调用 | C++ |
 | `"destructor_chain"` | 析构函数链 | C++ |
 | `"destructor_return"` | 析构函数返回 | C++ |
 | `"operator_call"` | 运算符重载调用 | C++ |
-| `"lambda_invocation"` | Lambda 调用 | C++, Java |
+| `"lambda_call"` | Lambda 调用 | C++, Java |
 | `"lambda_return"` | Lambda 返回 | C++, Java |
 | `"base_destructor_call"` | 基类析构调用 | C++ |
 | `"implicit_base_constructor_call"` | 隐式基类构造调用 | C++ |
@@ -283,8 +282,8 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 | 值 | 含义 | 适用语言 |
 |------|------|----------|
 | `"try_body"` | try 块入口 | JS |
-| `"catch_next"` | catch 块入口 | C++, JS |
-| `"catch_exception"` | 捕获异常 | C++, Java |
+| `"catch_next"` | catch 块入口 / 捕获异常 | C++, Java, JS |
+| `"catch_exception"` | 异常转移边（try 体 → catch 处理器） | C++ |
 | `"finally_next"` | finally 块入口 | JS |
 | `"throw_exit"` | throw 退出 | C++, Java |
 
@@ -305,10 +304,10 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 | 值 | 含义 |
 |------|------|
 | `"class_next"` | 类声明下一条 |
-| `"class_return"` | 类声明返回 |
+| `"constructor_return"` | 构造函数/类声明返回 |
 | `"constructor_next"` | 构造函数下一条 |
 | `"main_method_next"` | main 方法下一条 |
-| `"return_next"` | return 下一条 |
+| `"return_exit"` | return 退出 |
 
 示例：
 
@@ -352,17 +351,17 @@ DFG 节点继承自 CFG 节点，属性完全相同（`statement`、`line_no`、
 
 | 值 | 含义 | 适用语言 |
 |------|------|----------|
-| `"comesFrom"` | 变量使用点 → 变量定义点（最常见的数据流边） | C, C++, JS |
-| `"parameter"` | 形参传递 | C, C++ |
-| `"lastDef"` | 变量在某处的最后一个定义（需启用 `last_def=True`） | C, C++ |
-| `"lastUse"` | 变量在某处的最后一个使用（需启用 `last_use=True`） | C, C++ |
-| `"loop_carried"` | 循环携带的数据依赖 | C++ |
-| `"constructor_call"` | 构造函数数据流 | C++ |
+| `"comesFrom"` | 变量使用点 → 变量定义点（最常见的数据流边） | C, C++, Java, JS |
+| `"parameter"` | 形参传递 | C, C++, Java, JS |
+| `"lastDef"` | 变量在某处的最后一个定义（需启用 `last_def=True`） | C, C++, Java, JS |
+| `"lastUse"` | 变量在某处的最后一个使用（需启用 `last_use=True`） | C, C++, Java, JS |
+| `"loop_carried"` | 循环携带的数据依赖 | C, C++, JS |
+| `"constructor_call"` | 构造函数数据流 | C++, Java |
 | `"base_constructor_call"` | 基类构造函数数据流 | C++ |
 | `"destructor_call"` | 析构函数数据流 | C++ |
 | `"base_destructor_call"` | 基类析构函数数据流 | C++ |
 | `"virtual_dispatch"` | 虚函数派发数据流 | C++ |
-| `"lambda_call"` | Lambda 数据流 | C++ |
+| `"lambda_call"` | Lambda 数据流 | C++, Java |
 
 示例：
 
@@ -465,7 +464,7 @@ result.to_json("output.json")
       "token": "return_statement",
       "statement": "return c;",
       "line_no": 4,
-      "statement_type": "return",
+      "statement_type": "return_statement",
       "node_type": "AST|CFG|DFG"
     }
   ],

@@ -2394,7 +2394,7 @@ def start_rda(index, rda_table, cfg_graph, pre_solve=False):
             if "label" in edge_data and edge_data["label"] in [
                 "method_call",
                 "method_return",
-                "class_return",
+                "constructor_return",
                 "constructor_call",
             ]:
                 remove_edges.append(edge)

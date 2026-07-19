@@ -1539,6 +1539,22 @@ def name_match_with_fields(name1, name2):
     return False
 
 
+def is_node_inside_loop(ast_node):
+    """Check if an AST node is inside a loop structure (for/while/do-while)."""
+    if ast_node is None:
+        return False
+    current = ast_node
+    while current.parent is not None:
+        if current.parent.type in [
+            "for_statement",
+            "while_statement",
+            "do_statement",
+        ]:
+            return True
+        current = current.parent
+    return False
+
+
 def get_required_edges_from_def_to_use(
     index, cfg, rda_solution, rda_table, graph_nodes, processed_edges, properties
 ):
@@ -1579,6 +1595,30 @@ def get_required_edges_from_def_to_use(
                                 "used_def": used.name,
                             },
                         )
+                        # Loop-carried dependency: def at same node inside loop
+                        if available_def.line == node:
+                            node_key = (
+                                read_index(index, node)
+                                if node in index.values()
+                                else None
+                            )
+                            ast_node = (
+                                graph_nodes.get(node_key)
+                                if graph_nodes and node_key
+                                else None
+                            )
+                            if ast_node is not None and is_node_inside_loop(ast_node):
+                                add_edge(
+                                    final_graph,
+                                    node,
+                                    node,
+                                    {
+                                        "dataflow_type": "loop_carried",
+                                        "edge_type": "DFG_edge",
+                                        "color": "#FFA500",
+                                        "used_def": used.name,
+                                    },
+                                )
                         used.satisfied = True
 
                 elif "." in used.name or "." in available_def.name:
@@ -1639,7 +1679,7 @@ def get_required_edges_from_def_to_use(
                         final_graph,
                         killed_def.line,
                         node,
-                        {"color": "orange", "dataflow_type": "lastDef"},
+                        {"color": "orange", "dataflow_type": "lastDef", "edge_type": "DFG_edge"},
                     )
 
     for edge in processed_edges:

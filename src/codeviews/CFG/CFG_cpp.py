@@ -4277,7 +4277,7 @@ class CFGGraph_cpp(CFGGraph):
 
                             if lambda_body_first_id:
                                 self.add_edge(
-                                    parent_id, lambda_body_first_id, "lambda_invocation"
+                                    parent_id, lambda_body_first_id, "lambda_call"
                                 )
 
                                 lambda_id = self.index[lambda_key]
@@ -4602,7 +4602,7 @@ class CFGGraph_cpp(CFGGraph):
                 continue
 
             if is_immediately_invoked:
-                self.add_edge(stmt_id, lambda_body_first_id, "lambda_invocation")
+                self.add_edge(stmt_id, lambda_body_first_id, "lambda_call")
 
                 self.add_lambda_return_edges(
                     lambda_node, lambda_id, stmt_id, self.node_list
@@ -4628,7 +4628,7 @@ class CFGGraph_cpp(CFGGraph):
                             call_site_id = self.get_index(call_site_node)
 
                             self.add_edge(
-                                call_site_id, lambda_body_first_id, "lambda_invocation"
+                                call_site_id, lambda_body_first_id, "lambda_call"
                             )
 
                             self.add_lambda_return_edges(
@@ -5184,7 +5184,7 @@ class CFGGraph_cpp(CFGGraph):
                             and last_line.type != "try_statement"
                         ):
                             self.add_edge(
-                                self.get_index(last_line), current_index, "loop_control"
+                                self.get_index(last_line), current_index, "loop_next"
                             )
 
                 next_index, next_node = self.get_next_index(node, node_list)
@@ -5225,7 +5225,7 @@ class CFGGraph_cpp(CFGGraph):
                             and last_line.type != "try_statement"
                         ):
                             self.add_edge(
-                                self.get_index(last_line), current_index, "loop_control"
+                                self.get_index(last_line), current_index, "loop_next"
                             )
 
                 next_index, next_node = self.get_next_index(node, node_list)
@@ -5268,7 +5268,7 @@ class CFGGraph_cpp(CFGGraph):
                             and last_line.type != "try_statement"
                         ):
                             self.add_edge(
-                                self.get_index(last_line), current_index, "loop_control"
+                                self.get_index(last_line), current_index, "loop_next"
                             )
 
                 next_index, next_node = self.get_next_index(node, node_list)

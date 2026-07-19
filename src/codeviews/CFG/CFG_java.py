@@ -258,7 +258,7 @@ class CFGGraph_java(CFGGraph):
             if current_node_value.type == "method_declaration":
                 return
             next_index, next_node = self.get_next_index(current_node_value)
-            self.handle_next(current_node_value, next_node, "next_line 9")
+            self.handle_next(current_node_value, next_node, "next_line")
 
     def edge_to_body(self, current_node_key, current_node_value, body_type, edge_type):
         # We need to add an edge to the first statement in the body block
@@ -855,7 +855,7 @@ class CFGGraph_java(CFGGraph):
                         for return_node in self.records["return_statement_map"][
                             class_index
                         ]:
-                            self.add_edge(return_node, node[1], "class_return")
+                            self.add_edge(return_node, node[1], "constructor_return")
                     except Exception as e:
                         # If you can't find return statements, then add an edge from the last line
                         # Handled by adding the last line to the return statement map in self.function_calls
@@ -869,7 +869,7 @@ class CFGGraph_java(CFGGraph):
                         for return_node in self.records["return_statement_map"][
                             method_index
                         ]:
-                            self.add_edge(return_node, node[1], "class_return")
+                            self.add_edge(return_node, node[1], "constructor_return")
                     except:
                         # If you can't find return statements, then add an edge from the last line
                         # Handled by adding the last line to the return statement map in self.function_calls
@@ -880,15 +880,15 @@ class CFGGraph_java(CFGGraph):
         for lambda_key, statement_node in self.records["lambda_map"].items():
             # lambda_index = self.index[node_key]
             lambda_index = self.index[lambda_key]
-            # self.edge_to_body(node_key, lambda_expression, "body", "lambda_invocation")
+            # self.edge_to_body(node_key, lambda_expression, "body", "lambda_call")
             self.add_edge(
-                self.get_index(statement_node), lambda_index, "lambda_invocation"
+                self.get_index(statement_node), lambda_index, "lambda_call"
             )
             # TODO: maintain a return map for all points of return
             try:
                 for return_node in self.records["return_statement_map"][lambda_index]:
                     self.add_edge(
-                        return_node, self.get_index(statement_node), "lambda_return 1"
+                        return_node, self.get_index(statement_node), "lambda_return"
                     )
             except:
                 pass
@@ -901,14 +901,14 @@ class CFGGraph_java(CFGGraph):
                         self.add_edge(
                             self.get_index(lambda_expression),
                             self.get_index(statement_node),
-                            "lambda_return 2",
+                            "lambda_return",
                         )
                     else:
                         last_line_index = self.get_index(last_line)
                         self.add_edge(
                             last_line_index,
                             self.get_index(statement_node),
-                            "lambda_return 3",
+                            "lambda_return",
                         )
 
     def return_next_node(self, node_value):
@@ -1049,7 +1049,7 @@ class CFGGraph_java(CFGGraph):
                                 and next_node.type
                                 not in self.statement_types["definition_types"]
                             ):
-                                self.add_edge(src_node, dest_node, "next_line $")
+                                self.add_edge(src_node, dest_node, "next_line")
 
                         flag = False
                         while next_node.type == "block" and len(
@@ -1080,7 +1080,7 @@ class CFGGraph_java(CFGGraph):
                             and next_node.type
                             not in self.statement_types["definition_types"]
                         ):
-                            self.add_edge(src_node, dest_node, "next_line 1")
+                            self.add_edge(src_node, dest_node, "next_line")
 
                     except:
                         pass
@@ -1172,12 +1172,12 @@ class CFGGraph_java(CFGGraph):
                 last_line_index = self.get_index(last_line)
                 # Also add an edge from the last guy to the next statement after the if
                 if line_type in self.statement_types["non_control_statement"]:
-                    self.handle_next(last_line, next_node, "next_line 2")
+                    self.handle_next(last_line, next_node, "next_line")
 
                 empty_if = False
                 if last_line_index == current_index:
                     empty_if = True
-                    self.handle_next(node_value, next_node, "next_line 3")
+                    self.handle_next(node_value, next_node, "next_line")
                 if node_value.child_by_field_name("alternative") is not None:
                     # alternative
                     self.edge_to_body(node_key, node_value, "alternative", "false_branch")
@@ -1186,14 +1186,14 @@ class CFGGraph_java(CFGGraph):
                         node_value, "alternative"
                     )
                     if line_type in self.statement_types["non_control_statement"]:
-                        self.handle_next(last_line, next_node, "next_line 4")
+                        self.handle_next(last_line, next_node, "next_line")
 
                     if empty_if and last_line_index == current_index:
-                        self.handle_next(node_value, next_node, "next_line 5")
+                        self.handle_next(node_value, next_node, "next_line")
                 else:
                     # When else is not there add a direct edge from if node to the next statement
                     # if next_node is not None:
-                    self.handle_next(node_value, next_node, "next_line 6")
+                    self.handle_next(node_value, next_node, "next_line")
 
             # ------------------------------------------------------------------------------------------------
             elif current_node_type in self.statement_types["loop_control_statement"]:
@@ -1210,7 +1210,7 @@ class CFGGraph_java(CFGGraph):
                 self.handle_next(node_value, next_node, "false_branch")
                 # Add an edge from the last statement in the body to this node
                 if line_type in self.statement_types["non_control_statement"]:
-                    self.add_edge(last_line_index, current_index, "loop_control")
+                    self.add_edge(last_line_index, current_index, "loop_next")
 
                 # Add a self loop in case of for loops
                 if current_node_type != "while_statement":
@@ -1251,7 +1251,7 @@ class CFGGraph_java(CFGGraph):
 
                 # Add an edge from the while node to the first line in the block or to the current do node
                 # self.CFG_edge_list.append((while_node, dest_node, 'loop_control')) # First node of block
-                self.add_edge(while_index, current_index, "loop_control")  # do node
+                self.add_edge(while_index, current_index, "loop_next")  # do node
 
                 # Add an edge from the while node to the next statement after the do_statement
                 self.handle_next(while_node, next_node, "false_branch")
@@ -1362,7 +1362,7 @@ class CFGGraph_java(CFGGraph):
                         dest_node = self.get_index(next_node)
                         if dest_node in self.records["switch_child_map"].keys():
                             dest_node = self.records["switch_child_map"][dest_node]
-                        self.add_edge(src_node, dest_node, "next_line 7")
+                        self.add_edge(src_node, dest_node, "next_line")
 
                     except Exception as e:
                         pass
@@ -1450,7 +1450,7 @@ class CFGGraph_java(CFGGraph):
                         # There is no case body, so add an edge from this case to the next case label, if exists
                         if not default_flag and next_case_node_index is not None:
                             self.add_edge(
-                                current_case_index, next_case_node_index, "fall through"
+                                current_case_index, next_case_node_index, "fallthrough"
                             )
 
                     else:
@@ -1474,7 +1474,7 @@ class CFGGraph_java(CFGGraph):
                             next_line = case_statements[1]
                             next_line_index = self.get_index(next_line)
                             self.add_edge(
-                                current_case_index, next_line_index, "next_line 8"
+                                current_case_index, next_line_index, "next_line"
                             )
 
                         # Find the first line in each case block and add an edge from case label to itandl empty case block
@@ -1504,7 +1504,7 @@ class CFGGraph_java(CFGGraph):
                                 self.add_edge(
                                     current_case_index,
                                     next_case_node_index,
-                                    "fall through",
+                                    "fallthrough",
                                 )
                         else:
                             first_line_index = self.get_index(block_node)
@@ -1539,7 +1539,7 @@ class CFGGraph_java(CFGGraph):
                                         self.add_edge(
                                             last_line_index,
                                             next_line_index,
-                                            "fall through",
+                                            "fallthrough",
                                         )
 
                         # Find the last line in each case block and add an edge to the next case block unless it is a break statement
@@ -1565,7 +1565,7 @@ class CFGGraph_java(CFGGraph):
                                 self.add_edge(
                                     last_line_index,
                                     next_case_node_index,
-                                    "fall through",
+                                    "fallthrough",
                                 )
 
                         # in case of default, add an edge to the next statement outside the switch
@@ -1594,7 +1594,7 @@ class CFGGraph_java(CFGGraph):
                     inner_definition = inner_definition[0]
                     # inner_index = self.index[(inner_definition.start_point, inner_definition.end_point, inner_definition.type)]
                     # TODOD: Perhaps remove this because inconsistent wih newly decided logic
-                    self.add_edge(current_index, inner_definition, "return_next")
+                    self.add_edge(current_index, inner_definition, "return_exit")
 
                 if not self.inner_function(node_value):
                     # pass
@@ -1655,7 +1655,7 @@ class CFGGraph_java(CFGGraph):
                             catch_index = self.index[catch_node]
                             # if statement.type != 'return_statement': The Exception can occur on the RHS so the catch_exception edge should be there
                             self.add_edge(
-                                statement_index, catch_index, "catch_exception"
+                                statement_index, catch_index, "catch_next"
                             )
 
                 # Find the next statement outside the try block

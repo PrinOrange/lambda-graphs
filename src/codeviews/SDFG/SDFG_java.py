@@ -589,12 +589,12 @@ def start_rda(index, rda_table, graph, pre_solve=False):
     if debug and not pre_solve:
         print_table(index, rda_table)
     remove_set = []
-    # "method_return", "class_return"
+    # "method_return", "constructor_return"
     if pre_solve:
         remove_set = [
             "method_call",
             "method_return",
-            "class_return",
+            "constructor_return",
             "constructor_call",
         ]
     graph = copy.deepcopy(graph)
@@ -627,7 +627,7 @@ def start_rda(index, rda_table, graph, pre_solve=False):
             for s, t in cfg.in_edges(node):
                 if "label" in cfg.edges[s, t, 0] and cfg.edges[s, t, 0]["label"] in [
                     "method_return",
-                    "class_return",
+                    "constructor_return",
                 ]:
                     returning_feeders.append(s)
                 else:
@@ -729,7 +729,7 @@ def get_required_edges_from_def_to_use(
     # ]
     # twins = []
     # retain_edges = [
-    #     "constructor_call", "class_return", "method_call", "method_return"
+    #     "constructor_call", "constructor_return", "method_call", "method_return"
     # ]
     # retains = []
     # additional_edges = []
@@ -770,7 +770,7 @@ def get_required_edges_from_def_to_use(
                             final_graph,
                             available_def.line,
                             node,
-                            {"used_def": used.name},
+                            {"dataflow_type": "comesFrom", "edge_type": "DFG_edge", "used_def": used.name},
                             pre_solve,
                         )
                         used.satisfied = True
@@ -798,7 +798,7 @@ def get_required_edges_from_def_to_use(
                             final_graph,
                             available_def.line or node,
                             used.line or node,
-                            {"used_def": used.name},
+                            {"dataflow_type": "comesFrom", "edge_type": "DFG_edge", "used_def": used.name},
                             pre_solve,
                         )
                         used.satisfied = True
@@ -824,7 +824,7 @@ def get_required_edges_from_def_to_use(
                                         if not nx.has_path(cfg, i, node):
                                             continue
                                         add_edge(
-                                            final_graph, i, node, {"color": "green"}
+                                            final_graph, i, node, {"dataflow_type": "lastUse", "color": "green"}
                                         )
                                     # used.satisfied = True
                             #         break
@@ -843,7 +843,7 @@ def get_required_edges_from_def_to_use(
                     or read_index(index, available_def.line)[-1] in ignore_nodes
                 ):
                     continue
-                add_edge(final_graph, available_def.line, node, {"color": "orange"})
+                add_edge(final_graph, available_def.line, node, {"dataflow_type": "lastDef", "edge_type": "DFG_edge", "color": "orange"})
         # for definition in def_info:
         #     for available_def in rda_solution[node]["IN"]:
         #         if "." in definition.name or "." in available_def.name:
@@ -865,7 +865,28 @@ def get_required_edges_from_def_to_use(
             else:
                 add_edge(final_graph, *edge)
         for edge in processed_edges:
-            add_edge(final_graph, *edge)
+            src, dst = edge[0], edge[1]
+            df_type = "parameter"  # default for call/return edges
+            try:
+                cfg_edge_data = final_graph.get_edge_data(src, dst)
+                if cfg_edge_data:
+                    label = cfg_edge_data[0].get("label", "")
+                else:
+                    label = ""
+            except Exception:
+                label = ""
+            if "constructor_call" in label or "constructor" in label:
+                df_type = "constructor_call"
+            elif "lambda_call" in label:
+                df_type = "lambda_call"
+            elif "method_return" in label:
+                df_type = "parameter"
+            add_edge(
+                final_graph,
+                src,
+                dst,
+                {"dataflow_type": df_type, "edge_type": "DFG_edge"},
+            )
     # for edge in twins:
     #     continue
     #     add_edge(final_graph, edge[0], edge[1])
@@ -965,7 +986,7 @@ def dfg_java(prop, CFG_results):
     for edge in list(cfg_graph.edges()):
         edge_data = cfg_graph.get_edge_data(*edge)[0]
         # If there is object creation
-        if edge_data["label"] == "class_return":
+        if edge_data["label"] == "constructor_return":
             # call_statement = node_list[read_index(index, edge[1])]
             # call_node = recursively_get_children_of_types(call_statement, method_invocation)[0]
             last_statement = node_list[read_index(index, edge[0])]
@@ -1065,7 +1086,7 @@ def dfg_java(prop, CFG_results):
                 and return_statement.named_children
             ):
                 processed_edges.append(edge)
-        elif edge_data["label"] == "lambda_invocation":
+        elif edge_data["label"] == "lambda_call":
             processed_edges.append(edge)
 
     for class_id in uninitiated_classes:
@@ -1508,7 +1529,7 @@ def dfg_java(prop, CFG_results):
                             call_node = None
                             # print("java:" + edge_for_last)
                             if edge_for_last not in defined_cores:
-                                # "method_return", "class_return"
+                                # "method_return", "constructor_return"
                                 if any(
                                     [
                                         x in final_graph.nodes[leaf]
