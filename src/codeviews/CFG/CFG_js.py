@@ -102,7 +102,8 @@ class CFGGraph_js(CFGGraph):
                     continue
             if parent.type == "arrow_function":
                 return (2, parent)
-            if parent.type in ("function_declaration", "method_definition"):
+            if parent.type in ("function_declaration", "method_definition",
+                               "function_expression", "generator_function_declaration"):
                 return (2, None)
             if parent.type == "class_declaration":
                 return (2, None)
@@ -158,6 +159,8 @@ class CFGGraph_js(CFGGraph):
                 "function_declaration",
                 "method_definition",
                 "arrow_function",
+                "function_expression",
+                "generator_function_declaration",
             ):
                 return node
             node = node.parent
@@ -257,7 +260,7 @@ class CFGGraph_js(CFGGraph):
                 if next_idx and next_idx != 2:
                     self.CFG_edge_list.append((idx, next_idx, "loop_exit"))
 
-            elif ntype == "for_in_statement":
+            elif ntype in ("for_in_statement", "for_of_statement"):
                 body = node.child_by_field_name("body")
                 if body is not None:
                     first = self._edge_first_line(node, node_list)
@@ -317,6 +320,7 @@ class CFGGraph_js(CFGGraph):
                         "while_statement",
                         "for_statement",
                         "for_in_statement",
+                        "for_of_statement",
                         "do_statement",
                         "switch_statement",
                     ):
@@ -333,6 +337,7 @@ class CFGGraph_js(CFGGraph):
                         "while_statement",
                         "for_statement",
                         "for_in_statement",
+                        "for_of_statement",
                         "do_statement",
                     ):
                         self.CFG_edge_list.append(
@@ -372,8 +377,9 @@ class CFGGraph_js(CFGGraph):
                         # try body exit -> finally
                         pass  # handled via sequential flow
 
-            # function_declaration: add edge to first statement in body
-            elif ntype in ("function_declaration", "method_definition"):
+            # function_declaration / function_expression / method / generator: add edge to first statement in body
+            elif ntype in ("function_declaration", "method_definition",
+                           "function_expression", "generator_function_declaration"):
                 first = self._edge_first_line(node, node_list)
                 if first:
                     self.CFG_edge_list.append((idx, first[0], "first_next_line"))

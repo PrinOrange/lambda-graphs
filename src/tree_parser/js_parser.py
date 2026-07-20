@@ -57,7 +57,9 @@ class JavaScriptParser(CustomParser):
         # not variable references.
         remove_list = [
             "function_declaration",
+            "function_expression",
             "method_definition",
+            "generator_function_declaration",
             "call_expression",
             "new_expression",
             "member_expression",
@@ -72,14 +74,17 @@ class JavaScriptParser(CustomParser):
             "while_statement",
             "for_statement",
             "for_in_statement",
+            "for_of_statement",
             "do_statement",
             "switch_statement",
             "try_statement",
             "catch_clause",
             "finally_clause",
             "function_declaration",
+            "function_expression",
             "method_definition",
             "arrow_function",
+            "generator_function_declaration",
         ]
 
         if root_node.is_named and root_node.type in block_types:

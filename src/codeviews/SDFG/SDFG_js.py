@@ -13,11 +13,43 @@ from utils.js_nodes import statement_types
 assignment = ["assignment_expression"]
 def_statement = ["variable_declarator"]
 increment_statement = ["update_expression", "augmented_assignment_expression"]
-variable_type = ["identifier", "this"]
+variable_type = ["identifier", "this", "super"]
 method_calls = ["call_expression", "new_expression"]
 
 # AST nodes that constitute a variable definition
 _DEF_PARENT_TYPES = def_statement + ["formal_parameters"]
+
+# AST nodes we walk *through* when determining def/use context
+# (destructuring patterns, pairs in destructuring, shorthand properties)
+_WALK_THROUGH_TYPES = frozenset([
+    "object_pattern",
+    "array_pattern",
+    "shorthand_property_identifier",
+])
+
+# Parent types under which *all* children are USEs (fast path)
+_USE_PARENT_TYPES = frozenset([
+    "return_statement",
+    "throw_statement",
+    "yield_expression",
+    "await_expression",
+    "template_substitution",
+    "spread_element",
+    "computed_property_name",
+    "subscript_expression",
+    "member_expression",
+    "binary_expression",
+    "ternary_expression",
+    "unary_expression",
+    "arguments",
+    "new_expression",
+    "call_expression",
+    "sequence_expression",
+    "switch_statement",
+    "while_statement",
+    "do_statement",
+    "parenthesized_expression",
+])
 
 
 # ---- helpers ---------------------------------------------------------------
@@ -36,7 +68,7 @@ def _get_index(parser, node):
 
 
 def _traverse_variables(node, parser, callback):
-    """Walk *node* and call *callback(node, parser)* for every identifier/this."""
+    """Walk *node* and call *callback(node, parser)* for every identifier/this/super."""
     if node.is_named and node.type in variable_type:
         callback(node, parser)
     for child in node.children:
@@ -55,33 +87,202 @@ def _return_first_parent_of_types(node, parent_types):
 def _find_enclosing_function(node):
     """Walk ancestors until a function_declaration / arrow_function / function_expression."""
     while node is not None:
-        if node.type in ("function_declaration", "arrow_function", "function_expression",
-                         "method_definition", "generator_function_declaration"):
+        if node.type in (
+            "function_declaration", "arrow_function", "function_expression",
+            "method_definition", "generator_function_declaration",
+        ):
             return node
         node = node.parent
     return None
 
 
+# ---- identifier classification ---------------------------------------------
+
+
+def _classify_identifier(node):
+    """Classify an identifier/this/super as (is_def, is_use) by walking ancestors.
+
+    Returns ``(is_def, is_use)`` -- both may be True for increment operators.
+    """
+    current = node
+
+    while current is not None:
+        parent = current.parent
+        if parent is None:
+            return (False, True)
+
+        pt = parent.type
+
+        # ── Direct DEF contexts ─────────────────────────────────────────
+        if pt == "formal_parameters":
+            return (True, False)
+
+        if pt == "variable_declarator":
+            # Only the ``name`` child is a definition; the ``value`` child is a use
+            if parent.child_by_field_name("name") == current:
+                return (True, False)
+            return (False, True)
+
+        if pt == "catch_clause":
+            if parent.child_by_field_name("parameter") == current:
+                return (True, False)
+            return (False, True)
+
+        if pt in ("for_in_statement", "for_of_statement"):
+            if parent.child_by_field_name("left") == current:
+                return (True, False)
+            return (False, True)
+
+        if pt == "assignment_expression":
+            if parent.child_by_field_name("left") == current:
+                return (True, False)
+            return (False, True)
+
+        # ── Function / class / method names are definitions ─────────────
+        if pt in ("function_declaration", "function_expression",
+                  "generator_function_declaration", "class_declaration",
+                  "method_definition"):
+            if parent.child_by_field_name("name") == current:
+                return (True, False)
+            return (False, True)
+
+        # ── Both DEF and USE (increment / compound assignment) ──────────
+        if pt == "augmented_assignment_expression":
+            if parent.child_by_field_name("left") == current:
+                return (True, True)
+            return (False, True)
+
+        if pt == "update_expression":
+            return (True, True)
+
+        # ── Import bindings are defs ────────────────────────────────────
+        if pt in ("import_specifier", "namespace_import"):
+            # import { x }  or  import * as x
+            return (True, False)
+
+        if pt == "import_statement":
+            # import x from '...'  -- the default-import identifier is a named child
+            # (skip source string children which are not identifiers anyway)
+            return (True, False)
+
+        if pt == "import_clause":
+            return (True, False)
+
+        # ── Walk-through types (destructuring / patterns) ───────────────
+        if pt in _WALK_THROUGH_TYPES:
+            current = parent
+            continue
+
+        # ── Pair in an object literal / destructuring ───────────────────
+        if pt == "pair":
+            if parent.child_by_field_name("value") == current:
+                # Walk up to see if pair is inside a destructuring pattern
+                gp = parent.parent
+                while gp is not None:
+                    if gp.type in ("object_pattern", "array_pattern"):
+                        current = parent  # walk through
+                        break
+                    if gp.type == "object":
+                        return (False, True)  # object literal -- value is a USE
+                    gp = gp.parent
+                else:
+                    return (False, True)
+                continue  # walk-through to destructuring parent
+            else:
+                # property key -- always a USE (reading a property name)
+                return (False, True)
+
+        # ── Assignment pattern (x = default_value in destructuring) ─────
+        if pt == "assignment_pattern":
+            if parent.child_by_field_name("left") == current:
+                current = parent  # walk through, the left side is being defined
+                continue
+            # right side (default value) -- USE
+            return (False, True)
+
+        # ── Rest pattern (...rest in destructuring or parameters) ──────
+        if pt == "rest_pattern":
+            # The rest element is being defined
+            current = parent
+            continue
+
+        # ── Conditional expression -- condition is a USE ────────────────
+        if pt in ("if_statement", "while_statement", "do_statement"):
+            if parent.child_by_field_name("condition") == current:
+                return (False, True)
+            return (False, True)
+
+        # ── for_statement -- initializer may contain declarations ───────
+        if pt == "for_statement":
+            initializer = parent.child_by_field_name("initializer")
+            if initializer is not None and initializer == current:
+                # Could be a lexical_declaration or variable_declaration
+                # Let normal walking handle it
+                return (False, True)
+            return (False, True)
+
+        # ── Fast-path USE types ─────────────────────────────────────────
+        if pt in _USE_PARENT_TYPES:
+            return (False, True)
+
+        # ── Default: treat as USE ───────────────────────────────────────
+        return (False, True)
+
+    return (False, True)
+
+
+# ---- parameter extraction --------------------------------------------------
+
+
 def _find_parameters(func_node):
-    """Extract formal parameter names from a function AST node."""
+    """Extract formal parameter names from a function AST node.
+
+    Handles simple identifiers, object/array destructuring, rest patterns,
+    and default values (assignment patterns).
+    """
     params = []
     param_list = func_node.child_by_field_name("parameters")
     if param_list is None:
         return params
+
+    def _extract(node, into):
+        if node.type == "identifier":
+            into.append(_st(node))
+        elif node.type == "rest_pattern":
+            # ...rest
+            for child in node.named_children:
+                _extract(child, into)
+        elif node.type == "assignment_pattern":
+            # x = default_value
+            left = node.child_by_field_name("left")
+            if left is not None:
+                _extract(left, into)
+        elif node.type == "object_pattern":
+            for child in node.named_children:
+                if child.type == "shorthand_property_identifier":
+                    for sub in child.named_children:
+                        _extract(sub, into)
+                elif child.type == "pair":
+                    val = child.child_by_field_name("value")
+                    if val is not None:
+                        _extract(val, into)
+                elif child.type == "rest_pattern":
+                    _extract(child, into)
+                elif child.type == "assignment_pattern":
+                    _extract(child, into)
+        elif node.type == "array_pattern":
+            for child in node.named_children:
+                _extract(child, into)
+        elif node.type == "spread_element":
+            for child in node.named_children:
+                _extract(child, into)
+
     for child in param_list.named_children:
-        # destructuring pattern: {a, b}
-        if child.type == "object_pattern":
-            for sub in child.named_children:
-                if sub.type == "shorthand_property_identifier":
-                    params.append(_st(sub))
-        # array pattern: [a, b]
-        elif child.type == "array_pattern":
-            for sub in child.named_children:
-                if sub.type == "identifier":
-                    params.append(_st(sub))
-        elif child.type == "identifier":
-            params.append(_st(child))
+        _extract(child, params)
     return params
+
+
+# ---- misc helpers ----------------------------------------------------------
 
 
 def _read_index(index, node):
@@ -106,6 +307,7 @@ def _is_node_inside_loop(node_id, parser, CFG_results):
     while current is not None and current.parent is not None:
         if current.parent.type in (
             "for_statement", "while_statement", "do_statement", "for_in_statement",
+            "for_of_statement",
         ):
             return True
         current = current.parent
@@ -120,19 +322,23 @@ def _build_rda_table(parser, CFG_results):
 
     Each entry: ``{"use": set(var_names), "def": set(var_names)}``.
 
-    Handles:
-      - variable_declarator       → def
-      - formal_parameters         → def (function parameters)
-      - assignment left-hand-side → def
-      - assignment right-hand-side→ use
-      - update_expression         → both use and def
-      - call_expression           → use
-      - return/throw etc.         → use
+    Uses ancestor-walking classification to correctly handle:
+      - Variable declarations (let/const/var)
+      - Destructuring patterns (object and array)
+      - Assignment expressions (left=def, right=use)
+      - Augmented assignment and update expressions (both def and use)
+      - Function parameters, catch clause parameters, for-in loop variables
+      - Import bindings
+      - Member expressions, subscript expressions (use the object)
+      - Template substitutions, spread elements, computed property names
+      - Return/throw/yield/await values
+      - Conditional and loop conditions
+      - Binary, ternary, unary expressions
+      - Arrow functions, function expressions, method definitions
     """
     rda = defaultdict(lambda: {"use": set(), "def": set()})
-    index = parser.index
 
-    # -- Phase 1: walk every identifier / `this` ----------------------------
+    # -- Phase 1: walk every identifier / this / super --------------------
     def handler(node, p):
         var_name = _st(node)
         if not var_name:
@@ -148,60 +354,16 @@ def _build_rda_table(parser, CFG_results):
         if stmt_id is None:
             return
 
-        # Individual identifiers may not be in parser.index (especially
-        # those inside for-loop conditions/updates).  We still track them
-        # via their enclosing statement.
-        node_id = _get_index(parser, node)
+        is_def, is_use = _classify_identifier(node)
 
-        parent = node.parent
-
-        # formal_parameter → def (function/method parameter)
-        if parent is not None and parent.type == "formal_parameters":
+        if is_def:
             rda[stmt_id]["def"].add(var_name)
-
-        # variable_declarator → def
-        elif parent is not None and parent.type in def_statement:
-            rda[stmt_id]["def"].add(var_name)
-
-        # call_expression → use
-        elif parent is not None and parent.type in method_calls:
-            rda[stmt_id]["use"].add(var_name)
-
-        # assignment_expression: left = def, right = use
-        elif parent is not None and parent.type in assignment:
-            left = parent.child_by_field_name("left")
-            right = parent.child_by_field_name("right")
-            # Use text comparison — parser.index may not have every identifier
-            if left is not None and _st(node) == _st(left):
-                rda[stmt_id]["def"].add(var_name)
-            elif right is not None:
-                rda[stmt_id]["use"].add(var_name)
-
-        # update_expression (++, --) → both use and def
-        # augmented_assignment_expression (+=, *=, etc.) → left=both, right=use
-        elif parent is not None and parent.type in increment_statement:
-            if parent.type == "augmented_assignment_expression":
-                left = parent.child_by_field_name("left")
-                right = parent.child_by_field_name("right")
-                # Use text comparison — parser.index may not have every identifier
-                if left is not None and _st(node) == _st(left):
-                    rda[stmt_id]["def"].add(var_name)
-                    rda[stmt_id]["use"].add(var_name)
-                elif right is not None:
-                    rda[stmt_id]["use"].add(var_name)
-                else:
-                    rda[stmt_id]["use"].add(var_name)
-            else:
-                rda[stmt_id]["def"].add(var_name)
-                rda[stmt_id]["use"].add(var_name)
-
-        # default: use
-        else:
+        if is_use:
             rda[stmt_id]["use"].add(var_name)
 
     _traverse_variables(CFG_results.root_node, parser, handler)
 
-    # -- Phase 2: annotate function entry nodes with their parameter defs ---
+    # -- Phase 2: annotate function / method entry nodes with param defs --
     _add_parameter_defs(parser, rda, CFG_results.root_node)
 
     return rda
